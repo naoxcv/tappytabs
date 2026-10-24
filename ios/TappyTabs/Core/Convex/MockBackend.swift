@@ -97,6 +97,12 @@ final class MockBackend: Backend {
     func tapSession(partyId: String, userId: String, deviceId: String) -> AnyPublisher<TapSession?, TTError> {
         onMain(Just(nil).setFailureType(to: TTError.self))
     }
+    func forUserUpdates(userId: String) -> AnyPublisher<HostedParty?, TTError> {
+        onMain(partySubject.map { party in
+            guard let party, party.status != .placed, party.member(userId) != nil else { return nil }
+            return HostedParty(partyId: party.id, status: party.status)
+        })
+    }
     func announceTap(partyId: String, userId: String, deviceId: String, attemptId: String, token: String) async throws {}
     func respondTap(partyId: String, userId: String, hostDeviceId: String, attemptId: String, token: String) async throws {}
     func rejectTap(partyId: String, userId: String, hostDeviceId: String, attemptId: String, reason: String) async throws {}
@@ -108,7 +114,10 @@ final class MockBackend: Backend {
     func me(deviceId: String) async throws -> UserProfile? { nil }
     func restaurants() async throws -> [RestaurantRef] { [RestaurantRef(id: Self.restaurantId, name: menu.name)] }
     func hosted(hostDeviceId: String) async throws -> HostedParty? { partySubject.value.map { HostedParty(partyId: $0.id, status: $0.status) } }
-    func forUser(userId: String) async throws -> HostedParty? { partySubject.value.map { HostedParty(partyId: $0.id, status: $0.status) } }
+    func forUser(userId: String) async throws -> HostedParty? {
+        guard let party = partySubject.value, party.status != .placed, party.member(userId) != nil else { return nil }
+        return HostedParty(partyId: party.id, status: party.status)
+    }
 
     func upsertUser(deviceId: String, profile: DraftProfile) async throws -> String { me }
     func followups(draft: DraftProfile) async throws -> [FollowUpQuestion] {

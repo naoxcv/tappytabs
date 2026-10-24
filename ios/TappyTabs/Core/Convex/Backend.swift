@@ -13,6 +13,7 @@ protocol Backend: AnyObject {
     func addable(_ partyId: String, userId: String, shared: Bool) -> AnyPublisher<[AddableItem], TTError>
     func pendingTaps(partyId: String, hostDeviceId: String) -> AnyPublisher<[TapRequest], TTError>
     func tapSession(partyId: String, userId: String, deviceId: String) -> AnyPublisher<TapSession?, TTError>
+    func forUserUpdates(userId: String) -> AnyPublisher<HostedParty?, TTError>
 
     // One-shot reads
     func me(deviceId: String) async throws -> UserProfile?

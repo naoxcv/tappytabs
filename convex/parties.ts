@@ -64,6 +64,12 @@ export const join = mutation({
       if (!(await ctx.db.get(a.userId))) fail("NOT_FOUND", "User not found");
     }
     if (await findMember(ctx, party._id, a.userId)) return { result: "already", partyId: party._id };
+    const memberships = await ctx.db.query("members")
+      .withIndex("by_user", q => q.eq("userId", a.userId)).collect();
+    for (const membership of memberships) {
+      const otherParty = await ctx.db.get(membership.partyId);
+      if (otherParty && otherParty.status !== "placed") fail("BAD_STATUS", "Diner already joined another table");
+    }
     const members = await membersOf(ctx, party._id);
     // A competing tap may observe the party after the last seat moved it to hunger.
     // Report FULL for that race; reserve BAD_STATUS for a party that still has seats.
@@ -72,16 +78,17 @@ export const join = mutation({
       requireStatus(party, "checkin");
     }
     if (members.length >= party.size) fail("FULL", "Table is full");
-    if (a.via === "uwb") {
-      const exit = await ctx.db.query("tapExits")
-        .withIndex("by_party_user", q => q.eq("partyId", party._id).eq("userId", a.userId)).first();
-      if (exit && exit.expiresAt > Date.now()) fail("BAD_STATUS", "Diner left this table");
-      const claims = await ctx.db.query("tapClaims").withIndex("by_user", q => q.eq("userId", a.userId)).collect();
-      const active = claims.find(c => c.expiresAt > Date.now() && c.partyId !== party._id);
-      if (active) fail("BAD_STATUS", "Diner already tapped another table");
-      for (const claim of claims) await ctx.db.delete(claim._id);
-      await ctx.db.insert("tapClaims", { userId: a.userId, partyId: party._id, expiresAt: Date.now() + 300_000 });
+    const exit = await ctx.db.query("tapExits")
+      .withIndex("by_party_user", q => q.eq("partyId", party._id).eq("userId", a.userId)).first();
+    if (a.via === "uwb" && exit && exit.expiresAt > Date.now()) fail("BAD_STATUS", "Diner left this table");
+    const claims = await ctx.db.query("tapClaims").withIndex("by_user", q => q.eq("userId", a.userId)).collect();
+    for (const claim of claims) {
+      if (claim.expiresAt <= Date.now() || claim.partyId === party._id) continue;
+      const claimedParty = await ctx.db.get(claim.partyId);
+      if (claimedParty && claimedParty.status !== "placed") fail("BAD_STATUS", "Diner already joined another table");
     }
+    for (const claim of claims) await ctx.db.delete(claim._id);
+    await ctx.db.insert("tapClaims", { userId: a.userId, partyId: party._id, expiresAt: Date.now() + 300_000 });
     await ctx.db.insert("members", { partyId: party._id, userId: a.userId, joinedVia: a.via, joinedAt: Date.now() });
     if (members.length + 1 === party.size) await ctx.db.patch(party._id, { status: "hunger" });
     return { result: "joined", partyId: party._id };
@@ -147,8 +154,8 @@ export const current = query({
 export const hosted = query({
   args: { hostDeviceId: v.string() },
   handler: async (ctx, { hostDeviceId }) => {
-    const all = await ctx.db.query("parties").order("desc").take(20);
-    const p = all.find((x) => x.hostDeviceId === hostDeviceId);
+    const all = await ctx.db.query("parties").withIndex("by_hostDevice", q => q.eq("hostDeviceId", hostDeviceId)).order("desc").collect();
+    const p = all.find((x) => x.status !== "placed");
     return p ? { partyId: p._id, status: p.status } : null;
   },
 });
@@ -157,8 +164,8 @@ export const hosted = query({
 export const forUser = query({
   args: { userId: v.id("users") },
   handler: async (ctx, { userId }) => {
-    const recent = await ctx.db.query("members").order("desc").take(50);
-    for (const m of recent.filter((x) => x.userId === userId)) {
+    const memberships = await ctx.db.query("members").withIndex("by_user", q => q.eq("userId", userId)).order("desc").collect();
+    for (const m of memberships) {
       const p = await ctx.db.get(m.partyId);
       if (p && p.status !== "placed") return { partyId: p._id, status: p.status };
     }

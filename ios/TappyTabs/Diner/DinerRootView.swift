@@ -1,11 +1,15 @@
 // Owner: Role 1. Diner routing. The SERVER moves every phone at once: this view switches on party.status,
 // and no screen ever pushes another.
+import Combine
 import SwiftUI
 
 struct DinerFlow: View {
     @Environment(AppModel.self) private var app
     @Binding var pendingJoinCode: String?
     @AppStorage("tt.debugOverlay") private var debugOverlay = false
+    @State private var resumeWatch: AnyCancellable?
+    @State private var checkedUserId: String?
+    @State private var resumeError: String?
 
     var body: some View {
         VStack(spacing: 0) {
@@ -15,6 +19,15 @@ struct DinerFlow: View {
                     OnboardingFlow()                              // Role 2 → sets app.userId
                 } else if let partyId = app.partyId {
                     PartyScope(partyId: partyId, userId: app.userId) { store in DinerRootView(store: store) }
+                } else if checkedUserId != app.userId {
+                    VStack(spacing: 12) {
+                        if let resumeError {
+                            Text(resumeError).foregroundStyle(.secondary)
+                            Button("Retry") { watchForExistingTable() }.buttonStyle(.bordered)
+                        } else {
+                            ProgressView("Checking your table…")
+                        }
+                    }
                 } else {
                     TapInView(pendingJoinCode: $pendingJoinCode)  // Role 2 → sets app.partyId
                 }
@@ -22,10 +35,47 @@ struct DinerFlow: View {
             .frame(maxHeight: .infinity)
         }
         .overlay(alignment: .bottom) { if debugOverlay { ProximityDebugOverlay() } }
+        .task(id: app.userId) { watchForExistingTable() }
+        .onChange(of: app.partyId) { _, partyId in
+            if partyId == nil { watchForExistingTable() }
+            else { resumeWatch = nil }
+        }
+        .onChange(of: app.tapSearchPaused) { _, paused in
+            if paused { resumeWatch = nil }
+            else if app.partyId == nil { watchForExistingTable() }
+        }
+        .onDisappear { resumeWatch = nil }
+    }
+
+    private func watchForExistingTable() {
+        resumeWatch = nil
+        resumeError = nil
+        guard let userId = app.userId else { checkedUserId = nil; return }
+        guard app.partyId == nil, !app.tapSearchPaused else { checkedUserId = userId; return }
+        checkedUserId = nil
+        let backend = app.backend
+        resumeWatch = backend.forUserUpdates(userId: userId).sink(
+            receiveCompletion: { completion in
+                guard app.mode == .diner, app.userId == userId, app.backend === backend else { return }
+                if case .failure(let error) = completion {
+                    resumeError = error.userMessage
+                    checkedUserId = nil
+                }
+            },
+            receiveValue: { hosted in
+                guard app.mode == .diner, app.userId == userId, app.backend === backend else { return }
+                checkedUserId = userId
+                if let hosted, app.partyId == nil, !app.tapSearchPaused {
+                    app.partyId = hosted.partyId
+                    resumeWatch = nil
+                }
+            }
+        )
     }
 }
 
 struct DinerRootView: View {
+    @Environment(AppModel.self) private var app
     let store: PartyStore
 
     var body: some View {
@@ -45,6 +95,10 @@ struct DinerRootView: View {
             }
         }
         .animation(.easeInOut, value: store.party?.status)
+        .onChange(of: store.party) { _, party in
+            if let party, app.partyId == store.partyId, app.userId == store.userId,
+               party.member(app.userId) == nil { app.leaveTable() }
+        }
     }
 }
 
