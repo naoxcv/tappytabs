@@ -224,7 +224,7 @@ final class MockBackend: Backend {
     private func rebased(spread: Bool) -> MessagesPayload {
         let start = now + 500
         let msgs = fixtureMessages.messages.enumerated().map { i, m in
-            Bubble(id: m.id, fromUserId: m.fromUserId, text: m.text, showAt: spread ? start + Double(i) * 2200 : now - 1000)
+            Bubble(id: m.id, fromUserId: m.fromUserId, text: m.text, showAt: spread ? start + Double(i) * 2500 : now - 1000)
         }
         return MessagesPayload(serverNow: now, messages: msgs)
     }

@@ -24,7 +24,7 @@ export default defineSchema({
 
   restaurants: defineTable({
     name: v.string(),
-    mapsUrl: v.string(),
+    mapsUrl: v.optional(v.string()),
     menuSource: v.union(v.literal("seed"), v.literal("apify")),
     apifyRunId: v.optional(v.string()),
     fetchedAt: v.optional(v.number()),

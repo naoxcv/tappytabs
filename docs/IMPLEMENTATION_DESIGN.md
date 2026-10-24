@@ -75,7 +75,7 @@ tappytabs/
 
 - `ALLERGENS` = milk, egg, fish, shellfish, tree_nut, peanut, wheat, soy, sesame, gluten · `DIETS` = vegetarian, vegan, halal, no_pork · `HUNGERS` = snack (0.5), normal (1), starving (1.5) · `STATUSES` = checkin, hunger, negotiating, pick, confirm, placed · levels `contains | may_contain | not_detected` · `tagStatus` `tagged | untagged` · `JOIN_VIA` uwb, qr, sim.
 - Agent types: `AgentDraft {userId, mains[≤3]{itemId, reason}, drink|null, sharedProposals[≤2], bubble ≤120, fallback}`, `AgentVote {userId, yes[], bubble, fallback}`, `Plan {mains[], shared[]{itemId, qty, sharedBy[]}, summaryBubble, fallback}`. Pure code uses `MenuItemLite` / `UserLite`, which Convex docs already satisfy.
-- `TIMING`: step 8 s · rescue 30 s · ingest 20 s · bubble gap 2.2 s · first bubble +0.5 s · pick 45 s · confirm 45 s.
+- `TIMING`: step 8 s · rescue 30 s · ingest 20 s · bubble gap 2.5 s · first bubble +0.5 s · pick 45 s · confirm 45 s.
 
 ### 2.2 Errors
 
