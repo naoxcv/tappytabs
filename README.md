@@ -14,7 +14,7 @@ TappyTabs lets friends tap their phones on a restaurant's device to join a table
 
 ## Goals and non-goals
 
-The MVP is the full happy path for one real restaurant and 3–4 diners, working live on stage.
+The MVP is the full happy path for one configured demo restaurant with a mock menu and 3–4 diners, working live on stage.
 
 **Goals**
 
@@ -56,7 +56,7 @@ Must-haves define the demo; should-haves and stretch items are built only after 
 1. **Tap to join.** Holding a diner's iPhone against the restaurant iPhone adds them to the party within ~2 s, with haptic and visual feedback. QR code join as fallback.
 2. **Restaurant view.** Party-size picker, live check-in count, automatic start at full party, extra taps rejected, "Start with fewer" override, incoming final order.
 3. **Agent avatars on the restaurant screen.** Each diner's agent appears as their avatar; its messages show as speech bubbles, paced so people can read them (~2–3 s each), followed by a plan summary.
-4. **Real menu.** One real nearby restaurant's menu, pulled live and normalized: name, category, price, description, allergen and diet tags.
+4. **Mock menu with live Apify processing.** A hand-authored menu is loaded for the demo and sent through our published Apify menu normalizer/allergen tagger Actor, which returns normalized items with name, category, price, description, allergen and diet tags. Scraping a real restaurant menu from a Google Maps location is a should-have.
 5. **Taste profile.** Per user: allergies and diet (hard constraints), likes, dislikes, cuisines and spice (soft), avatar, plus hunger chosen at the table.
 6. **Diner agents.** One per diner; filters by hard constraints, then proposes 1–3 ranked candidates plus a drink, each with a one-line reason.
 7. **Agent negotiation.** Agents exchange candidates and reach a group plan (personal mains, shared dishes, count) in bounded rounds, finishing in under ~30 s.
@@ -66,6 +66,7 @@ Must-haves define the demo; should-haves and stretch items are built only after 
 
 **Should-have**
 
+- Restaurant owner accounts and self-service restaurant profiles. An owner enters a Google Maps location; a separate Apify scraper Actor finds menu data to prefill the restaurant's editable menu profile. The owner can review and edit the results. This is a setup shortcut, not an MVP dependency.
 - Hunger level shapes portion count and number of shared dishes.
 - Agent personalities from the profile (adventurous, picky, budget-minded).
 - Per-person and total price on the confirmation screen.
@@ -86,7 +87,7 @@ Must-haves define the demo; should-haves and stretch items are built only after 
 - **Determinism.** Allergy filtering and order totals are computed in plain code, never by an LLM. LLMs rank, explain and negotiate inside those bounds.
 - **Reliability.** Negotiation always terminates (fixed rounds, deterministic tie-break). The demo survives flaky venue Wi-Fi (hotspot backup) and a failed tap (QR fallback).
 - **Platform.** Native iOS. Every demo phone, including the restaurant phone, is an iPhone 11 or later with an ultra-wideband chip (not SE or 16e), Developer Mode on, app in the foreground during taps.
-- **Tooling decisions already made.** Convex is the backend (TypeScript), including agents. Claude and Bitdeer AI Model Studio provide LLM reasoning. Apify provides menu data. Detailed design is out of scope for this PRD.
+- **Tooling decisions already made.** Convex is the backend (TypeScript), including agents. Claude and Bitdeer AI Model Studio provide LLM reasoning. The MVP runs our Apify menu normalizer/allergen tagger on a mock menu; a separate Apify scraper Actor that finds a menu from a Google Maps location is a should-have. Detailed design is in the software design documents.
 
 ## Success criteria and demo
 
@@ -98,7 +99,7 @@ The demo is a 2-minute live run with 3–4 phones, ending with the order landing
 - [ ] Negotiation completes in under 30 s with zero allergen violations.
 - [ ] Avatars visibly talk and converge on the restaurant screen.
 - [ ] Every device shows the same order in real time.
-- [ ] Menu is visibly from the real restaurant.
+- [ ] The mock menu is visible on the restaurant device and has been processed by a live run of our Apify Actor.
 - [ ] Each target track's requirement is visible in the demo or README.
 
 **Demo script**
@@ -108,7 +109,7 @@ The demo is a 2-minute live run with 3–4 phones, ending with the order landing
 3. (40 s) Avatars negotiate on the restaurant screen, e.g. "Maya's allergic to shellfish, so no paella for the table."
 4. (25 s) Stage 1 picks; stage 2 group order; one diner swaps a dish for a suggested substitute.
 5. (10 s) Everyone confirms; the order lands on the restaurant screen.
-6. (10 s) Tech close: ultra-wideband tap, live menu, agents on Convex, reasoning on Claude and Bitdeer.
+6. (10 s) Tech close: ultra-wideband tap, live Apify processing of the mock menu, agents on Convex, reasoning on Claude and Bitdeer.
 
 ## Target tracks and their requirements
 
@@ -117,23 +118,18 @@ Four sponsor tracks are built into the product; design must keep each one's requ
 | Track | Prize | Requirement the design must satisfy |
 | --- | --- | --- |
 | Convex | $5,000 | Convex is the core backend: agents, negotiation and realtime sync all run on it |
-| Apify + Best Actor | $5k across top 5; $400 | Menu comes from a live Apify run; our menu normalizer/allergen tagger is published as its own Actor |
+| Apify + Best Actor | $5k across top 5; $400 | The mock menu is processed in a live Apify run; our menu normalizer/allergen tagger is published as its own Actor. A separate menu scraper from a Google Maps location is a should-have. |
 | Bitdeer AI Model Studio | $500 / $200 credits + hardware | Model Studio does real work (drafting, tagging, bubble copy), named in code and README |
 | Anthropic | TBD | Named community, a real problem, one thing done well, Claude central with known failure modes handled |
 | Cal Hacks: Technically Complex, People-First, Hacker's Choice, Creative | Hardware | Working live demo; clear human benefit |
 
 **Low-effort add-ons:** Notability (design notes from hour one), MLH Gen AI, GoDaddy / .Tech domain.
 
-**Optional, needs a feature:** Visa (prices, per-person totals, merchant benefit), ElevenLabs (voice summary), Auth0 (real login).
+**Optional, needs a feature:** Visa (prices, per-person totals, merchant benefit), ElevenLabs (voice summary).
 
 ## Open questions
 
-- [ ] Which real restaurant for the demo, and is its Google Maps menu complete?
-- [ ] Negotiation rules: how many shared dishes per party size and hunger level?
-- [ ] Accounts with login, or a lightweight profile per device?
-- [ ] Avatar style: emoji and color, or illustrated characters?
 - [ ] Is the restaurant iPhone screen enough for the avatar conversation, or do we add a large table display?
-- [ ] Who writes the onboarding dish-card set, and where do photos come from?
 - [ ] Do demo users pre-onboard before judging?
 - [ ] Does every teammate have a compatible iPhone and a Mac with current Xcode?
 - [ ] Can one project enter multiple sponsor tracks, and is there a cap?
