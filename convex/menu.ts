@@ -3,6 +3,7 @@
 import { v } from "convex/values";
 import { z } from "zod";
 import { internal } from "./_generated/api";
+import type { Id } from "./_generated/dataModel";
 import { action, internalMutation, internalQuery, query } from "./_generated/server";
 import { ALLERGENS, ALLERGEN_LEVELS, DIETS, TIMING } from "./shared/enums";
 import { menuOf } from "./lib/guards";
@@ -98,26 +99,43 @@ export function mapScraperOutput(rows: unknown[]): RawItem[] {
 }
 
 /** Fetch the live menu. Never throws for an Apify problem: returns what happened and keeps the existing items. */
-const ingestArgs = { restaurantId: v.id("restaurants"), items: v.optional(v.array(rawItemV)) };
+const ingestArgs = {
+  restaurantId: v.optional(v.id("restaurants")),
+  menuUrl: v.optional(v.string()),
+  restaurantName: v.optional(v.string()),
+  items: v.optional(v.array(rawItemV)),
+};
 
 export const ingest = action({
   args: ingestArgs,
-  handler: async (ctx, { restaurantId, items: suppliedItems }): Promise<{ count: number; source: "apify" | "seed"; apifyRunId: string | null; note: string }> => {
-    const r = await ctx.runQuery(internal.menu.getRestaurant, { restaurantId });
+  handler: async (ctx, { restaurantId, menuUrl, restaurantName, items: suppliedItems }): Promise<{
+    count: number; source: "apify" | "seed"; apifyRunId: string | null; note: string; restaurantId: Id<"restaurants"> | null;
+  }> => {
+    const r = restaurantId ? await ctx.runQuery(internal.menu.getRestaurant, { restaurantId }) : null;
     const token = process.env.APIFY_TOKEN;
     const normalizer = process.env.APIFY_NORMALIZER_ACTOR; // e.g. "yourname/menu-normalizer"
     const scraper = process.env.APIFY_SCRAPER_ACTOR; // e.g. a Google Maps menu scraper from the Apify Store
-    const keep = (note: string) => ({ count: r?.itemCount ?? 0, source: "seed" as const, apifyRunId: null, note });
-    if (!r) return keep("restaurant not found");
+    const keep = (note: string) => ({ count: r?.itemCount ?? 0, source: "seed" as const, apifyRunId: null, note, restaurantId: restaurantId ?? null });
+    if (restaurantId && !r) return keep("restaurant not found");
+    if (!restaurantId && (!menuUrl?.trim() || !restaurantName?.trim())) {
+      return keep("provide restaurantName and menuUrl to create a new restaurant menu");
+    }
     if (!token || !normalizer) return keep("APIFY_TOKEN / APIFY_NORMALIZER_ACTOR not set; using seeded menu");
+    const sourceUrl = menuUrl?.trim() || r?.mapsUrl;
+    const sourceName = restaurantName?.trim() || r?.name;
     const deadline = Date.now() + TIMING.ingestTimeoutMs;
     try {
       let raw: RawItem[] = suppliedItems ?? RAW_MENU;
       let note = "normalized the hand-written source menu";
-      if (scraper && r.mapsUrl) {
-        const scraped = await runActor(scraper, { startUrls: [{ url: r.mapsUrl }], maxItems: 200 }, token, Math.max(3_000, deadline - Date.now() - 8_000));
+      if (!suppliedItems && sourceUrl) {
+        if (!scraper) return keep("APIFY_SCRAPER_ACTOR not set; kept the existing menu");
+        const scraped = await runActor(scraper, { startUrls: [{ url: sourceUrl }], maxRequestsPerCrawl: 200 }, token, Math.max(3_000, deadline - Date.now() - 8_000));
         const mapped = mapScraperOutput(scraped.items);
-        if (mapped.length >= 5) { raw = mapped; note = `scraped ${mapped.length} items`; }
+        if (mapped.length < 5) return keep(`scraper found ${mapped.length} menu items; kept the existing menu`);
+        raw = mapped;
+        note = `scraped ${mapped.length} items`;
+      } else if (!suppliedItems && !restaurantId) {
+        return keep("a menuUrl or items array is required to create a restaurant menu");
       }
       const run = await runActor(normalizer, { items: raw }, token, Math.max(3_000, deadline - Date.now()));
       const items: NormalizedItem[] = [];
@@ -126,8 +144,15 @@ export const ingest = action({
         if (parsed.success) items.push(parsed.data);
       }
       if (items.length < 5) return keep(`normalizer returned ${items.length} valid items; kept existing menu`);
-      const count = await ctx.runMutation(internal.menu.upsertItems, { restaurantId, items, apifyRunId: run.runId });
-      return { count, source: "apify", apifyRunId: run.runId ?? null, note };
+      const targetRestaurantId = restaurantId ?? await ctx.runMutation(internal.menu.createRestaurant, {
+        name: sourceName!, ...(sourceUrl ? { mapsUrl: sourceUrl } : {}),
+      });
+      const count = await ctx.runMutation(internal.menu.upsertItems, {
+        restaurantId: targetRestaurantId, items, apifyRunId: run.runId,
+        ...(menuUrl?.trim() ? { mapsUrl: menuUrl.trim() } : {}),
+        ...(sourceName ? { restaurantName: sourceName } : {}),
+      });
+      return { count, source: "apify", apifyRunId: run.runId ?? null, note, restaurantId: targetRestaurantId };
     } catch (e) {
       return keep(`ingest failed: ${String(e)}; kept existing menu`);
     }
@@ -142,10 +167,19 @@ export const getRestaurant = internalQuery({
   },
 });
 
+export const createRestaurant = internalMutation({
+  args: { name: v.string(), mapsUrl: v.optional(v.string()) },
+  handler: async (ctx, { name, mapsUrl }): Promise<Id<"restaurants">> =>
+    ctx.db.insert("restaurants", { name, mapsUrl, menuSource: "seed" }),
+});
+
 /** Upsert by (restaurantId, name). Never deletes: open parties keep valid item ids. */
 export const upsertItems = internalMutation({
-  args: { restaurantId: v.id("restaurants"), items: v.array(v.any()), apifyRunId: v.optional(v.string()) },
-  handler: async (ctx, { restaurantId, items, apifyRunId }): Promise<number> => {
+  args: {
+    restaurantId: v.id("restaurants"), items: v.array(v.any()), apifyRunId: v.optional(v.string()),
+    mapsUrl: v.optional(v.string()), restaurantName: v.optional(v.string()),
+  },
+  handler: async (ctx, { restaurantId, items, apifyRunId, mapsUrl, restaurantName }): Promise<number> => {
     for (const raw of items) {
       const item = normalizedItem.parse(raw);
       const existing = await ctx.db
@@ -155,7 +189,11 @@ export const upsertItems = internalMutation({
       if (existing) await ctx.db.patch(existing._id, item);
       else await ctx.db.insert("menuItems", { restaurantId, ...item });
     }
-    await ctx.db.patch(restaurantId, { menuSource: "apify", apifyRunId, fetchedAt: Date.now() });
+    await ctx.db.patch(restaurantId, {
+      menuSource: "apify", apifyRunId, fetchedAt: Date.now(),
+      ...(mapsUrl ? { mapsUrl } : {}),
+      ...(restaurantName ? { name: restaurantName } : {}),
+    });
     return items.length;
   },
 });

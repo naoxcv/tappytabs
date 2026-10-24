@@ -1,0 +1,29 @@
+{
+    "$schema": "https://apify.com/schemas/v1/dataset.ide.json",
+    "actorSpecification": 1,
+    "fields": {
+        "sourceUrl": { "type": "string", "description": "Source menu page" },
+        "name": { "type": "string", "description": "Menu item name" },
+        "description": { "type": "string", "description": "Menu item description" },
+        "price": { "type": "string", "description": "Menu item price" },
+        "category": { "type": "string", "description": "Menu section" }
+    },
+    "views": {
+        "overview": {
+            "title": "Overview",
+            "transformation": {
+                "fields": ["name", "description", "price", "category", "sourceUrl"]
+            },
+            "display": {
+                "component": "table",
+                "properties": {
+                    "name": { "label": "Item", "format": "text" },
+                    "description": { "label": "Description", "format": "text" },
+                    "price": { "label": "Price", "format": "text" },
+                    "category": { "label": "Category", "format": "text" },
+                    "sourceUrl": { "label": "Source URL", "format": "link" }
+                }
+            }
+        }
+    }
+}
