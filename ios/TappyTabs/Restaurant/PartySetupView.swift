@@ -1,10 +1,10 @@
-// Owner: Role 2. Size stepper 2–6, menu status line with "Fetch menu" (never blocks starting), "Open table".
+// Owner: Role 2. Choosing a party size opens the table and starts proximity hosting.
 import Combine
 import SwiftUI
 
 struct PartySetupView: View {
     @Environment(AppModel.self) private var app
-    @State private var size = 4
+    @State private var opening = false
     @State private var restaurant: RestaurantRef?
     @State private var menu: MenuStatus?
     @State private var fetching = false
@@ -17,15 +17,19 @@ struct PartySetupView: View {
             Text(restaurant?.name ?? "Loading…").font(.largeTitle.bold()).padding(.top, 24)
             menuLine
             Spacer()
-            Text("Party size").font(.headline)
-            HStack(spacing: 30) {
-                Button { size = max(2, size - 1) } label: { Image(systemName: "minus.circle.fill").font(.system(size: 44)) }
-                Text("\(size)").font(.system(size: 72, weight: .bold)).monospacedDigit()
-                Button { size = min(6, size + 1) } label: { Image(systemName: "plus.circle.fill").font(.system(size: 44)) }
+            Text("How many diners?").font(.headline)
+            HStack(spacing: 10) {
+                ForEach(2...6, id: \.self) { count in
+                    Button("\(count)") { Task { await open(size: count) } }
+                        .font(.title.bold())
+                        .frame(maxWidth: .infinity, minHeight: 64)
+                        .buttonStyle(.borderedProminent)
+                        .disabled(restaurant == nil || opening)
+                }
             }
             Spacer()
             if let error { Text(error).foregroundStyle(.red) }
-            Button("Open table") { Task { await open() } }.buttonStyle(BigButtonStyle()).disabled(restaurant == nil)
+            if opening { ProgressView("Opening table…") }
         }
         .padding()
         .task(id: "\(app.backendKind.rawValue)|\(app.convexURL)") { await load() }
@@ -77,8 +81,10 @@ struct PartySetupView: View {
         fetching = false
     }
 
-    private func open() async {
-        guard let r = restaurant else { return }
+    private func open(size: Int) async {
+        guard let r = restaurant, !opening else { return }
+        opening = true
+        defer { opening = false }
         do {
             let created = try await app.backend.createParty(restaurantId: r.id, size: size, hostDeviceId: app.deviceId)
             app.partyId = created.partyId

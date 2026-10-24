@@ -53,11 +53,24 @@ struct LogoHeader: View {
 struct DebugMenu: View {
     @Environment(AppModel.self) private var app
     @Environment(\.dismiss) private var dismiss
+    @State private var selectingDiner: Int?
+    @State private var identityMessage: String?
+    @State private var identityRequestID = UUID()
+    @State private var leavingTable = false
+    @State private var leaveError: String?
 
     var body: some View {
         @Bindable var app = app
         NavigationStack {
             Form {
+                if app.mode == .diner && app.partyId == nil {
+                    Section("Tap test") {
+                        Button("Restart tap search") {
+                            app.leaveTable()
+                            dismiss()
+                        }
+                    }
+                }
                 Section("Backend") {
                     Picker("Data", selection: $app.backendKind) {
                         ForEach(AppModel.BackendKind.allCases) { Text($0.rawValue.capitalized).tag($0) }
@@ -69,13 +82,23 @@ struct DebugMenu: View {
                         Button("Demo") { app.convexURL = Env.demoURL }
                     }
                 }
-                Section("Identity (seeded demo profiles)") {
+                Section("Test identities") {
                     LabeledContent("deviceId", value: app.deviceId)
                     LabeledContent("userId", value: app.userId ?? "–")
                     ForEach(1...4, id: \.self) { n in
-                        Button("Be demo diner \(n)") { app.deviceId = "demo-diner-\(n)"; Task { await adoptSeededUser() } }
+                        Button("Skip onboarding · diner \(n)") { selectDemoDiner(n) }
+                            .disabled(selectingDiner != nil)
                     }
-                    Button("Be the demo restaurant") { app.deviceId = "demo-restaurant" }
+                    if let selectingDiner { ProgressView("Loading demo diner \(selectingDiner)…") }
+                    if let identityMessage { Text(identityMessage).font(.footnote) }
+                    Button("Be the demo restaurant") {
+                        identityRequestID = UUID()
+                        selectingDiner = nil
+                        identityMessage = nil
+                        app.deviceId = "demo-restaurant"
+                        app.userId = nil
+                        app.leaveTable()
+                    }
                     Button("Sign out (re-run onboarding)", role: .destructive) { app.signOut() }
                 }
                 if let mock = app.mock {
@@ -92,7 +115,11 @@ struct DebugMenu: View {
                     }
                 }
                 Section {
-                    Button("Leave table") { app.partyId = nil }
+                    Button("Leave table") {
+                        Task { await leaveJoinedTable() }
+                    }.disabled(leavingTable)
+                    if leavingTable { ProgressView("Leaving table…") }
+                    if let leaveError { Text(leaveError).foregroundStyle(.red).font(.footnote) }
                     Button("Switch mode") { app.switchMode(); dismiss() }
                 }
             }
@@ -101,7 +128,61 @@ struct DebugMenu: View {
         }
     }
 
-    private func adoptSeededUser() async {
-        if let me = try? await app.backend.me(deviceId: app.deviceId) { app.userId = me._id }
+    @MainActor private func leaveJoinedTable() async {
+        leavingTable = true
+        leaveError = nil
+        do {
+            try await app.leaveJoinedTable()
+            dismiss()
+        } catch {
+            leaveError = TTError.from(error).userMessage
+        }
+        leavingTable = false
+    }
+
+    @MainActor private func selectDemoDiner(_ n: Int) {
+        let selectedDeviceId = "demo-diner-\(n)"
+        let requestID = UUID()
+        identityRequestID = requestID
+        selectingDiner = n
+        identityMessage = nil
+        app.deviceId = selectedDeviceId
+        app.userId = nil
+        app.leaveTable()
+
+        if let mock = app.mock {
+            app.userId = mock.ids.userIds[n - 1]
+            selectingDiner = nil
+            dismiss()
+            return
+        }
+
+        let backend = app.backend
+        Task { await adoptSeededUser(n, deviceId: selectedDeviceId, requestID: requestID, backend: backend) }
+    }
+
+    @MainActor private func adoptSeededUser(_ n: Int, deviceId: String, requestID: UUID, backend: Backend) async {
+        do {
+            let me = try await backend.me(deviceId: deviceId)
+            guard identityRequestID == requestID, app.deviceId == deviceId, app.backend === backend else { return }
+            let userId: String
+            if let me { userId = me._id }
+            else {
+                // A fresh local backend need not be seeded just to test phone-to-phone tap.
+                var profile = DraftProfile()
+                profile.name = "Test Diner \(n)"
+                profile.avatarId = "avatar_\(n)"
+                userId = try await backend.upsertUser(deviceId: deviceId, profile: profile)
+            }
+            guard identityRequestID == requestID, app.deviceId == deviceId, app.backend === backend else { return }
+            app.userId = userId
+            selectingDiner = nil
+            dismiss()
+            return
+        } catch {
+            guard identityRequestID == requestID, app.deviceId == deviceId, app.backend === backend else { return }
+            identityMessage = "Could not create test diner \(n): \(TTError.from(error).userMessage)"
+        }
+        selectingDiner = nil
     }
 }

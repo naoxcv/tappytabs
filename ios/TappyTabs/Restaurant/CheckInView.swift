@@ -1,5 +1,5 @@
 // Owner: Role 2. "2 of 4 checked in", avatars pop in with a haptic, small QR, "Start with fewer" at ≥ 2.
-// Hosts UWB: on a tap, calls parties:join for that diner; FULL → tells the diner's phone over Multipeer.
+// Hosts UWB: on a tap, calls parties:join for that diner; FULL → tells the diner through Convex.
 import SwiftUI
 
 struct CheckInView: View {
@@ -42,11 +42,14 @@ struct CheckInView: View {
         }
         .padding()
         .onChange(of: members.count) { old, new in if new > old { UINotificationFeedbackGenerator().notificationOccurred(.success) } }
+        .onChange(of: members.map(\.userId)) { old, new in
+            for userId in Set(old).subtracting(new) { proximity.forgetDiner(userId) }
+        }
         .task(id: store.partyId) {
-            proximity.startHosting(partyId: store.partyId) { userId in
+            proximity.startHosting(partyId: store.partyId, hostDeviceId: app.deviceId, backend: app.backend) { userId in
                 Task {
-                    if let e = await store.admit(userId: userId, via: .uwb), e.code == .FULL {
-                        proximity.reject(userId: userId, reason: "Table is full")
+                    if let error = await store.admit(userId: userId, via: .uwb) {
+                        proximity.reject(userId: userId, reason: error.userMessage)
                     }
                 }
             }

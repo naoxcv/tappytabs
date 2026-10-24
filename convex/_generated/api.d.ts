@@ -38,6 +38,7 @@ import type * as seedData from "../seedData.js";
 import type * as shared_enums from "../shared/enums.js";
 import type * as shared_errors from "../shared/errors.js";
 import type * as shared_types from "../shared/types.js";
+import type * as tap from "../tap.js";
 import type * as tests_fixtures from "../tests/fixtures.js";
 import type * as users from "../users.js";
 
@@ -78,6 +79,7 @@ declare const fullApi: ApiFromModules<{
   "shared/enums": typeof shared_enums;
   "shared/errors": typeof shared_errors;
   "shared/types": typeof shared_types;
+  tap: typeof tap;
   "tests/fixtures": typeof tests_fixtures;
   users: typeof users;
 }>;

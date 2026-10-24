@@ -38,6 +38,8 @@ final class OnboardingModel {
 struct OnboardingFlow: View {
     @Environment(AppModel.self) private var app
     @State private var model = OnboardingModel()
+    @State private var creatingTestProfile = false
+    @State private var testProfileError: String?
 
     var body: some View {
         VStack(spacing: 0) {
@@ -58,6 +60,39 @@ struct OnboardingFlow: View {
             .frame(maxHeight: .infinity)
             .transition(.push(from: .trailing))
             .animation(.easeInOut, value: model.step)
+            if let testProfileError {
+                Text(testProfileError).font(.footnote).foregroundStyle(.red).padding(.horizontal)
+            }
+            Button(creatingTestProfile ? "Creating test diner…" : "Skip onboarding for tap test") {
+                Task { await createTestProfile() }
+            }
+            .font(.footnote)
+            .disabled(creatingTestProfile)
+            .padding(.bottom)
+        }
+    }
+
+    private func createTestProfile() async {
+        guard !creatingTestProfile else { return }
+        creatingTestProfile = true
+        testProfileError = nil
+        defer { creatingTestProfile = false }
+        let backend = app.backend
+        let deviceId = app.deviceId
+        do {
+            let userId: String
+            if let existing = try await backend.me(deviceId: deviceId) {
+                userId = existing._id
+            } else {
+                var draft = DraftProfile()
+                draft.name = "Test \(deviceId.prefix(4))"
+                userId = try await backend.upsertUser(deviceId: deviceId, profile: draft)
+            }
+            guard app.backend === backend, app.deviceId == deviceId else { return }
+            app.userId = userId
+        } catch {
+            guard app.backend === backend, app.deviceId == deviceId else { return }
+            testProfileError = TTError.from(error).userMessage
         }
     }
 }

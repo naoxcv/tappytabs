@@ -62,7 +62,7 @@ tappytabs/
     ├── TappyTabs/Core/Convex/        R1 Models, API, Backend protocol, LiveBackend, MockBackend, PartyStore
     ├── TappyTabs/Core/Mocks/         R1 fixtures (generated, don't hand-edit)
     ├── TappyTabs/Core/UI/            R1 AvatarView, SpeechBubble, PriceText, badges, toasts
-    ├── TappyTabs/Core/Proximity/     R2 Proximity (Multipeer + NI), TapDetector, QR, debug overlay
+    ├── TappyTabs/Core/Proximity/     R2 Proximity (Multipeer discovery + Convex tokens + NI), TapDetector, QR, debug overlay
     ├── TappyTabs/Diner/              R1 screens (+ R2's TapInView)
     ├── TappyTabs/Onboarding/         R2
     ├── TappyTabs/Restaurant/         R2
@@ -97,6 +97,12 @@ Every diner write takes `deviceId` and every restaurant write takes `hostDeviceI
 | `menu:ingest` | action | `restaurantId` | `{count, source, apifyRunId, note}`; never throws for Apify problems | R2 |
 | `parties:create` | mutation | `restaurantId`, `size` 2–6, `hostDeviceId` | `{partyId, joinCode}` | R2 |
 | `parties:join` | mutation | `partyId` or `joinCode`, `userId`, `via`, `hostDeviceId` (uwb/sim) or `deviceId` (qr) | `{result: joined/already, partyId}`; `FULL`, `BAD_STATUS`, `NOT_HOST` | R2 |
+| `parties:leave` | mutation | `partyId`, `userId`, `deviceId` | During check-in, removes membership and pending tap state; rejects after check-in | R2 |
+| `tap:announce` | mutation | `partyId`, `userId`, `deviceId`, `attemptId`, `dinerToken` | Stores one pending attempt per diner and table | R2 |
+| `tap:pending` | query | `partyId`, `hostDeviceId` | Pending diner tokens for this table | R2 |
+| `tap:respond` | mutation | `partyId`, `userId`, `hostDeviceId`, `attemptId`, `hostToken` | Replies only to the matching attempt | R2 |
+| `tap:session` | query | `partyId`, `userId`, `deviceId` | Matching host token or rejection | R2 |
+| `tap:reject` | mutation | `partyId`, `userId`, `hostDeviceId`, `attemptId`, `reason` | Rejects the matching attempt | R2 |
 | `parties:current` | query | `partyId` | `{id, restaurantName, status, size, joinCode, pickDeadline, confirmDeadline, members[{userId, name, avatarId, hunger, picked, confirmed}]}` | R1, R2 |
 | `parties:hosted` | query | `hostDeviceId` | `{partyId, status}` or null (relaunch) | R2 |
 | `parties:forUser` | query | `userId` | `{partyId, status}` or null (relaunch) | R1 |
@@ -113,6 +119,10 @@ Every diner write takes `deviceId` and every restaurant write takes `hostDeviceI
 | `orders:confirm` | mutation | `partyId`, `userId`, `deviceId` | last confirm → placed | R1 |
 
 Rules for stage 2: edits are allowed only in `confirm`. Once **you** confirm, you can't edit, but others still can. Removing a shared line takes you off `sharedBy`; the line is deleted when nobody is left.
+
+Nearby table discovery is local to Multipeer. `tap:advertise` and `tap:discover` remain as inert compatibility endpoints for older builds; new iOS builds do not call them. The five token endpoints above retain their arguments and return shapes. `parties:join` now atomically claims the first table for a UWB diner for five minutes, returning `BAD_STATUS` if another table already claimed that diner. `parties:reset` clears its claims. Role 1's Swift `Backend` removes `advertiseTapTable` and `discoverTapTable` and exposes `leave(partyId:userId:deviceId:)`. Role 3's agent interface does not change.
+
+The diner Debug menu's **Leave table** calls `parties:leave` before clearing local routing. The mutation removes that member, their pending token and their tap claim during check-in. It also writes a short-lived `tapExits` marker, so an in-flight host ranging callback cannot rejoin them. A fresh `tap:announce` clears that marker. The diner pauses automatic tap discovery until **Search for tables** is pressed, and the restaurant releases that diner's NI session when the membership list shrinks.
 
 ### 2.4 Agent step interface (Role 3 → Role 4)
 
@@ -189,17 +199,17 @@ Pure functions Role 4 imports: `isSafeFor`, `safeSet`, `sharedSafeSet`, `addable
 | | Item |
 |---|---|
 | ✅ | `TapDetector` (pure, tested): < 15 cm for 3 readings in a row, 5 s debounce, a nil reading resets the count. |
-| 🟡 | `Proximity`: Multipeer advertise/browse with auto-accept, `Envelope` token swap, one `NISession` per peer, rejection message, suspend/invalidate handling. **Compiles; never run on hardware.** |
+| 🟡 | `Proximity`: restaurant Multipeer advertisement exposes its party ID; the diner continuously discovers nearby tables, starts independent Convex `tap:announce` / `tap:respond` token exchanges and `NISession`s for each, retries unanswered exchanges, and keeps ranging active while approaching. A device session limit shows an explicit nearby-table choice. No Multipeer peer connection or Convex-wide table discovery is used. **Needs multi-table phone verification.** |
 | ✅ | QR: generator, AVFoundation scanner, `tappytabs://join/<code>` URL scheme (Info.plist), tested parser. |
 | 🟡 | `ProximityDebugOverlay` (triple-tap the logo): distances, counts, threshold slider. |
 | ✅ | `TapInView` state machine: searching → connected → tapped → joined, with QR promotion at 5 s and 3 s, URL-scheme join, mock "Simulate tap". |
-| ✅ | Restaurant: `PartySetupView` (size 2–6, menu status line, Fetch menu), `CheckInView` (count, pop-in haptic, QR, Start with fewer, hosting), `HungerWaitView`, `TableTalkView` (semicircle, bubbles above speakers, history strip, `PlanSummaryCard`), `ProgressBoardView`, `OrderReceivedView` (ticket, ask-server rows, New table). Relaunch resumes the hosted party. |
+| ✅ | Restaurant: `PartySetupView` (choosing size 2–6 opens the table, menu status line, Fetch menu), `CheckInView` (count, pop-in haptic, QR, Start with fewer, hosting), `HungerWaitView`, `TableTalkView` (semicircle, bubbles above speakers, history strip, `PlanSummaryCard`), `ProgressBoardView`, `OrderReceivedView` (ticket, ask-server rows, New table). Relaunch resumes the hosted party. |
 | ✅ | Onboarding: name → allergies/diet chips → spice → 16-card swipe deck → follow-ups (skipped after 4 s) → avatar → summary (`upsert` + `summarize`). |
 | ✅ | Mode select, long-press to switch, Debug menu (Mock/Live, URL, seeded identities, jump to status). |
 
 ### Next, in order
 
-1. **Two-phone spike (first thing):** set `DEVELOPMENT_TEAM` in `project.yml`, run `xcodegen`, and install on two UWB iPhones. Restaurant phone: *Be the demo restaurant* → Open table. Diner phone: *Be demo diner 1* → Tap-in. Watch the debug overlay for live distance.
+1. **Multi-table phone check:** install the current build on two restaurant phones and a diner phone, using the same reachable Convex deployment. Open a table on each restaurant phone, then open diner tap-in. The debug overlay should show both nearby party IDs progressing through discovered → exchanging → ranging → measuring. Tap one restaurant phone: only that table should admit the diner. If iOS reaches its active ranging limit, choose a table in the diner list and retry the tap; QR stays available.
 2. **Tune `TapConfig`:** record readings at 5, 10, 15 and 20 cm on the actual demo phones, and set the threshold and count in `TapConfig` defaults.
 3. Check the first-run permission prompts (Local Network, Nearby Interaction, Camera) and make the pre-demo checklist accept all of them.
 4. **Edge cases on hardware:** double tap (expect `already`), fifth diner at a table of 4 (diner sees "Table is full"), two simultaneous taps, restaurant app backgrounded and resumed.
@@ -332,7 +342,7 @@ Profile and menu go inside XML tags as data. Only listed ids may be returned. Bu
 
 ## 6. Known gaps and things to verify first
 
-1. **Untested on hardware:** UWB/Multipeer (Role 2, step 1).
+1. **Needs hardware verification:** Multipeer table discovery, Convex token exchange, and UWB ranging on two phones (Role 2, step 1).
 2. **No live model or Apify call made yet:** prompts, structured-output schemas and the Apify REST path are written to the docs but unproven (Role 3 steps 1–2, Role 4 steps 3–4).
 3. **`ConvexError` payload format in Swift**, assumed to be the JSON of `{code, message, reasons}` (Role 1 step 1).
 4. **Phones → local backend:** the simulator reaches `127.0.0.1`. Phones need your Mac's LAN IP (ATS is relaxed for dev in Info.plist) or a cloud dev deployment.

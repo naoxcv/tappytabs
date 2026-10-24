@@ -72,9 +72,40 @@ export const join = mutation({
       requireStatus(party, "checkin");
     }
     if (members.length >= party.size) fail("FULL", "Table is full");
+    if (a.via === "uwb") {
+      const exit = await ctx.db.query("tapExits")
+        .withIndex("by_party_user", q => q.eq("partyId", party._id).eq("userId", a.userId)).first();
+      if (exit && exit.expiresAt > Date.now()) fail("BAD_STATUS", "Diner left this table");
+      const claims = await ctx.db.query("tapClaims").withIndex("by_user", q => q.eq("userId", a.userId)).collect();
+      const active = claims.find(c => c.expiresAt > Date.now() && c.partyId !== party._id);
+      if (active) fail("BAD_STATUS", "Diner already tapped another table");
+      for (const claim of claims) await ctx.db.delete(claim._id);
+      await ctx.db.insert("tapClaims", { userId: a.userId, partyId: party._id, expiresAt: Date.now() + 300_000 });
+    }
     await ctx.db.insert("members", { partyId: party._id, userId: a.userId, joinedVia: a.via, joinedAt: Date.now() });
     if (members.length + 1 === party.size) await ctx.db.patch(party._id, { status: "hunger" });
     return { result: "joined", partyId: party._id };
+  },
+});
+
+/** A diner can leave while the table is still collecting check-ins. */
+export const leave = mutation({
+  args: { partyId: v.id("parties"), userId: v.id("users"), deviceId: v.string() },
+  handler: async (ctx, { partyId, userId, deviceId }): Promise<void> => {
+    await requireUser(ctx, userId, deviceId);
+    const party = await getParty(ctx, partyId);
+    requireStatus(party, "checkin");
+    const member = await findMember(ctx, partyId, userId);
+    if (member) await ctx.db.delete(member._id);
+    const sessions = await ctx.db.query("tapSessions")
+      .withIndex("by_party_user", q => q.eq("partyId", partyId).eq("userId", userId)).collect();
+    for (const session of sessions) await ctx.db.delete(session._id);
+    const claims = await ctx.db.query("tapClaims").withIndex("by_user", q => q.eq("userId", userId)).collect();
+    for (const claim of claims) if (claim.partyId === partyId) await ctx.db.delete(claim._id);
+    const oldExits = await ctx.db.query("tapExits")
+      .withIndex("by_party_user", q => q.eq("partyId", partyId).eq("userId", userId)).collect();
+    for (const exit of oldExits) await ctx.db.delete(exit._id);
+    await ctx.db.insert("tapExits", { partyId, userId, expiresAt: Date.now() + 300_000 });
   },
 });
 
@@ -169,10 +200,12 @@ export const reset = mutation({
   handler: async (ctx, { partyId, hostDeviceId }) => {
     const party = await getParty(ctx, partyId);
     requireHost(party, hostDeviceId);
-    for (const table of ["members", "orderLines"] as const) {
+    for (const table of ["members", "orderLines", "tapSessions", "tapHosts", "tapExits"] as const) {
       const rows = await ctx.db.query(table).withIndex("by_party", (q) => q.eq("partyId", partyId)).collect();
       for (const r of rows) await ctx.db.delete(r._id);
     }
+    const claims = await ctx.db.query("tapClaims").withIndex("by_party", q => q.eq("partyId", partyId)).collect();
+    for (const claim of claims) await ctx.db.delete(claim._id);
     const cands = await ctx.db.query("candidates").withIndex("by_party_user", (q) => q.eq("partyId", partyId)).collect();
     for (const r of cands) await ctx.db.delete(r._id);
     const msgs = await ctx.db.query("messages").withIndex("by_party_showAt", (q) => q.eq("partyId", partyId)).collect();

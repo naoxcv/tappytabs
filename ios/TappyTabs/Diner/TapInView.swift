@@ -1,4 +1,4 @@
-// Owner: Role 2. Diner check-in. States: searching → connected ("hold your phone to the restaurant phone")
+// Owner: Role 2. Diner check-in. Discovery and token exchange start automatically while the diner holds the phones together.
 // → tapped (instant buzz + animation) → joined (my userId appears in parties:current) → hand off: app.partyId.
 // QR is always available; promoted to primary after 5 s with no restaurant, or 3 s after a tap that didn't join.
 import Combine
@@ -8,11 +8,11 @@ struct TapInView: View {
     @Environment(AppModel.self) private var app
     @Binding var pendingJoinCode: String?
     @State private var proximity = Proximity.shared
-    @State private var discoveredPartyId: String?
     @State private var showScanner = false
     @State private var promoteQR = false
     @State private var message: String?
-    @State private var watch: AnyCancellable?
+    @State private var watches: [String: AnyCancellable] = [:]
+    @State private var tableLabels: [String: String] = [:]
 
     var body: some View {
         VStack(spacing: 24) {
@@ -26,8 +26,34 @@ struct TapInView: View {
                     .symbolEffect(.bounce, value: proximity.state == .tapped)
             }
             Text(title).font(.title2.bold()).multilineTextAlignment(.center)
+            if !proximity.nearbyTables.isEmpty {
+                Text("\(proximity.nearbyTables.count) nearby table\(proximity.nearbyTables.count == 1 ? "" : "s") found")
+                    .font(.subheadline).foregroundStyle(.secondary)
+            }
+            if proximity.hasCapacityOverflow {
+                Text("Too many tables to range at once. Choose the table shown on the restaurant phone.")
+                    .font(.footnote).multilineTextAlignment(.center)
+                ScrollView(.horizontal) {
+                    HStack {
+                        ForEach(proximity.nearbyTables) { table in
+                            Button(tableLabels[table.partyId] ?? "Table \(table.partyId.suffix(6))") {
+                                proximity.focus(on: table.partyId)
+                            }
+                            .buttonStyle(.bordered)
+                        }
+                    }
+                }
+            }
             if let message { Text(message).foregroundStyle(.red) }
             if !proximity.supportsTap { Text("This phone can't tap, use QR").foregroundStyle(.secondary) }
+            if app.tapSearchPaused || promoteQR || proximity.state == .tapped {
+                Button(app.tapSearchPaused ? "Search for tables" : "Restart tap search") {
+                    if app.tapSearchPaused { app.resumeTapSearch() }
+                    else { app.leaveTable() }
+                }
+                    .buttonStyle(.bordered)
+                    .accessibilityIdentifier("restartTapSearch")
+            }
             Spacer()
             if promoteQR || !proximity.supportsTap {
                 Button("Scan QR") { showScanner = true }.buttonStyle(BigButtonStyle())
@@ -42,36 +68,53 @@ struct TapInView: View {
         .sheet(isPresented: $showScanner) {
             QRScannerView { code in showScanner = false; Task { await joinByCode(code) } }.ignoresSafeArea()
         }
-        .task { start() }
-        .task { try? await Task.sleep(for: .seconds(5)); if proximity.state == .searching { promoteQR = true } }
+        .task(id: app.tapAttemptID) { start() }
+        .task(id: app.tapAttemptID) {
+            try? await Task.sleep(for: .seconds(5))
+            if !Task.isCancelled && (proximity.state == .searching || proximity.state == .preparing) { promoteQR = true }
+        }
         .onChange(of: pendingJoinCode) { _, code in if let code { Task { await joinByCode(code) } } }
-        .onDisappear { proximity.stop(); watch = nil }
+        .onDisappear { proximity.stop(); watches = [:] }
     }
 
     private var title: String {
-        switch proximity.state {
-        case .idle, .searching: "Looking for the restaurant…"
-        case .connected: "Hold your phone to the restaurant phone"
+        if app.tapSearchPaused { return "You left the table" }
+        return switch proximity.state {
+        case .idle, .searching, .preparing, .connected: "Hold your phone to the restaurant phone"
         case .tapped: "Tapped! Joining…"
         case .rejected(let reason): reason
         }
     }
 
     private func start() {
+        watches = [:]
+        tableLabels = [:]
+        message = nil
+        promoteQR = false
+        if app.tapSearchPaused { proximity.stop(); return }
         guard let userId = app.userId else { return }
         if let code = pendingJoinCode { Task { await joinByCode(code) }; return }
-        proximity.startDinerTapIn(userId: userId, onConnected: { partyId in
-            discoveredPartyId = partyId
+        proximity.startDinerTapIn(userId: userId, deviceId: app.deviceId, backend: app.backend, onTableDiscovered: { partyId in
             watchForMembership(partyId)
+        }, onTableLost: { partyId in
+            watches[partyId] = nil
+            tableLabels[partyId] = nil
         }, onTapped: {
-            Task { try? await Task.sleep(for: .seconds(3)); if app.partyId == nil { promoteQR = true } }
+            let attemptID = app.tapAttemptID
+            Task {
+                try? await Task.sleep(for: .seconds(3))
+                if !Task.isCancelled && app.tapAttemptID == attemptID && app.partyId == nil && proximity.state == .tapped {
+                    promoteQR = true
+                }
+            }
         }, onRejected: { reason in message = reason })
     }
 
     /// The restaurant phone calls parties:join after it sees the tap; we just wait to appear in the party.
     private func watchForMembership(_ partyId: String) {
         guard let userId = app.userId else { return }
-        watch = app.backend.party(partyId).replaceError(with: nil).sink { party in
+        watches[partyId] = app.backend.party(partyId).replaceError(with: nil).sink { party in
+            if let party { tableLabels[partyId] = "Table \(party.joinCode)" }
             if party?.member(userId) != nil { proximity.stop(); app.partyId = partyId }
         }
     }
@@ -82,6 +125,7 @@ struct TapInView: View {
         do {
             let r = try await app.backend.join(partyId: nil, joinCode: code, userId: userId, via: .qr, hostDeviceId: nil, deviceId: app.deviceId)
             proximity.stop()
+            app.tapSearchPaused = false
             app.partyId = r.partyId
         } catch {
             message = TTError.from(error).userMessage
