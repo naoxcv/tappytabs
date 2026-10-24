@@ -1,0 +1,61 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Agents, alive</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>
+:root{--bg:#f4f5f7;--card:#fff;--tx:#1d1f23;--mu:#6b7078;--bd:#e3e5e9;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#17181b;--card:#222428;--tx:#f0f1f3;--mu:#9aa0a8;--bd:#33363b}}
+:root[data-theme="dark"]{--bg:#17181b;--card:#222428;--tx:#f0f1f3;--mu:#9aa0a8;--bd:#33363b}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif;padding:24px 16px 40px}
+main{max-width:980px;margin:0 auto}h1{font-size:22px;margin:0 0 4px}p.s{margin:0 0 18px;color:var(--mu)}
+.bar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:18px}
+.bar button{font:inherit;color:var(--tx);background:var(--card);border:1px solid var(--bd);border-radius:999px;padding:8px 16px;cursor:pointer}
+.bar label{color:var(--mu);display:flex;gap:6px;align-items:center;margin-left:6px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px}
+.card{font:inherit;color:var(--tx);background:var(--card);border:1px solid var(--bd);border-radius:28px;padding:10px 10px 18px;cursor:pointer;text-align:center}
+.card svg{width:100%;height:auto;overflow:visible;display:block}.card b{display:block;margin-top:2px}.card span{color:var(--mu);font-size:13px}
+</style></head><body><main>
+<h1>Agents, alive</h1><p class="s">Eyes follow your pointer, blink on their own, and each character has its own energy. Tap one to make it hop.</p>
+<div class="bar"><button id="hop">Hop all</button><button id="bl">Blink all</button><label><input type="checkbox" id="fol" checked> Eyes follow pointer</label></div>
+<div class="grid">%%CARDS%%</div></main>
+<script>
+const R=Math.random,rr=(a,b)=>a+R()*(b-a),RM=matchMedia('(prefers-reduced-motion: reduce)').matches;
+// personality: breathe amount/speed, sway deg, hop interval, hop height, squash, blink interval, double-blink chance, glance interval, eye range, lean deg
+const P={tomato:{br:.012,bs:2.2,sw:1.2,hi:[2,4.5],hh:120,sq:.16,bk:[2,4.5],db:.2,gl:[1.5,3.5],er:16,ln:4},
+mushroom:{br:.008,bs:1.1,sw:.5,hi:[7,13],hh:60,sq:.08,bk:[3.5,7],db:.05,gl:[3,6],er:12,ln:2.5},
+bokchoy:{br:.01,bs:1.4,sw:3,hi:[5,9],hh:80,sq:.1,bk:[2.5,5.5],db:.1,gl:[2,4.5],er:14,ln:3},
+cat:{br:.011,bs:1.7,sw:2.2,hi:[3.5,7],hh:85,sq:.13,bk:[1.8,4.5],db:.3,gl:[.9,2.4],er:15,ln:3.5},
+garlic:{br:.01,bs:1.8,sw:1.6,hi:[4,8],hh:90,sq:.12,bk:[1.5,4],db:.4,gl:[.8,2],er:18,ln:3.5}};
+const now=()=>performance.now()/1000;let px=null,py=0,lastMove=-99;
+addEventListener('pointermove',e=>{px=e.clientX;py=e.clientY;lastMove=now()});
+const C=[...document.querySelectorAll('.card')].map(el=>{const n=el.dataset.n,p=P[n];
+ const c={el,p,body:el.querySelector('.body'),eyes:[...el.querySelectorAll('.eye')].map(e=>({e,x:+e.dataset.cx,y:+e.dataset.cy})),
+ t:rr(0,6),ex:0,ey:0,gx:0,gy:0,hy:0,hv:0,air:false,wind:0,s:0,sv:0,bt:-1,nb:now()+rr(.5,2),nh:now()+rr(p.hi[0],p.hi[1]),ng:now()+rr(.5,2),dbl:false};
+ el.onclick=()=>{hop(c);c.nb=now()+.25;c.dbl=true};return c});
+function hop(c){if(RM||c.air||c.wind>0)return;c.wind=.13}
+function blink(c){if(c.bt<0)c.bt=0}
+document.getElementById("hop").onclick=()=>C.forEach((c,i)=>setTimeout(()=>hop(c),i*120));document.getElementById("bl").onclick=()=>C.forEach(blink);
+let last=now();
+function frame(){const T=now(),dt=Math.min(.05,T-last);last=T;
+ for(const c of C){const p=c.p;c.t+=dt;
+  // blink
+  if(T>c.nb&&c.bt<0)c.bt=0;
+  let sy=1;if(c.bt>=0){c.bt+=dt/.17;if(c.bt>=1){c.bt=-1;if(c.dbl||R()<p.db){c.dbl=false;c.nb=T+.22;if(R()<.5)c.dbl=false}else c.nb=T+rr(...p.bk)}else sy=1-.92*Math.sin(Math.PI*c.bt)}
+  // hop (anticipate, launch, land)
+  if(!RM){if(T>c.nh&&!c.air&&c.wind<=0){hop(c);c.nh=T+rr(...p.hi)}
+   if(c.wind>0){c.wind-=dt;if(c.wind<=0){c.air=true;c.hv=Math.sqrt(2*2600*p.hh)}}
+   if(c.air){c.hv-=2600*dt;c.hy+=c.hv*dt;if(c.hy<=0){c.hy=0;c.air=false;c.sv+=Math.abs(c.hv)/2600*1.2*p.sq*20;c.hv=0}}}
+  const tg=c.wind>0?p.sq*1.1:c.air?-Math.abs(c.hv)/12000:0;
+  c.sv+=((tg-c.s)*320-c.sv*13)*dt;c.s+=c.sv*dt;
+  // gaze
+  let tx,ty,fol=document.getElementById("fol").checked&&px!==null&&T-lastMove<4;
+  const r=c.el.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2;
+  if(fol){const dx=px-cx,dy=py-cy,d=Math.hypot(dx,dy)||1,k=Math.min(1,d/260);tx=dx/d*k;ty=dy/d*k}
+  else{if(T>c.ng){c.gx=R()<.3?0:rr(-1,1);c.gy=R()<.3?0:rr(-.7,.7);c.ng=T+rr(...p.gl)}tx=c.gx;ty=c.gy}
+  const a=1-Math.exp(-dt*(fol?14:9));c.ex+=(tx-c.ex)*a;c.ey+=(ty-c.ey)*a;
+  // apply
+  const br=p.br*Math.sin(c.t*p.bs)+c.s,rot=(RM?0:p.sw*Math.sin(c.t*p.bs*.6))+p.ln*c.ex,Sx=1+br*-.5+c.s*.55-c.s*.0,Sy=1-br;
+  c.body.setAttribute('transform',`translate(0 ${-c.hy.toFixed(1)}) translate(512 860) rotate(${rot.toFixed(2)}) scale(${(1+(c.s*.6)-p.br*Math.sin(c.t*p.bs)*.5).toFixed(3)} ${(1-c.s+p.br*Math.sin(c.t*p.bs)).toFixed(3)}) translate(-512 -860)`);
+  for(const e of c.eyes)e.e.setAttribute('transform',`translate(${(c.ex*p.er).toFixed(1)} ${(c.ey*p.er*.8).toFixed(1)}) translate(${e.x} ${e.y}) scale(${(1+(1-sy)*.18).toFixed(3)} ${sy.toFixed(3)}) translate(${-e.x} ${-e.y})`)}
+ requestAnimationFrame(frame)}
+frame();
+</script></body></html>

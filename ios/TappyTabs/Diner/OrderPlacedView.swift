@@ -7,7 +7,7 @@ struct OrderPlacedView: View {
 
     var body: some View {
         VStack(spacing: 16) {
-            Image(systemName: "checkmark.seal.fill").font(.system(size: 72)).foregroundStyle(.green).padding(.top, 40)
+            AvatarView(avatarId: store.me?.avatarId ?? "avatar_1", size: 96, state: .happy).padding(.top, 24)
             Text("Sent to the restaurant").font(.largeTitle.bold())
             List {
                 Section("For the table") { ForEach(store.sharedLines) { LineRow(line: $0, avatars: $0.sharedBy.compactMap { store.avatar(of: $0) }) } }

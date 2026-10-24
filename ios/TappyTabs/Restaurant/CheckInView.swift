@@ -17,7 +17,7 @@ struct CheckInView: View {
             LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 3), spacing: 18) {
                 ForEach(members) { m in
                     VStack {
-                        AvatarView(avatarId: m.avatarId, size: 80)
+                        AvatarView(avatarId: m.avatarId, size: 80, state: store.lastError == nil ? .happy : .confused)
                         Text(m.name).font(.headline)
                     }
                     .transition(.scale.combined(with: .opacity))

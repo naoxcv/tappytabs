@@ -17,7 +17,7 @@ struct TableTalkView: View {
                         if let current, current.fromUserId == nil {
                             SpeechBubble(text: current.text, speaker: .restaurant).id(current.id)
                         }
-                        AvatarView(avatarId: AvatarCatalog.restaurant, size: 70, highlighted: current?.fromUserId == nil && current != nil)
+                        AvatarView(avatarId: AvatarCatalog.restaurant, size: 70, highlighted: current?.fromUserId == nil && current != nil, state: store.lastError != nil ? .confused : store.party?.status == .negotiating ? .thinking : .idle)
                     }
                     .position(x: geo.size.width / 2, y: geo.size.height * 0.2)
 
@@ -29,7 +29,7 @@ struct TableTalkView: View {
                             if let current, current.fromUserId == m.userId {
                                 SpeechBubble(text: current.text, speaker: .diner(avatarId: m.avatarId, name: m.name)).id(current.id)
                             }
-                            AvatarView(avatarId: m.avatarId, size: 64, highlighted: current?.fromUserId == m.userId)
+                            AvatarView(avatarId: m.avatarId, size: 64, highlighted: current?.fromUserId == m.userId, state: store.lastError != nil ? .confused : store.party?.status == .negotiating ? .thinking : .idle)
                             Text(m.name).font(.caption.bold())
                         }
                         .position(p)

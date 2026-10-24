@@ -21,6 +21,7 @@ struct OrderReceivedView: View {
 
     var body: some View {
         VStack(spacing: 0) {
+            AvatarView(avatarId: AvatarCatalog.restaurant, size: 80, state: .happy)
             Text("Order received").font(.largeTitle.bold()).padding()
             List {
                 Section("For the table") {

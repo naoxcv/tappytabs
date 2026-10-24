@@ -8,43 +8,6 @@ enum Theme {
     static let restaurantBubble = Color(.tertiarySystemFill)
 }
 
-/// Avatar ids → accent color + placeholder emoji. Amy's illustrations go in Assets as "avatar_<n>".
-enum AvatarCatalog {
-    static let ids = (1...8).map { "avatar_\($0)" }
-    private static let colors: [Color] = [.pink, .orange, .teal, .indigo, .green, .purple, .yellow, .blue]
-    private static let emoji = ["🦊", "🐼", "🐸", "🐙", "🐯", "🐨", "🐵", "🐳"]
-    private static func index(_ id: String) -> Int {
-        let n = Int(id.split(separator: "_").last.map(String.init) ?? "") ?? 1
-        return ((n - 1) % 8 + 8) % 8
-    }
-    static func color(_ id: String) -> Color { colors[index(id)] }
-    static func placeholder(_ id: String) -> String { emoji[index(id)] }
-    static let restaurant = "restaurant"
-}
-
-struct AvatarView: View {
-    let avatarId: String
-    var size: CGFloat = 56
-    var highlighted = false
-
-    var body: some View {
-        ZStack {
-            Circle().fill(AvatarCatalog.color(avatarId).opacity(0.25))
-            if let img = UIImage(named: avatarId) {
-                Image(uiImage: img).resizable().scaledToFit().clipShape(Circle())
-            } else if avatarId == AvatarCatalog.restaurant {
-                Text("🧑‍🍳").font(.system(size: size * 0.55))
-            } else {
-                Text(AvatarCatalog.placeholder(avatarId)).font(.system(size: size * 0.55))
-            }
-        }
-        .frame(width: size, height: size)
-        .overlay(Circle().stroke(highlighted ? Theme.accent : .clear, lineWidth: 3))
-        .scaleEffect(highlighted ? 1.08 : 1)
-        .animation(.spring(duration: 0.3), value: highlighted)
-    }
-}
-
 enum Speaker: Equatable {
     case diner(avatarId: String, name: String)
     case restaurant
