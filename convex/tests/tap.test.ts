@@ -36,6 +36,35 @@ describe("tap token exchange", () => {
       partyId: other.partyId, userId, via: "uwb", hostDeviceId: "other-host",
     })).result).toBe("joined");
   });
+  test("QR and UWB joins cannot put a diner in two active tables", async () => {
+    const { t, partyId, userId, deviceId, hostDeviceId, restaurantId } = await setup();
+    const other = await t.mutation(api.parties.create, { restaurantId, size: 4, hostDeviceId: "other-host" });
+    await t.mutation(api.parties.join, { partyId, userId, via: "qr", deviceId });
+    expect(await errorCode(t.mutation(api.parties.join, {
+      partyId: other.partyId, userId, via: "uwb", hostDeviceId: "other-host",
+    }))).toBe("BAD_STATUS");
+    expect((await t.query(api.parties.current, { partyId }))?.members).toHaveLength(1);
+    expect((await t.query(api.parties.current, { partyId: other.partyId }))?.members).toHaveLength(0);
+    await t.mutation(api.parties.leave, { partyId, userId, deviceId });
+    await t.mutation(api.parties.join, { partyId: other.partyId, userId, via: "uwb", hostDeviceId: "other-host" });
+    expect(await errorCode(t.mutation(api.parties.join, {
+      partyId, userId, via: "qr", deviceId,
+    }))).toBe("BAD_STATUS");
+  });
+  test("competing QR and UWB joins leave only one active membership", async () => {
+    const { t, partyId, userId, deviceId, restaurantId } = await setup();
+    const other = await t.mutation(api.parties.create, { restaurantId, size: 4, hostDeviceId: "other-host" });
+    const results = await Promise.allSettled([
+      t.mutation(api.parties.join, { partyId, userId, via: "qr", deviceId }),
+      t.mutation(api.parties.join, { partyId: other.partyId, userId, via: "uwb", hostDeviceId: "other-host" }),
+    ]);
+    expect(results.filter(result => result.status === "fulfilled")).toHaveLength(1);
+    const memberships = [
+      ...(await t.query(api.parties.current, { partyId }))!.members,
+      ...(await t.query(api.parties.current, { partyId: other.partyId }))!.members,
+    ];
+    expect(memberships.filter(member => member.userId === userId)).toHaveLength(1);
+  });
   test("leaving check-in removes membership, token, and tap claim", async () => {
     const { t, partyId, userId, deviceId, hostDeviceId, restaurantId } = await setup();
     const other = await t.mutation(api.parties.create, { restaurantId, size: 4, hostDeviceId: "other-host" });

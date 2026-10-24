@@ -62,7 +62,8 @@ export default defineSchema({
     pickDeadline: v.optional(v.number()),
     confirmDeadline: v.optional(v.number()),
     placedAt: v.optional(v.number()),
-  }).index("by_joinCode", ["joinCode"]),
+  }).index("by_joinCode", ["joinCode"])
+    .index("by_hostDevice", ["hostDeviceId"]),
 
   members: defineTable({
     partyId: v.id("parties"),
@@ -74,7 +75,8 @@ export default defineSchema({
     confirmedAt: v.optional(v.number()),
   })
     .index("by_party", ["partyId"])
-    .index("by_party_user", ["partyId", "userId"]),
+    .index("by_party_user", ["partyId", "userId"])
+    .index("by_user", ["userId"]),
 
   // Ephemeral Nearby Interaction token exchange. Each attempt replaces the previous one.
   tapSessions: defineTable({
@@ -96,7 +98,7 @@ export default defineSchema({
     expiresAt: v.number(),
   }).index("by_party", ["partyId"]),
 
-  // Only the first verified UWB tap may claim a diner during a short race window.
+  // First successful join (tap or QR) claims the diner during competing requests.
   tapClaims: defineTable({
     userId: v.id("users"),
     partyId: v.id("parties"),

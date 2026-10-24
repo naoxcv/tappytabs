@@ -37,6 +37,9 @@ final class LiveBackend: Backend {
     func tapSession(partyId: String, userId: String, deviceId: String) -> AnyPublisher<TapSession?, TTError> {
         sub(API.tapSession, ["partyId": partyId, "userId": userId, "deviceId": deviceId])
     }
+    func forUserUpdates(userId: String) -> AnyPublisher<HostedParty?, TTError> {
+        sub(API.partiesForUser, ["userId": userId])
+    }
 
     /// convex-swift has no one-shot query; take the first value of a subscription.
     private func once<T: Decodable>(_ name: String, _ args: [String: ConvexEncodable?]) async throws -> T {

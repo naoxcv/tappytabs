@@ -6,6 +6,7 @@ import workflowTest from "@convex-dev/workflow/test";
 import { api, internal } from "../_generated/api";
 import { mapScraperOutput } from "../menu";
 import schema from "../schema";
+import { TIMING } from "../shared/enums";
 
 const modules = import.meta.glob("../**/!(*.test).ts");
 
@@ -277,7 +278,7 @@ describe("orders", () => {
 });
 
 describe("messages", () => {
-  test("paced 2.5 s apart and deduped", async () => {
+  test("paced at the configured gap and deduped", async () => {
     const t = convexTest(schema, modules);
     workflowTest.register(t, "workflow");
     const { partyId } = await t.mutation(internal.seed.scenario, { scenario: "negotiated" });
@@ -285,7 +286,7 @@ describe("messages", () => {
     await t.mutation(internal.messages.insertPaced, { partyId, text: before[0].text, fromUserId: before[0].fromUserId ?? undefined });
     const after = (await t.query(api.messages.list, { partyId })).messages;
     expect(after.length).toBe(before.length);
-    for (let i = 1; i < after.length; i++) expect(after[i].showAt - after[i - 1].showAt).toBeGreaterThanOrEqual(2_500);
+    for (let i = 1; i < after.length; i++) expect(after[i].showAt - after[i - 1].showAt).toBeGreaterThanOrEqual(TIMING.bubbleGapMs);
   });
 });
 

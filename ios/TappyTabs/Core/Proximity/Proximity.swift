@@ -307,7 +307,8 @@ final class Proximity: NSObject {
                       self.hostAttempts[request.userId] == request.attemptId else { return }
                 self.record("ranging diner \(request.userId.suffix(6))")
             } catch {
-                guard let self, self.generation == current else { return }
+                guard let self, self.generation == current,
+                      self.hostAttempts[request.userId] == request.attemptId else { return }
                 self.record("token reply failed: \(error.localizedDescription)")
                 self.hostAttempts[request.userId] = nil
             }

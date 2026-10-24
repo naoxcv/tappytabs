@@ -105,11 +105,17 @@ struct PartySetupView: View {
         guard let restaurant, !opening else { return }
         opening = true
         defer { opening = false }
+        let backend = app.backend
+        let deviceId = app.deviceId
         do {
-            let created = try await app.backend.createParty(restaurantId: restaurant.id, size: size, hostDeviceId: app.deviceId)
+            let created = try await backend.createParty(restaurantId: restaurant.id, size: size, hostDeviceId: deviceId)
+            guard app.backend === backend, app.deviceId == deviceId, app.mode == .restaurant,
+                  app.partyId == nil else { return }
             app.partyId = created.partyId
         } catch {
-            self.error = TTError.from(error).userMessage
+            if app.backend === backend, app.deviceId == deviceId, app.mode == .restaurant {
+                self.error = TTError.from(error).userMessage
+            }
         }
     }
 }
