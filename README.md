@@ -110,7 +110,7 @@ npm run seed
 
 The seed writes the checked menu snapshot first, then tries the configured normalizer Actor using the raw mock menu. If Apify is unavailable or unconfigured, the snapshot remains in place. `npm run seed:negotiated` and `npm run seed:placed` prepare screen fixtures. `npm run e2e` exercises the full backend flow and **wipes app data in the active Convex deployment**, so use a disposable local or personal deployment.
 
-To enable live model and menu processing, set Convex environment variables with `npx convex env set`: `ANTHROPIC_API_KEY`, `CLAUDE_MODEL`, `BITDEER_API_KEY`, `BITDEER_MODEL`, `APIFY_TOKEN`, `APIFY_NORMALIZER_ACTOR`, and optionally `APIFY_SCRAPER_ACTOR` plus `DEMO_SEED`. The demo deployment URL and successful live Actor run still need to be supplied by the deployment owner. The Actor's public Apify Store listing will be linked here after publication.
+To enable live model and menu processing, set Convex environment variables with `npx convex env set`: `ANTHROPIC_API_KEY`, `CLAUDE_MODEL`, `BITDEER_API_KEY`, `BITDEER_MODEL`, `APIFY_TOKEN`, `APIFY_NORMALIZER_ACTOR` (expected slug: `yipqp/menu-normalizer`), and optionally `APIFY_SCRAPER_ACTOR` plus `DEMO_SEED`. After a successful live ingest, refresh the checked fallback with `CONVEX_URL=<your-deployment-url> npm run menu:snapshot`. This exports the current normalized menu without reseeding. The Actor's public Apify Store listing will be linked here after publication.
 
 ## Success criteria and demo
 
