@@ -169,7 +169,7 @@ The top four messages are check-in, the middle six are the negotiation workflow,
 | iOS → Convex | `ConvexClient(deploymentUrl:)` in `Env.swift` | none (device id) | reconnect banner; state resumes from subscriptions |
 | Convex → Claude | `agents/claude.ts` | `ANTHROPIC_API_KEY` env var | 8 s timeout → fallback agent |
 | Convex → Bitdeer | `agents/bitdeer.ts`, OpenAI client with Bitdeer base URL | `BITDEER_API_KEY` | 8 s timeout → fallback agent and template bubbles |
-| Convex → Apify | `menu.ts`, `apify-client` | `APIFY_TOKEN` | 20 s cap → cached normalized menu snapshot |
+| Convex → Apify | `menu.ts`, `apify-client` | `APIFY_TOKEN` | 60 s cap → cached normalized menu snapshot |
 | Project Actor → Bitdeer | `apify/menu-normalizer/src/main.ts` | Actor secret env var | keyword tags plus Bitdeer enrichment; uncertain tags stay `may_contain` |
 | Optional scraper Actor → Convex (should-have) | owner restaurant setup | `APIFY_TOKEN` | scraper output is reviewed/edited, then passed through the project Actor |
 | Phone ↔ phone | Multipeer + Nearby Interaction | local only | QR join |
@@ -646,7 +646,7 @@ export const negotiate = workflow.define({
 ### Design: menu pipeline
 
 1. **Restaurant row.** `seed.ts` creates the single demo restaurant. Its raw hand-authored mock menu is the MVP source; a Maps URL or owner-managed profile is not required.
-2. **`menu:ingest` (action).** Accept `{ restaurantId, items? }`; when omitted, use the seeded raw mock menu. With `APIFY_TOKEN` and `APIFY_NORMALIZER_ACTOR`, call the project Actor with `{ items }`, read its output, stop waiting at 20 s, and use the checked-in normalized snapshot if the Actor is unavailable. Upsert `menuItems` by `(restaurantId, name)` and record the project Actor run ID / `fetchedAt`.
+2. **`menu:ingest` (action).** Accept `{ restaurantId, items? }`; when omitted, use the seeded raw mock menu. With `APIFY_TOKEN` and `APIFY_NORMALIZER_ACTOR`, call the project Actor with `{ items }`, read its output, stop waiting at 60 s, and use the checked-in normalized snapshot if the Actor is unavailable. Upsert `menuItems` by `(restaurantId, name)` and record the project Actor run ID / `fetchedAt`.
 3. **Actor `menu-normalizer`.** Node + TypeScript on the `apify` SDK. Input: `{ items: [{ name, description?, ingredients?, price?, category? }] }`. For each item: parse price to cents; keyword pass (`keywords.ts`) checks the name, description, and ingredients for allergens and diet; Bitdeer `tag` prompt in batches of 20 may add or raise allergens and add tags, cuisine, spice 0–4, `isDrink`, `shareable`; anything unreadable becomes `may_contain` for every allergen. Output per item via `Actor.pushData`: exactly the `menuItems` fields minus `restaurantId`. `.actor/actor.json` and an input schema with a README, published public on the Apify Store.
 4. **Seed fallback.** `seed.ts` includes the raw mock menu and a hand-checked normalized snapshot, so agents always have menu data. The MVP demo still runs the project Actor against the mock input to demonstrate the required Apify integration.
 
@@ -688,11 +688,12 @@ export const negotiate = workflow.define({
 - [x] `parties:setHunger` starting the workflow; 30 s rescue (fallback workflow and rescue coverage added)
 - [x] `orders:candidates`, `pick`, `autoPick`, `lines` with totals, `addable`, `add`, `remove`, `confirm`, `autoConfirm` + tests; Role 3's `isSafeFor` and `substituteFor` are available
 - [ ] `seed.ts --scenario negotiated` and `--scenario placed`
-- [x] Raw mock menu (`RAW_MENU`) and checked normalized snapshot (`SEED_MENU`) in `convex/seedData.ts`
+- [x] Raw mock menu and checked normalized snapshot in `convex/fixtures/raw-menu.json` and `convex/fixtures/normalized-menu.json`
 - [x] Actor input schema, price parsing, ingredient-aware keyword pass, Bitdeer tagging, and normalized output; Role 3 keyword rules and tag prompt are available
 - [ ] Publish the Actor to the Apify Store (Actor README is in `apify/menu-normalizer/README.md`)
 - [x] `menu:ingest`, `menu:status`; base seed invokes ingest and keeps the checked snapshot as fallback
-- [ ] Run the published project Actor on the mock fixture and refresh/verify the checked snapshot
+- [x] Add `npm run menu:snapshot` to export a successful live ingest into the checked fallback fixture
+- [x] Run the project Actor on the mock fixture; verify all 28 rows are tagged and refresh the checked snapshot
 - [ ] Demo deployment with env vars and seed; end-to-end script test
 - [x] README section: Convex architecture and setup, with a link to the repository Actor docs
 - [ ] Add the public Apify Store link to the README after Actor publication

@@ -75,7 +75,7 @@ tappytabs/
 
 - `ALLERGENS` = milk, egg, fish, shellfish, tree_nut, peanut, wheat, soy, sesame, gluten · `DIETS` = vegetarian, vegan, halal, no_pork · `HUNGERS` = snack (0.5), normal (1), starving (1.5) · `STATUSES` = checkin, hunger, negotiating, pick, confirm, placed · levels `contains | may_contain | not_detected` · `tagStatus` `tagged | untagged` · `JOIN_VIA` uwb, qr, sim.
 - Agent types: `AgentDraft {userId, mains[≤3]{itemId, reason}, drink|null, sharedProposals[≤2], bubble ≤120, fallback}`, `AgentVote {userId, yes[], bubble, fallback}`, `Plan {mains[], shared[]{itemId, qty, sharedBy[]}, summaryBubble, fallback}`. Pure code uses `MenuItemLite` / `UserLite`, which Convex docs already satisfy.
-- `TIMING`: step 8 s · rescue 30 s · ingest 20 s · bubble gap 2.5 s · first bubble +0.5 s · pick 45 s · confirm 45 s.
+- `TIMING`: step 8 s · rescue 30 s · ingest 60 s · bubble gap 2.5 s · first bubble +0.5 s · pick 45 s · confirm 45 s.
 
 ### 2.2 Errors
 
@@ -275,7 +275,7 @@ Profile and menu go inside XML tags as data. Only listed ids may be returned. Bu
 | ✅ | Schema (D1, D5 fields: `deviceId`, `tagStatus`, `epoch`, `kind`, `menuSource`). |
 | ✅ | Every function in §2.3 with status, device and host checks; serializable join; epoch-guarded timers; exact-cent totals; final safety gate at placement. |
 | ✅ | Negotiation workflow (`@convex-dev/workflow`), parallel steps, pooling, idempotent commit, 30 s rescue, paced bubbles with dedupe. |
-| ✅ | `menu:ingest` over Apify's run-sync REST API (no SDK needed in Convex), Zod validation, upsert without deleting, 20 s cap, seed fallback. `mapScraperOutput` is best-effort. |
+| ✅ | `menu:ingest` over Apify's run-sync REST API (no SDK needed in Convex), Zod validation, upsert without deleting, 60 s cap, seed fallback. `mapScraperOutput` is best-effort. |
 | ✅ | Seed (`base`, `negotiated`, `placed`); `e2e:happyPath` (27 s on fallbacks); `scripts/export-fixtures.mjs`. |
 | ✅ | Actor `menu-normalizer`: keyword pass → Bitdeer tag pass (add or raise only) → `pushData`; `.actor/` spec, input schema, Dockerfile, local `INPUT.json`; 3 node tests; local run verified. |
 | ✅ | 7 convex-test backend tests (join already/full/host/QR, startWithFewer, reset, UNSAFE, substitute, exact totals, device binding, pacing). |
