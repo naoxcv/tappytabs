@@ -1,0 +1,3 @@
+// Copy this file to Local.xcconfig and replace both values with your own.
+DEVELOPMENT_TEAM = YOUR_APPLE_DEVELOPMENT_TEAM
+PRODUCT_BUNDLE_IDENTIFIER = com.example.tappytabs.local

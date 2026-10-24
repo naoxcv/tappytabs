@@ -1,0 +1,4 @@
+// Shared app defaults. Developer-specific values may be supplied by Local.xcconfig.
+DEVELOPMENT_TEAM =
+PRODUCT_BUNDLE_IDENTIFIER = com.tappytabs.app
+#include? "Local.xcconfig"

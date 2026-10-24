@@ -18,6 +18,7 @@
 		397D3E572B3609DC5F03DA43 /* ConvexMobile in Frameworks */ = {isa = PBXBuildFile; productRef = 2A00E310F2041334551AAF20 /* ConvexMobile */; };
 		39A457898D1AA803FEE02C9D /* remove_result.json in Resources */ = {isa = PBXBuildFile; fileRef = 92E1913001A81FD2709E4953 /* remove_result.json */; };
 		39A8C2AC12537F669CDABED9 /* LiveBackend.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1DDCD86E6CC908CEDACD0D95 /* LiveBackend.swift */; };
+		3F73194B3F1F2AE3CA130D82 /* AgentAvatar.swift in Sources */ = {isa = PBXBuildFile; fileRef = C453521ABF5F2F72C25A116A /* AgentAvatar.swift */; };
 		456853B4614E695450383E88 /* HungerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36A29FF568E57F47CF8675A4 /* HungerView.swift */; };
 		480E85DB7C5609572C8DCF5D /* TappyTabsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EBFEF3B5A98EF72B4B57CEFF /* TappyTabsTests.swift */; };
 		48EC76A4CB5FCA40CDEE3B33 /* TapDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37610BF3D13D5BCD3CBEBEC2 /* TapDetector.swift */; };
@@ -46,6 +47,7 @@
 		BC2BC9D71DAF49B595F5C6B0 /* PartyStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34331FD12121DCB867EECBBA /* PartyStore.swift */; };
 		CA83B7AF4B0CA7B949927DC4 /* OrderReceivedView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8FF1F8E7F3E713F3573D4106 /* OrderReceivedView.swift */; };
 		DEF305EF2322D535CDB3DD0A /* OrderPlacedView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63AE4B2FC8EF52651F4435DE /* OrderPlacedView.swift */; };
+		E11E444BE8BEBF2F1FDE0DFF /* AgentAvatarConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09516CED9F36421A8EDC1527 /* AgentAvatarConfig.swift */; };
 		E300BC49B76B34E2C65374FC /* candidates.json in Resources */ = {isa = PBXBuildFile; fileRef = 039EAAF1EDAEC3ACA06C0653 /* candidates.json */; };
 		E664059815A34F03DDB8C551 /* Components.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D34315A745D984D0513B97B /* Components.swift */; };
 		EA92FFBF7AD214E6F9D162C3 /* CheckInView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 888D60115954865E6C827B00 /* CheckInView.swift */; };
@@ -71,6 +73,7 @@
 		039EAAF1EDAEC3ACA06C0653 /* candidates.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = candidates.json; sourceTree = "<group>"; };
 		05B35DFE12987B740C96E1DB /* restaurants.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = restaurants.json; sourceTree = "<group>"; };
 		0743084581CF6E250736C989 /* party_confirm.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = party_confirm.json; sourceTree = "<group>"; };
+		09516CED9F36421A8EDC1527 /* AgentAvatarConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentAvatarConfig.swift; sourceTree = "<group>"; };
 		0B539221DD302FB4EE39DA8E /* PartySetupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PartySetupView.swift; sourceTree = "<group>"; };
 		0E901A3F41C0F85EC9DBCEAF /* lines_placed.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = lines_placed.json; sourceTree = "<group>"; };
 		12E552E477519E633B05AC47 /* Env.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Env.swift; sourceTree = "<group>"; };
@@ -103,15 +106,17 @@
 		92E1913001A81FD2709E4953 /* remove_result.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = remove_result.json; sourceTree = "<group>"; };
 		97AC9926C975AEB944A8E216 /* AppModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppModel.swift; sourceTree = "<group>"; };
 		A6E86F4ED0A1B933678772FD /* ProximityDebugOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProximityDebugOverlay.swift; sourceTree = "<group>"; };
-		ACF7EC6D8FE8C5BC12DDA62D /* TappyTabs.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TappyTabs.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		ACF7EC6D8FE8C5BC12DDA62D /* TappyTabs.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = TappyTabs.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		AD44F0FA209F27A88E79C902 /* TapInView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TapInView.swift; sourceTree = "<group>"; };
 		B4B2FF440BE7B2C50E7A7C2E /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
 		BE3B0A2974E205429510BFB4 /* party_pick.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = party_pick.json; sourceTree = "<group>"; };
+		C453521ABF5F2F72C25A116A /* AgentAvatar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentAvatar.swift; sourceTree = "<group>"; };
 		D3DC698F30EFC43DA0663DDF /* messages.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = messages.json; sourceTree = "<group>"; };
 		D90E8A9C87A0679A9F96306D /* addable_personal.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = addable_personal.json; sourceTree = "<group>"; };
 		DFF3A0CD77F3FB64AD23B9C6 /* party_placed.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = party_placed.json; sourceTree = "<group>"; };
 		E8AB5E427FC15EF2C1013A04 /* NegotiatingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NegotiatingView.swift; sourceTree = "<group>"; };
 		EBFEF3B5A98EF72B4B57CEFF /* TappyTabsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TappyTabsTests.swift; sourceTree = "<group>"; };
+		EF160CA36220A4D50281D2D7 /* TappyTabs.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = TappyTabs.xcconfig; sourceTree = "<group>"; };
 		F035B87AF4CB25C8AEF2FB92 /* TappyTabsApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TappyTabsApp.swift; sourceTree = "<group>"; };
 		F852CF4D7AE939099C2ED335 /* Proximity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Proximity.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -166,6 +171,7 @@
 		4E08FF9E049BD42010226346 = {
 			isa = PBXGroup;
 			children = (
+				CBB0BAE733966080D944B6BD /* Config */,
 				8F0809B63D418881A3AB26D5 /* TappyTabs */,
 				8E9CABE36E33A00BEC5528E0 /* TappyTabsTests */,
 				6FCB7864207591BA768E4A62 /* Products */,
@@ -175,6 +181,8 @@
 		4E70006837EE3E26415C1D05 /* UI */ = {
 			isa = PBXGroup;
 			children = (
+				C453521ABF5F2F72C25A116A /* AgentAvatar.swift */,
+				09516CED9F36421A8EDC1527 /* AgentAvatarConfig.swift */,
 				3D34315A745D984D0513B97B /* Components.swift */,
 			);
 			path = UI;
@@ -250,6 +258,14 @@
 				58B29E865741B0EDC0BA805E /* TableTalkView.swift */,
 			);
 			path = Restaurant;
+			sourceTree = "<group>";
+		};
+		CBB0BAE733966080D944B6BD /* Config */ = {
+			isa = PBXGroup;
+			children = (
+				EF160CA36220A4D50281D2D7 /* TappyTabs.xcconfig */,
+			);
+			path = Config;
 			sourceTree = "<group>";
 		};
 		D6340F49914F3C5FA3DF659E /* Onboarding */ = {
@@ -337,10 +353,10 @@
 				LastUpgradeCheck = 1430;
 				TargetAttributes = {
 					17CDC0576A885FC1C3DCA4C9 = {
+						DevelopmentTeam = "";
 						ProvisioningStyle = Automatic;
 					};
 					F65FAB64E6D413A47A826529 = {
-						DevelopmentTeam = "";
 						ProvisioningStyle = Automatic;
 					};
 				};
@@ -408,6 +424,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				7CFCED39F9A9FC0A4042DA52 /* API.swift in Sources */,
+				3F73194B3F1F2AE3CA130D82 /* AgentAvatar.swift in Sources */,
+				E11E444BE8BEBF2F1FDE0DFF /* AgentAvatarConfig.swift in Sources */,
 				2602A4CDCB1F97B6F23C651B /* AppModel.swift in Sources */,
 				25D49B64EA0219949C204C6D /* Backend.swift in Sources */,
 				EA92FFBF7AD214E6F9D162C3 /* CheckInView.swift in Sources */,
@@ -503,7 +521,6 @@
 				COPY_PHASE_STRIP = NO;
 				CURRENT_PROJECT_VERSION = 1;
 				DEBUG_INFORMATION_FORMAT = dwarf;
-				DEVELOPMENT_TEAM = "";
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
@@ -552,17 +569,16 @@
 		};
 		925566F8F3ED8749C1346E16 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = EF160CA36220A4D50281D2D7 /* TappyTabs.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				DEVELOPMENT_TEAM = HJS3794H8M;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = TappyTabs/Resources/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.naotappytabs.app;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = 1;
 			};
@@ -570,17 +586,16 @@
 		};
 		9F7A918095C136A2A09B4CC3 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = EF160CA36220A4D50281D2D7 /* TappyTabs.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				DEVELOPMENT_TEAM = HJS3794H8M;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = TappyTabs/Resources/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.naotappytabs.app;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = 1;
 			};
@@ -623,7 +638,6 @@
 				COPY_PHASE_STRIP = NO;
 				CURRENT_PROJECT_VERSION = 1;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				DEVELOPMENT_TEAM = "";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
