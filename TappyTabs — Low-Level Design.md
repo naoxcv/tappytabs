@@ -697,6 +697,7 @@ export const negotiate = workflow.define({
 - [x] Backend E2E script passed on the isolated Convex `dev/e2e` deployment; original development deployment data was left untouched
 - [x] Demo deployment configured at `https://oceanic-canary-660.convex.cloud`; provider and Apify env vars set; tagged 28-item menu seeded
 - [ ] Full iOS happy path on five demo phones, twice; record run results
+  - Status (2026-10-24): not run; one physical iPhone was connected, and the iOS simulator build succeeded. No app-level rehearsal results are recorded.
 - [x] README section: Convex architecture and setup, with a link to the repository Actor docs
 - [ ] Add the public Apify Store link to the README after Actor publication
 
