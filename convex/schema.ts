@@ -16,6 +16,7 @@ export default defineSchema({
     likes: v.array(v.string()), // tags
     dislikes: v.array(v.string()), // tags
     cuisines: v.array(v.string()),
+    dislikedCuisines: v.optional(v.array(v.string())),
     likedCategories: v.optional(v.array(v.string())),
     personality: v.optional(personalityV),
     avatarId: v.string(),

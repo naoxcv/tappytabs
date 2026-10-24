@@ -26,7 +26,7 @@ export function scoreContext(menu: MenuItemLite[]): ScoreContext {
 
 /**
  * Weights (tune with the 4 seeded profiles; keep them here, not in prompts):
- *  +3 per liked tag, +2 cuisine in cuisines, −4 per disliked tag, −2 per spice level above tolerance,
+ *  +3 per liked tag, +2 per liked cuisine, −4 per disliked tag/cuisine, −2 per spice level above tolerance,
  *  +1 shareable when starving, budget-minded gets ±2 points per $5 from median price, +2 for an unliked category for
  *  adventurous, −2 askServer for picky, −5 askServer for everyone (clean items always rank first).
  */
@@ -40,7 +40,11 @@ export function scoreItem(
   const tags = new Set(item.tags.map((t) => t.toLowerCase()));
   for (const like of user.likes) if (tags.has(like.toLowerCase())) s += 3;
   for (const dislike of user.dislikes) if (tags.has(dislike.toLowerCase())) s -= 4;
-  if (item.cuisine && user.cuisines.map((c) => c.toLowerCase()).includes(item.cuisine.toLowerCase())) s += 2;
+  if (item.cuisine) {
+    const cuisine = item.cuisine.toLowerCase();
+    if (user.cuisines.some((liked) => liked.toLowerCase() === cuisine)) s += 2;
+    if (user.dislikedCuisines?.some((disliked) => disliked.toLowerCase() === cuisine)) s -= 4;
+  }
   if (item.spice > user.spice) s -= 2 * (item.spice - user.spice);
   if (hunger === "starving" && item.shareable) s += 1;
   if (user.personality === "budget_minded") {

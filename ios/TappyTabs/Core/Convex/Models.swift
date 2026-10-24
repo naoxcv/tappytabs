@@ -209,6 +209,7 @@ struct DraftProfile: Equatable {
     var likes: [String] = []
     var dislikes: [String] = []
     var cuisines: [String] = []
+    var dislikedCuisines: [String] = []
     var likedCategories: [String] = []
     var avatarId = "avatar_1"
 }

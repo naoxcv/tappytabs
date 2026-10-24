@@ -27,7 +27,7 @@ async function writeBase(ctx: MutationCtx) {
   for (const u of SEED_USERS) {
     userIds.push(await ctx.db.insert("users", {
       ...u, allergies: [...u.allergies], diet: [...u.diet], likes: [...u.likes], dislikes: [...u.dislikes],
-      cuisines: [...u.cuisines], likedCategories: [...u.likedCategories],
+      cuisines: [...u.cuisines], dislikedCuisines: [...u.dislikedCuisines], likedCategories: [...u.likedCategories],
     }));
   }
   return { restaurantId, userIds };

@@ -4,15 +4,15 @@ import type { DraftProfile, FollowUpAnswer } from "../shared/types";
 
 /**
  * Deterministic, never chosen by a model:
- *  budget_minded if a follow-up answer mentions price; else adventurous if liked cards span ≥ 4 categories;
- *  else picky if dislikes outnumber likes; else adventurous.
+ *  budget_minded if a follow-up answer mentions price; else adventurous if preferences span ≥ 4 categories/cuisines;
+ *  else picky if explicit dislikes outnumber likes; else adventurous.
  */
 export function personalityFrom(profile: DraftProfile, answers: FollowUpAnswer[]): Personality {
   const priceWords = /(price|cheap|budget|afford|value|deal|save)/i;
   if (answers.some((a) => priceWords.test(a.answer))) return "budget_minded";
-  const categories = new Set(profile.likedCategories ?? []);
-  if (categories.size >= 4) return "adventurous";
-  if (profile.dislikes.length > profile.likes.length) return "picky";
+  const interests = new Set([...(profile.likedCategories ?? []), ...profile.cuisines]);
+  if (interests.size >= 4) return "adventurous";
+  if (profile.dislikes.length + (profile.dislikedCuisines?.length ?? 0) > profile.likes.length + profile.cuisines.length) return "picky";
   return "adventurous";
 }
 

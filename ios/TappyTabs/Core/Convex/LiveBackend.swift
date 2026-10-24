@@ -67,6 +67,7 @@ final class LiveBackend: Backend {
             "likes": strings(p.likes),
             "dislikes": strings(p.dislikes),
             "cuisines": strings(p.cuisines),
+            "dislikedCuisines": strings(p.dislikedCuisines),
             "likedCategories": strings(p.likedCategories),
             "avatarId": p.avatarId,
         ]

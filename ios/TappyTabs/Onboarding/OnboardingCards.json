@@ -1,18 +1,7 @@
 [
-  { "name": "Pad Thai", "emoji": "🍜", "category": "mains", "cuisine": "Thai", "tags": ["noodles", "tangy"] },
-  { "name": "Tofu Green Curry", "emoji": "🍛", "category": "mains", "cuisine": "Thai", "tags": ["curry", "spicy"] },
-  { "name": "Pesto Pasta", "emoji": "🍝", "category": "mains", "cuisine": "Italian", "tags": ["pasta", "cheesy"] },
-  { "name": "Grilled Salmon Bowl", "emoji": "🍣", "category": "mains", "cuisine": "Japanese", "tags": ["grilled", "seafood", "rice"] },
-  { "name": "Chicken Shawarma", "emoji": "🥙", "category": "mains", "cuisine": "Mediterranean", "tags": ["grilled", "chicken"] },
-  { "name": "Pork Belly Bao", "emoji": "🥟", "category": "mains", "cuisine": "Taiwanese", "tags": ["pork", "buns"] },
-  { "name": "Beef Pho", "emoji": "🍲", "category": "mains", "cuisine": "Vietnamese", "tags": ["noodles", "soup", "beef"] },
-  { "name": "Mushroom Risotto", "emoji": "🍚", "category": "mains", "cuisine": "Italian", "tags": ["rice", "cheesy", "mushroom"] },
-  { "name": "Spicy Bibimbap", "emoji": "🥘", "category": "mains", "cuisine": "Korean", "tags": ["rice", "spicy"] },
-  { "name": "Seafood Paella", "emoji": "🥘", "category": "shareables", "cuisine": "Spanish", "tags": ["seafood", "rice"] },
-  { "name": "Korean Fried Chicken", "emoji": "🍗", "category": "shareables", "cuisine": "Korean", "tags": ["fried", "chicken", "spicy"] },
-  { "name": "Margherita Flatbread", "emoji": "🍕", "category": "shareables", "cuisine": "Italian", "tags": ["cheesy", "flatbread"] },
-  { "name": "Truffle Fries", "emoji": "🍟", "category": "shareables", "cuisine": "American", "tags": ["fried", "crispy"] },
-  { "name": "Garden Salad", "emoji": "🥗", "category": "sides", "cuisine": "American", "tags": ["salad", "healthy"] },
-  { "name": "Mango Lassi", "emoji": "🥭", "category": "drinks", "cuisine": "Indian", "tags": ["sweet", "fruity"] },
-  { "name": "Mochi Ice Cream", "emoji": "🍡", "category": "desserts", "cuisine": "Japanese", "tags": ["sweet", "cold"] }
+  { "name": "Thai", "emoji": "🍛", "cuisine": "Thai" },
+  { "name": "Italian", "emoji": "🍝", "cuisine": "Italian" },
+  { "name": "Japanese", "emoji": "🍣", "cuisine": "Japanese" },
+  { "name": "Mexican", "emoji": "🌮", "cuisine": "Mexican" },
+  { "name": "Mediterranean", "emoji": "🥙", "cuisine": "Mediterranean" }
 ]
