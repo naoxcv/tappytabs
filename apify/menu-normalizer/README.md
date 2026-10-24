@@ -19,7 +19,7 @@ This Actor accepts hand-written or scraped menu items and writes one normalized 
 }
 ```
 
-`name` is required. `description`, `ingredients`, `price`, and `category` are optional. Prices may be a formatted string or a numeric value; output prices are cents. Set the Actor secrets `BITDEER_API_KEY` and `BITDEER_MODEL` to enable model enrichment; without them, the deterministic keyword pass runs and uncertain allergen fields stay conservative.
+`name` is required. `description`, `ingredients`, `price`, and `category` are optional. Provide prices as strings (for example, `"$18.00"` or `"18.00"`); output prices are cents. Set the Actor secrets `BITDEER_API_KEY` and `BITDEER_MODEL` to enable model enrichment; without them, the deterministic keyword pass runs and uncertain allergen fields stay conservative.
 
 ## Output
 

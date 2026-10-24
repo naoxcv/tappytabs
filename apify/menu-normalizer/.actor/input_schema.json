@@ -6,7 +6,7 @@
     "items": {
       "title": "Menu items",
       "type": "array",
-      "description": "Raw items: [{ name, description?, ingredients?, price?, category? }]. Price may be a string like \"$12.50\" or a number.",
+      "description": "Raw items: [{ name, description?, ingredients?, price?, category? }]. Provide price as text, such as \"$12.50\" or \"12.50\".",
       "editor": "json",
       "items": {
         "type": "object",
@@ -14,7 +14,7 @@
           "name": { "title": "Name", "type": "string", "description": "Menu item name." },
           "description": { "title": "Description", "type": "string", "description": "Short description shown on the menu." },
           "ingredients": { "title": "Ingredients", "type": "array", "description": "Ingredient names when available.", "items": { "type": "string" } },
-          "price": { "title": "Price", "type": ["string", "number"], "description": "Menu price as text or a number." },
+          "price": { "title": "Price", "type": "string", "description": "Menu price as text, such as \"$12.50\" or \"12.50\"." },
           "category": { "title": "Category", "type": "string", "description": "Menu category, such as Mains or Drinks." }
         },
         "required": ["name"]

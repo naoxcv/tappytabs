@@ -1,0 +1,11 @@
+{
+  "actorOutputSchemaVersion": 1,
+  "title": "Normalized restaurant menu dataset",
+  "properties": {
+    "results": {
+      "type": "string",
+      "title": "Normalized menu items",
+      "template": "{{links.apiDefaultDatasetUrl}}/items"
+    }
+  }
+}

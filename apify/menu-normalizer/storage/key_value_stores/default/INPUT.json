@@ -3,6 +3,6 @@
     { "name": "Seafood Paella", "description": "Saffron rice, prawns, mussels, squid", "price": "$28.00", "category": "Shareables" },
     { "name": "Pad Thai", "description": "Rice noodles, tamarind, egg, crushed peanuts", "price": "$18.00", "category": "Mains" },
     { "name": "Falafel Wrap", "description": "Falafel, tahini, pickles, lavash", "price": "$15.00", "category": "Mains" },
-    { "name": "Mango Lassi", "description": "Mango, yogurt, cardamom", "price": 6.5, "category": "Drinks" }
+    { "name": "Mango Lassi", "description": "Mango, yogurt, cardamom", "price": "6.50", "category": "Drinks" }
   ]
 }

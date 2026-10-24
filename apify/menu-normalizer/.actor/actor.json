@@ -5,6 +5,7 @@
   "description": "Turns any scraped restaurant menu into clean items: price in cents, category, and conservative allergen (contains / may_contain / not_detected), diet and taste tags. Keyword rules first, then an LLM pass that can only add or raise allergens.",
   "version": "0.1",
   "input": "./input_schema.json",
+  "output": "./output_schema.json",
   "dockerfile": "./Dockerfile",
   "storages": {
     "dataset": {
