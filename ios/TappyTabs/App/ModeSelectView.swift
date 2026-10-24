@@ -17,7 +17,7 @@ struct ModeSelectView: View {
                     Text("TappyTabs")
                         .font(AppTypography.custom(36, weight: .black))
                         .tracking(-1.2)
-                        .foregroundStyle(Color(red: 1, green: 0.96, blue: 0.86))
+                        .foregroundStyle(Theme.accent)
                         .offset(y: -28)
                 }
                 Spacer(minLength: 40)
@@ -28,7 +28,7 @@ struct ModeSelectView: View {
                             .foregroundStyle(.black)
                             .frame(maxWidth: .infinity)
                             .frame(height: 56)
-                            .background(Color(red: 1, green: 0.96, blue: 0.86), in: RoundedRectangle(cornerRadius: 15))
+                            .background(Theme.accent, in: RoundedRectangle(cornerRadius: 15))
                     }
                     .buttonStyle(.plain)
 
@@ -36,7 +36,7 @@ struct ModeSelectView: View {
                         Text("This is a restaurant device.")
                             .font(AppTypography.custom(18, weight: .regular))
                             .underline()
-                            .foregroundStyle(Color(red: 1, green: 0.96, blue: 0.86))
+                            .foregroundStyle(Theme.accent)
                             .frame(maxWidth: .infinity)
                             .frame(height: 38)
                             .contentShape(Rectangle())

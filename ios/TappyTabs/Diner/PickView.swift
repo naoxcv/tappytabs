@@ -34,7 +34,7 @@ struct PickView: View {
                 guard let id = selected ?? store.mains.first?.itemId else { return }
                 sending = true
                 Task { await store.pick(id); UINotificationFeedbackGenerator().notificationOccurred(.success); sending = false }
-            } label: { sending ? AnyView(ProgressView().tint(.white)) : AnyView(Text("Lock in")) }
+            } label: { sending ? AnyView(ProgressView().tint(Theme.accentForeground)) : AnyView(Text("Lock in")) }
                 .buttonStyle(BigButtonStyle())
                 .disabled(store.mains.isEmpty || sending)
                 .padding()
@@ -51,7 +51,14 @@ struct CandidateCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack(alignment: .firstTextBaseline) {
-                if big { Text("TOP PICK").font(AppTypography.style(.caption2, weight: .bold)).foregroundStyle(Theme.accent) }
+                if big {
+                    Text("TOP PICK")
+                        .font(AppTypography.style(.caption2, weight: .bold))
+                        .foregroundStyle(Theme.accentForeground)
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 3)
+                        .background(Theme.accent, in: Capsule())
+                }
                 Spacer()
                 PriceText(cents: candidate.priceCents).font(big ? AppTypography.style(.title3, weight: .bold) : AppTypography.headline)
             }

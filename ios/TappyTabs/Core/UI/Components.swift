@@ -3,7 +3,8 @@ import SwiftUI
 import UIKit
 
 enum Theme {
-    static let accent = Color(red: 0.98, green: 0.42, blue: 0.24)
+    static let accent = Color(red: 1, green: 0.96, blue: 0.86)
+    static let accentForeground = Color.black
     static let card = Color(.secondarySystemBackground)
     static let restaurantBubble = Color(.tertiarySystemFill)
 }
@@ -186,7 +187,7 @@ struct BigButtonStyle: ButtonStyle {
             .font(AppTypography.headline)
             .frame(maxWidth: .infinity, minHeight: 54)
             .background(tint.opacity(configuration.isPressed ? 0.7 : 1), in: RoundedRectangle(cornerRadius: 16))
-            .foregroundStyle(.white)
+            .foregroundStyle(Theme.accentForeground)
     }
 }
 

@@ -151,7 +151,7 @@ struct FlowChips<T: Hashable & Identifiable>: View {
                 Button { if on { selected.remove(item) } else { selected.insert(item) } } label: {
                     Text(item[keyPath: label]).frame(maxWidth: .infinity).padding(.vertical, 10)
                         .background(on ? Theme.accent : Theme.card, in: Capsule())
-                        .foregroundStyle(on ? .white : .primary)
+                        .foregroundStyle(on ? Theme.accentForeground : .primary)
                 }.buttonStyle(.plain)
             }
         }
