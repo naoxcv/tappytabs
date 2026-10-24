@@ -44,7 +44,7 @@ export const joinViaV = v.union(...JOIN_VIA.map((j) => v.literal(j)));
 export const TIMING = {
   stepTimeoutMs: 8_000,
   rescueAfterMs: 30_000,
-  ingestTimeoutMs: 20_000,
+  ingestTimeoutMs: 60_000,
   bubbleGapMs: 1_800,
   firstBubbleDelayMs: 250,
   bubbleEndHoldMs: 1_500,
