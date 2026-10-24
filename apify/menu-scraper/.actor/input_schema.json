@@ -1,0 +1,23 @@
+{
+    "$schema": "https://apify.com/schemas/v1/input.ide.json",
+    "title": "Restaurant Menu Scraper",
+    "type": "object",
+    "schemaVersion": 1,
+    "properties": {
+        "startUrls": {
+            "title": "Menu URL",
+            "type": "array",
+            "description": "Required. Enter a publicly accessible restaurant menu or online ordering page URL.",
+            "editor": "requestListSources",
+            "minItems": 1
+        },
+        "maxRequestsPerCrawl": {
+            "title": "Max Requests per Crawl",
+            "type": "integer",
+            "description": "Maximum number of requests that can be made by this crawler.",
+            "minimum": 1,
+            "default": 1
+        }
+    },
+    "required": ["startUrls"]
+}

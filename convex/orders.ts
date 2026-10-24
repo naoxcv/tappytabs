@@ -47,6 +47,19 @@ async function writePick(ctx: MutationCtx, partyId: Id<"parties">, member: Doc<"
   await ctx.db.patch(member._id, { pickedItemId: itemId });
 }
 
+/** A diner-selected main is a positive taste signal for future recommendations. */
+async function learnFromPick(ctx: MutationCtx, user: Doc<"users">, item: Doc<"menuItems">) {
+  const likes = [...new Set([...user.likes, ...item.tags])].slice(-40);
+  const cuisines = [...new Set([
+    ...user.cuisines,
+    ...(item.cuisine ? [item.cuisine] : []),
+  ])].slice(-20);
+  const dislikedCuisines = (user.dislikedCuisines ?? []).filter(
+    (cuisine) => cuisine.toLowerCase() !== item.cuisine?.toLowerCase(),
+  );
+  await ctx.db.patch(user._id, { likes, cuisines, dislikedCuisines });
+}
+
 async function toConfirm(ctx: MutationCtx, party: Doc<"parties">) {
   const confirmDeadline = Date.now() + TIMING.confirmWindowMs;
   await ctx.db.patch(party._id, { status: "confirm", confirmDeadline });
@@ -66,6 +79,7 @@ export const pick = mutation({
     if (!item) fail("NOT_FOUND", "Dish not found");
     const s = isSafeFor(item, [user], "personal");
     if (!s.safe) fail("UNSAFE", "That dish isn't safe for you", s.reasons);
+    await learnFromPick(ctx, user, item);
     await writePick(ctx, partyId, member, itemId);
     const members = await membersOf(ctx, partyId);
     if (members.every((m) => !!m.pickedItemId)) await toConfirm(ctx, party);

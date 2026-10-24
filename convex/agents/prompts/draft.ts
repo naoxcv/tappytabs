@@ -16,7 +16,7 @@ export const draftSchema = z.object({
 
 const menuRow = (i: SafeItem) => ({
   id: i._id, name: i.name, category: i.category, price: `$${(i.priceCents / 100).toFixed(2)}`,
-  description: i.description, tags: i.tags, askServer: i.askServer,
+  cuisine: i.cuisine, description: i.description, tags: i.tags, askServer: i.askServer,
 });
 
 export function draftPrompt(args: {
@@ -28,13 +28,15 @@ export function draftPrompt(args: {
     PERSONALITY_TONE[user.personality ?? "adventurous"],
     "Pick up to 3 ranked mains and 1 drink for your diner, and propose 0–2 dishes for the whole table to share.",
     "Prefer items without askServer. Give a one-line reason per pick (max 60 chars).",
-    "The candidate list is ordered by a code-based fit score; use that order as your default and only depart from it for a clear preference reason.",
+    "The candidate list is pre-sorted by a rough code score; treat its order as a weak tie-breaker, not a recommendation.",
+    "Use the diner's liked and disliked cuisines plus the actual candidate descriptions and tags to infer taste fit, including reasonable similarities across cuisines. Do not assume an entire cuisine is identical to another; ground each pick in the listed dish details.",
     "The server writes the opening bubble from your selected dishes, so focus on ranking candidates and concise reasons.",
     COMMON_RULES,
   ].join("\n");
   const user_ = [
     tag("profile", {
-      name: user.name, likes: user.likes, dislikes: user.dislikes, cuisines: user.cuisines,
+      name: user.name, likes: user.likes, dislikes: user.dislikes,
+      likedCuisines: user.cuisines, dislikedCuisines: user.dislikedCuisines ?? [],
       spiceTolerance: user.spice, hunger: args.hunger,
     }),
     tag("candidates", args.mains.map(menuRow)),

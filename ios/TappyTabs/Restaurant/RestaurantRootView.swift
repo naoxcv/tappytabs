@@ -20,7 +20,11 @@ struct RestaurantFlow: View {
         .overlay(alignment: .bottom) { if debugOverlay { ProximityDebugOverlay() } }
         .task {
             // Relaunch: resume the table this phone was hosting.
-            if app.partyId == nil, let hosted = try? await app.backend.hosted(hostDeviceId: app.deviceId), hosted.status != .placed {
+            guard app.partyId == nil else { return }
+            let backend = app.backend
+            let deviceId = app.deviceId
+            if let hosted = try? await backend.hosted(hostDeviceId: deviceId), hosted.status != .placed,
+               app.partyId == nil, app.backend === backend, app.deviceId == deviceId, app.mode == .restaurant {
                 app.partyId = hosted.partyId
             }
         }

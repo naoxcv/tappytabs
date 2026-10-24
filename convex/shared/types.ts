@@ -30,6 +30,7 @@ export type UserLite = {
   likes: string[];
   dislikes: string[];
   cuisines: string[];
+  dislikedCuisines?: string[];
   personality?: Personality;
 };
 
@@ -69,6 +70,7 @@ export type DraftProfile = {
   likes: string[];
   dislikes: string[];
   cuisines: string[];
+  dislikedCuisines?: string[];
   likedCategories?: string[];
 };
 

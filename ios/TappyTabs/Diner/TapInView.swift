@@ -11,6 +11,7 @@ struct TapInView: View {
     @State private var showScanner = false
     @State private var promoteQR = false
     @State private var message: String?
+    @State private var joiningByQR = false
     @State private var watches: [String: AnyCancellable] = [:]
     @State private var tableLabels: [String: String] = [:]
 
@@ -45,6 +46,7 @@ struct TapInView: View {
                 }
             }
             if let message { Text(message).foregroundStyle(.red) }
+            if joiningByQR { ProgressView("Joining table…") }
             if !proximity.supportsTap { Text("This phone can't tap, use QR").foregroundStyle(.secondary) }
             if app.tapSearchPaused || promoteQR || proximity.state == .tapped {
                 Button(app.tapSearchPaused ? "Search for tables" : "Restart tap search") {
@@ -56,9 +58,9 @@ struct TapInView: View {
             }
             Spacer()
             if promoteQR || !proximity.supportsTap {
-                Button("Scan QR") { showScanner = true }.buttonStyle(BigButtonStyle())
+                Button("Scan QR") { showScanner = true }.buttonStyle(BigButtonStyle()).disabled(joiningByQR)
             } else {
-                Button("Scan QR instead") { showScanner = true }
+                Button("Scan QR instead") { showScanner = true }.disabled(joiningByQR)
             }
             if let mock = app.mock {
                 Button("Simulate tap (mock)") { Task { await simulatedJoin(mock) } }.font(AppTypography.footnote)
@@ -113,21 +115,37 @@ struct TapInView: View {
     /// The restaurant phone calls parties:join after it sees the tap; we just wait to appear in the party.
     private func watchForMembership(_ partyId: String) {
         guard let userId = app.userId else { return }
-        watches[partyId] = app.backend.party(partyId).replaceError(with: nil).sink { party in
+        let backend = app.backend
+        let attemptID = app.tapAttemptID
+        watches[partyId] = backend.party(partyId).replaceError(with: nil).sink { party in
+            guard app.mode == .diner, app.userId == userId, app.backend === backend, app.tapAttemptID == attemptID,
+                  app.partyId == nil, !joiningByQR else { return }
             if let party { tableLabels[partyId] = "Table \(party.joinCode)" }
             if party?.member(userId) != nil { proximity.stop(); app.partyId = partyId }
         }
     }
 
     private func joinByCode(_ code: String) async {
+        guard !joiningByQR else { return }
         pendingJoinCode = nil
         guard let userId = app.userId else { return }
+        joiningByQR = true
+        let backend = app.backend
+        let deviceId = app.deviceId
+        let attemptID = app.tapAttemptID
+        proximity.stop()
+        watches = [:]
+        defer { joiningByQR = false }
         do {
-            let r = try await app.backend.join(partyId: nil, joinCode: code, userId: userId, via: .qr, hostDeviceId: nil, deviceId: app.deviceId)
-            proximity.stop()
+            let r = try await backend.join(partyId: nil, joinCode: code, userId: userId, via: .qr, hostDeviceId: nil, deviceId: deviceId)
+            guard app.mode == .diner, app.userId == userId, app.backend === backend, app.deviceId == deviceId,
+                  app.tapAttemptID == attemptID, app.partyId == nil || app.partyId == r.partyId else { return }
             app.tapSearchPaused = false
             app.partyId = r.partyId
         } catch {
+            guard app.mode == .diner, app.userId == userId, app.backend === backend, app.deviceId == deviceId,
+                  app.tapAttemptID == attemptID, app.partyId == nil else { return }
+            start()
             message = TTError.from(error).userMessage
         }
     }

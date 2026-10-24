@@ -18,6 +18,7 @@ const profileFields = {
   likes: v.array(v.string()),
   dislikes: v.array(v.string()),
   cuisines: v.array(v.string()),
+  dislikedCuisines: v.optional(v.array(v.string())),
   likedCategories: v.optional(v.array(v.string())),
   avatarId: v.string(),
 };

@@ -26,11 +26,19 @@ final class OnboardingModel {
 
     func swipe(_ card: OnboardingCard, liked: Bool) {
         if liked {
-            draft.likes = Array(Set(draft.likes + card.tags)).sorted()
+            draft.likes = Array(Set(draft.likes + card.tags).subtracting(draft.dislikes)).sorted()
             if !draft.cuisines.contains(card.cuisine) { draft.cuisines.append(card.cuisine) }
-            if !draft.likedCategories.contains(card.category) { draft.likedCategories.append(card.category) }
+            draft.dislikedCuisines.removeAll { $0 == card.cuisine }
+            if card.category != "cuisine", !draft.likedCategories.contains(card.category) {
+                draft.likedCategories.append(card.category)
+            }
         } else {
             draft.dislikes = Array(Set(draft.dislikes + card.tags).subtracting(draft.likes)).sorted()
+            draft.likes.removeAll { card.tags.contains($0) }
+            if card.category == "cuisine" {
+                if !draft.dislikedCuisines.contains(card.cuisine) { draft.dislikedCuisines.append(card.cuisine) }
+                draft.cuisines.removeAll { $0 == card.cuisine }
+            }
         }
     }
 }
@@ -177,7 +185,7 @@ struct SwipeDeckStep: View {
     @State private var offset: CGSize = .zero
 
     var body: some View {
-        StepScaffold(title: "Swipe what you like", subtitle: "Right = yum, left = nope", nextTitle: cards.isEmpty ? "Next" : "Skip the rest", onNext: model.next) {
+        StepScaffold(title: "Which cuisines do you enjoy?", subtitle: "Right = like, left = skip", nextTitle: cards.isEmpty ? "Next" : "Skip the rest", onNext: model.next) {
             ZStack {
                 if cards.isEmpty { Text("All done!").font(AppTypography.title) }
                 ForEach(cards.reversed()) { card in
@@ -185,7 +193,9 @@ struct SwipeDeckStep: View {
                     VStack(spacing: 8) {
                         Text(card.emoji).font(.system(size: 90))
                         Text(card.name).font(AppTypography.style(.title, weight: .bold))
-                        Text(card.tags.joined(separator: " · ")).foregroundStyle(.secondary)
+                        if !card.tags.isEmpty {
+                            Text(card.tags.joined(separator: " · ")).foregroundStyle(.secondary)
+                        }
                     }
                     .frame(maxWidth: .infinity, minHeight: 320)
                     .background(Theme.card, in: RoundedRectangle(cornerRadius: 24))

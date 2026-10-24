@@ -1,0 +1,18 @@
+{
+    "$schema": "https://apify.com/schemas/v1/actor.ide.json",
+    "actorSpecification": 1,
+    "name": "menu-scraper",
+    "title": "TappyTabs Restaurant Menu Scraper",
+    "description": "Extracts menu items from public restaurant menu pages and online ordering sites.",
+    "version": "0.0",
+    "meta": {
+        "templateId": "js-crawlee-cheerio",
+        "generatedBy": "Codex with GPT-6"
+    },
+    "inputSchema": "./input_schema.json",
+    "outputSchema": "./output_schema.json",
+    "storages": {
+        "dataset": "./dataset_schema.json"
+    },
+    "dockerfile": "../Dockerfile"
+}
