@@ -1,7 +1,7 @@
 /// <reference types="vite/client" />
 // Owner: Role 4. Mutation tests against an in-memory Convex (convex-test). No network, no models.
 import { convexTest } from "convex-test";
-import { describe, expect, test } from "vitest";
+import { describe, expect, test, vi } from "vitest";
 import workflowTest from "@convex-dev/workflow/test";
 import { api, internal } from "../_generated/api";
 import schema from "../schema";
@@ -34,7 +34,7 @@ describe("parties:join", () => {
     const extra = await t.mutation(api.users.upsert, {
       deviceId: "x", name: "Extra", allergies: [], diet: [], spice: 1, likes: [], dislikes: [], cuisines: [], avatarId: "avatar_5",
     });
-    expect(await code(t.mutation(api.parties.join, { partyId, userId: extra, via: "uwb", hostDeviceId }))).toBe("BAD_STATUS");
+    expect(await code(t.mutation(api.parties.join, { partyId, userId: extra, via: "uwb", hostDeviceId }))).toBe("FULL");
   });
 
   test("FULL when the table is full but still in checkin", async () => {
@@ -45,6 +45,19 @@ describe("parties:join", () => {
       for (const userId of userIds.slice(0, 2)) await ctx.db.insert("members", { partyId, userId, joinedVia: "uwb", joinedAt: 0 });
     });
     expect(await code(t.mutation(api.parties.join, { partyId, userId: userIds[2], via: "uwb", hostDeviceId }))).toBe("FULL");
+  });
+
+  test("concurrent taps for the final seat allow one join and reject the other as FULL", async () => {
+    const { t, restaurantId, userIds, hostDeviceId } = await setup();
+    const { partyId } = await t.mutation(api.parties.create, { restaurantId, size: 2, hostDeviceId });
+    await t.mutation(api.parties.join, { partyId, userId: userIds[0], via: "uwb", hostDeviceId });
+    const attempts = await Promise.allSettled(userIds.slice(1, 3).map((userId) =>
+      t.mutation(api.parties.join, { partyId, userId, via: "uwb", hostDeviceId }),
+    ));
+    expect(attempts.filter((r) => r.status === "fulfilled")).toHaveLength(1);
+    const rejected = attempts.find((r): r is PromiseRejectedResult => r.status === "rejected");
+    expect(rejected && (rejected.reason as any)?.data?.code).toBe("FULL");
+    expect((await t.query(api.parties.current, { partyId }))!.members).toHaveLength(2);
   });
 
   test("tap join requires the host device; QR requires the diner's device", async () => {
@@ -68,6 +81,69 @@ describe("parties:join", () => {
     expect(r.status).toBe("checkin");
     expect(r.members).toHaveLength(0);
     expect(r.joinCode).not.toBe(p.joinCode);
+  });
+
+  test("scheduled work from before reset is harmless", async () => {
+    const t = convexTest(schema, modules);
+    workflowTest.register(t, "workflow");
+    const { partyId, hostDeviceId } = await t.mutation(internal.seed.scenario, { scenario: "negotiated" });
+    await t.mutation(api.parties.reset, { partyId, hostDeviceId });
+    await t.mutation(internal.parties.advance, { partyId, epoch: 0 });
+    await t.mutation(internal.orders.autoPick, { partyId, epoch: 0 });
+    await t.mutation(internal.orders.autoConfirm, { partyId, epoch: 0 });
+    expect((await t.query(api.parties.current, { partyId }))!.status).toBe("checkin");
+    expect((await t.query(api.orders.lines, { partyId })).lines).toHaveLength(0);
+  });
+});
+
+describe("negotiation rescue", () => {
+  test("last hunger choice starts the workflow and fallback path reaches placed", async () => {
+    vi.useFakeTimers();
+    try {
+      const { t, partyId, userIds, hostDeviceId } = await setup();
+      for (const userId of userIds) {
+        await t.mutation(api.parties.join, { partyId, userId, via: "sim", hostDeviceId });
+      }
+      for (const [i, userId] of userIds.entries()) {
+        await t.mutation(api.parties.setHunger, {
+          partyId, userId, deviceId: `demo-diner-${i + 1}`, hunger: "normal",
+        });
+      }
+
+      await t.finishAllScheduledFunctions(vi.runAllTimers);
+
+      expect((await t.query(api.parties.current, { partyId }))!.status).toBe("placed");
+      expect((await t.query(api.messages.list, { partyId })).messages.length).toBeGreaterThan(0);
+      expect((await t.query(api.orders.lines, { partyId })).lines.length).toBeGreaterThan(0);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  test("fallback rescue commits a live negotiating party idempotently", async () => {
+    const t = convexTest(schema, modules);
+    workflowTest.register(t, "workflow");
+    const seeded = await t.mutation(internal.seed.base, {});
+    const partyId = await t.run(async (ctx) => {
+      const id = await ctx.db.insert("parties", {
+        restaurantId: seeded.restaurantId, hostDeviceId: seeded.hostDeviceId, size: 4,
+        status: "negotiating", joinCode: "RESCUE", epoch: 0, negotiationStartedAt: Date.now(),
+      });
+      for (const [i, userId] of seeded.userIds.entries()) {
+        await ctx.db.insert("members", { partyId: id, userId, joinedVia: "sim", joinedAt: Date.now() + i, hunger: "normal" });
+      }
+      return id;
+    });
+
+    await t.action(internal.negotiation.rescue, { partyId, epoch: 0 });
+    await t.action(internal.negotiation.rescue, { partyId, epoch: 0 });
+
+    const party = await t.run((ctx) => ctx.db.get(partyId));
+    expect(party?.committedAt).toBeDefined();
+    expect((await t.query(api.messages.list, { partyId })).messages.length).toBeGreaterThan(0);
+    for (const userId of seeded.userIds) {
+      expect((await t.query(api.orders.candidates, { partyId, userId })).length).toBeGreaterThan(0);
+    }
   });
 });
 
@@ -113,6 +189,44 @@ describe("orders", () => {
     const { partyId, userIds } = await t.mutation(internal.seed.scenario, { scenario: "negotiated" });
     const cands = await t.query(api.orders.candidates, { partyId, userId: userIds[0] });
     expect(await code(t.mutation(api.orders.pick, { partyId, userId: userIds[0], deviceId: "demo-diner-2", itemId: cands[0].itemId }))).toBe("NOT_MEMBER");
+  });
+
+  test("removing a shared line removes only the caller and deletes it when the last sharer leaves", async () => {
+    const t = convexTest(schema, modules);
+    workflowTest.register(t, "workflow");
+    const { partyId, restaurantId, userIds } = await t.mutation(internal.seed.scenario, { scenario: "negotiated" });
+    for (const [i, userId] of userIds.entries()) {
+      const cands = await t.query(api.orders.candidates, { partyId, userId });
+      await t.mutation(api.orders.pick, { partyId, userId, deviceId: `demo-diner-${i + 1}`, itemId: cands.find((c) => !c.isDrink)!.itemId });
+    }
+    const menu = await t.query(api.menu.list, { restaurantId });
+    const safeSharedItem = menu.find((item) => item.name === "Salted Edamame")!;
+    const lineId = await t.mutation(api.orders.add, { partyId, userId: userIds[0], deviceId: "demo-diner-1", itemId: safeSharedItem._id, shared: true });
+    for (const [i, userId] of userIds.entries()) {
+      await t.mutation(api.orders.remove, { partyId, userId, deviceId: `demo-diner-${i + 1}`, lineId });
+      const line = (await t.query(api.orders.lines, { partyId })).lines.find((candidate) => candidate.lineId === lineId);
+      if (i < userIds.length - 1) expect(line?.sharedBy).toEqual(userIds.slice(i + 1));
+      else expect(line).toBeUndefined();
+    }
+  });
+
+  test("auto-pick and auto-confirm advance the party and final safety drops unsafe lines", async () => {
+    const t = convexTest(schema, modules);
+    workflowTest.register(t, "workflow");
+    const { partyId, restaurantId, userIds } = await t.mutation(internal.seed.scenario, { scenario: "negotiated" });
+    const menu = await t.query(api.menu.list, { restaurantId });
+    const unsafeItem = menu.find((item) => item.name === "Seafood Paella")!;
+    await t.run(async (ctx) => {
+      await ctx.db.insert("orderLines", {
+        partyId, itemId: unsafeItem._id, qty: 1, kind: "shared", sharedBy: [userIds[0]], addedBy: "agent",
+      });
+    });
+
+    await t.mutation(internal.orders.autoPick, { partyId, epoch: 0 });
+    expect((await t.query(api.parties.current, { partyId }))!.status).toBe("confirm");
+    await t.mutation(internal.orders.autoConfirm, { partyId, epoch: 0 });
+    expect((await t.query(api.parties.current, { partyId }))!.status).toBe("placed");
+    expect((await t.query(api.orders.lines, { partyId })).lines.some((line) => line.itemId === unsafeItem._id)).toBe(false);
   });
 });
 

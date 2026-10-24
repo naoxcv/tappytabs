@@ -64,8 +64,13 @@ export const join = mutation({
       if (!(await ctx.db.get(a.userId))) fail("NOT_FOUND", "User not found");
     }
     if (await findMember(ctx, party._id, a.userId)) return { result: "already", partyId: party._id };
-    requireStatus(party, "checkin");
     const members = await membersOf(ctx, party._id);
+    // A competing tap may observe the party after the last seat moved it to hunger.
+    // Report FULL for that race; reserve BAD_STATUS for a party that still has seats.
+    if (party.status !== "checkin") {
+      if (members.length >= party.size) fail("FULL", "Table is full");
+      requireStatus(party, "checkin");
+    }
     if (members.length >= party.size) fail("FULL", "Table is full");
     await ctx.db.insert("members", { partyId: party._id, userId: a.userId, joinedVia: a.via, joinedAt: Date.now() });
     if (members.length + 1 === party.size) await ctx.db.patch(party._id, { status: "hunger" });

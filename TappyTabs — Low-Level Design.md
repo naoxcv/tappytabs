@@ -681,12 +681,12 @@ export const negotiate = workflow.define({
 - [x] `schema.ts` implements the current backend contract; it extends the original schema above, and `restaurants.mapsUrl` is optional
 - [ ] `seed.ts --scenario base` with a hand-made menu
 - [ ] `users:upsert`, `users:me`
-- [ ] `parties:create`, `join`, `current`, `startWithFewer`, `reset` + tests
+- [x] `parties:create`, `join`, `current`, `startWithFewer`, `reset` + tests (including concurrent last-seat joins and stale timers after reset)
 - [ ] `messages:list`, `insertPaced` with dedupe
 - [ ] `agentLogs:insert` for Role 3
-- [ ] `negotiate` workflow wired to Role 3's fallback steps; `poolAndPost`, `postVotes`, `commit`, `advance`; *needs* Role 3's `steps.ts` stubs and `dropBubbleText`
-- [ ] `parties:setHunger` starting the workflow; 30 s rescue
-- [ ] `orders:candidates`, `pick`, `autoPick`, `lines` with totals, `addable`, `add`, `remove`, `confirm`, `autoConfirm` + tests; *needs* `isSafeFor`, `substituteFor`
+- [x] `negotiate` workflow wired to Role 3's fallback steps; `poolAndPost`, `postVotes`, `commit`, `advance`; Role 3's `steps.ts` and `dropBubbleText` are available
+- [x] `parties:setHunger` starting the workflow; 30 s rescue (fallback workflow and rescue coverage added)
+- [x] `orders:candidates`, `pick`, `autoPick`, `lines` with totals, `addable`, `add`, `remove`, `confirm`, `autoConfirm` + tests; Role 3's `isSafeFor` and `substituteFor` are available
 - [ ] `seed.ts --scenario negotiated` and `--scenario placed`
 - [ ] Add raw mock menu fixture and checked normalized snapshot
 - [ ] Actor: input schema, price parsing, keyword pass, Bitdeer tagging, output; *needs* `keywords.ts` and `tag` prompt (Role 3)
