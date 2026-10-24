@@ -28,7 +28,7 @@ async function tagBatch(batch: { index: number; item: RawItem }[]): Promise<Map<
       temperature: 0,
       response_format: { type: "json_object" },
       messages: [{ role: "system", content: TAG_SYSTEM }, { role: "user", content: tagUser(batch) }],
-    }, { timeout: 12_000 });
+    }, { timeout: 45_000, maxRetries: 0 });
     const parsed = JSON.parse(res.choices[0]?.message?.content ?? "{}") as { items?: (LlmTags & { index: number })[] };
     for (const row of parsed.items ?? []) if (typeof row.index === "number") out.set(row.index, row);
   } catch (e) {
