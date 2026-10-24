@@ -47,7 +47,14 @@ const normalizedItem = z.object({
 });
 export type NormalizedItem = z.infer<typeof normalizedItem>;
 
-type RawItem = { name: string; description?: string; price?: string | number; category?: string };
+type RawItem = { name: string; description?: string; ingredients?: string[]; price?: string | number; category?: string };
+const rawItemV = v.object({
+  name: v.string(),
+  description: v.optional(v.string()),
+  ingredients: v.optional(v.array(v.string())),
+  price: v.optional(v.union(v.string(), v.number())),
+  category: v.optional(v.string()),
+});
 
 async function runActor(actorId: string, input: unknown, token: string, timeoutMs: number) {
   const ctrl = new AbortController();
@@ -75,8 +82,11 @@ export function mapScraperOutput(rows: unknown[]): RawItem[] {
     if (!x || typeof x !== "object") return;
     if (Array.isArray(x)) return x.forEach((y) => visit(y, category));
     const name = x.name ?? x.title ?? x.itemName;
-    if (typeof name === "string" && (x.price !== undefined || x.description !== undefined)) {
-      out.push({ name, description: x.description ?? "", price: x.price ?? x.priceText, category: x.category ?? x.section ?? category });
+    if (typeof name === "string" && (x.price !== undefined || x.description !== undefined || x.ingredients !== undefined)) {
+      const ingredients = Array.isArray(x.ingredients)
+        ? x.ingredients.filter((value: unknown): value is string => typeof value === "string")
+        : typeof x.ingredients === "string" ? x.ingredients.split(/[,;]/).map((value: string) => value.trim()).filter(Boolean) : undefined;
+      out.push({ name, description: x.description ?? "", ingredients, price: x.price ?? x.priceText, category: x.category ?? x.section ?? category });
       return;
     }
     for (const key of ["menu", "menuItems", "items", "sections", "categories", "dishes"]) {
@@ -88,9 +98,11 @@ export function mapScraperOutput(rows: unknown[]): RawItem[] {
 }
 
 /** Fetch the live menu. Never throws for an Apify problem: returns what happened and keeps the existing items. */
+const ingestArgs = { restaurantId: v.id("restaurants"), items: v.optional(v.array(rawItemV)) };
+
 export const ingest = action({
-  args: { restaurantId: v.id("restaurants") },
-  handler: async (ctx, { restaurantId }): Promise<{ count: number; source: "apify" | "seed"; apifyRunId: string | null; note: string }> => {
+  args: ingestArgs,
+  handler: async (ctx, { restaurantId, items: suppliedItems }): Promise<{ count: number; source: "apify" | "seed"; apifyRunId: string | null; note: string }> => {
     const r = await ctx.runQuery(internal.menu.getRestaurant, { restaurantId });
     const token = process.env.APIFY_TOKEN;
     const normalizer = process.env.APIFY_NORMALIZER_ACTOR; // e.g. "yourname/menu-normalizer"
@@ -100,7 +112,7 @@ export const ingest = action({
     if (!token || !normalizer) return keep("APIFY_TOKEN / APIFY_NORMALIZER_ACTOR not set; using seeded menu");
     const deadline = Date.now() + TIMING.ingestTimeoutMs;
     try {
-      let raw: RawItem[] = RAW_MENU;
+      let raw: RawItem[] = suppliedItems ?? RAW_MENU;
       let note = "normalized the hand-written source menu";
       if (scraper && r.mapsUrl) {
         const scraped = await runActor(scraper, { startUrls: [{ url: r.mapsUrl }], maxItems: 200 }, token, Math.max(3_000, deadline - Date.now() - 8_000));

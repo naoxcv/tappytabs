@@ -4,6 +4,7 @@ import { convexTest } from "convex-test";
 import { describe, expect, test, vi } from "vitest";
 import workflowTest from "@convex-dev/workflow/test";
 import { api, internal } from "../_generated/api";
+import { mapScraperOutput } from "../menu";
 import schema from "../schema";
 
 const modules = import.meta.glob("../**/!(*.test).ts");
@@ -240,5 +241,13 @@ describe("messages", () => {
     const after = (await t.query(api.messages.list, { partyId })).messages;
     expect(after.length).toBe(before.length);
     for (let i = 1; i < after.length; i++) expect(after[i].showAt - after[i - 1].showAt).toBeGreaterThanOrEqual(2_500);
+  });
+});
+
+describe("menu input mapping", () => {
+  test("scraper ingredients are passed through to the normalizer input", () => {
+    expect(mapScraperOutput([{ name: "Special", price: "$9", ingredients: "sesame; soy" }])).toEqual([
+      { name: "Special", description: "", ingredients: ["sesame", "soy"], price: "$9", category: undefined },
+    ]);
   });
 });

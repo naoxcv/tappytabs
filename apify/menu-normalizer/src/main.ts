@@ -1,5 +1,5 @@
 // Owner: Role 4. TappyTabs menu-normalizer Actor (published to the Apify Store).
-// Input:  { items: [{ name, description?, price?, category? }] }
+// Input:  { items: [{ name, description?, ingredients?, price?, category? }] }
 // Output: one dataset row per item, exactly convex/menu.ts `normalizedItem`.
 // Pipeline: keyword pass (deterministic) → Bitdeer tag pass in batches of 20 (add/raise only) → push.
 import { Actor, log } from "apify";
@@ -37,7 +37,7 @@ async function tagBatch(batch: { index: number; item: RawItem }[]): Promise<Map<
   return out;
 }
 
-const size = input.batchSize ?? 20;
+const size = Math.max(1, Math.min(50, Math.floor(input.batchSize ?? 20)));
 const batches: { index: number; item: RawItem }[][] = [];
 for (let i = 0; i < items.length; i += size) batches.push(items.slice(i, i + size).map((item, j) => ({ index: i + j, item })));
 const tagged = await Promise.all(batches.map(tagBatch));

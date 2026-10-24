@@ -19,6 +19,9 @@ test("keyword pass finds allergens and fails diets closed", () => {
   const padThai = keywordPass({ name: "Pad Thai", description: "Rice noodles, egg, crushed peanuts" }, 1);
   assert.equal(level(padThai, "peanut"), "contains");
   assert.equal(level(padThai, "wheat"), "not_detected"); // rice noodles
+  const ingredientOnly = keywordPass({ name: "House special", ingredients: ["sesame oil", "soy sauce"] }, 2);
+  assert.equal(level(ingredientOnly, "sesame"), "contains");
+  assert.equal(level(ingredientOnly, "soy"), "contains");
 });
 
 test("LLM may only raise; no LLM → untagged, may_contain everywhere else", () => {

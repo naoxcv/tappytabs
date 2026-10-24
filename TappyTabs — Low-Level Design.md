@@ -137,7 +137,7 @@ Role 3 exports three internal actions from `agents/steps.ts`; Role 4's workflow 
 | `users:me` | query | `deviceId` | user or `null` | R1, R2 |
 | `users:followups` | action | draft profile | 0–3 `{id, question, options[]}` (Claude) | R2 onboarding |
 | `users:summarize` | action | `userId` | `{profileSummary, personality}`, also saved on the user | R2 onboarding |
-| `menu:ingest` | action | `restaurantId`, raw `items` | `{count, apifyRunId}`; runs the project normalizer/tagger Actor and upserts `menuItems` | R2 restaurant / seed setup |
+| `menu:ingest` | action | `restaurantId`, optional raw `items` | `{count, source, apifyRunId, note}`; runs the project normalizer/tagger Actor and upserts `menuItems` | R2 restaurant / seed setup |
 | `menu:status` | query | `restaurantId` | `{name, fetchedAt, itemCount}` | R2 restaurant |
 | `parties:create` | mutation | `restaurantId`, `size`, `hostDeviceId` | `{partyId, joinCode}` | R2 restaurant |
 | `parties:join` | mutation | `partyId` or `joinCode`, `userId`, `via` | `{result: "joined" or "already", partyId}`; error `FULL` / `BAD_STATUS` | R2 proximity |
@@ -646,8 +646,8 @@ export const negotiate = workflow.define({
 ### Design: menu pipeline
 
 1. **Restaurant row.** `seed.ts` creates the single demo restaurant. Its raw hand-authored mock menu is the MVP source; a Maps URL or owner-managed profile is not required.
-2. **`menu:ingest` (action).** Accept `{ restaurantId, items }` where `items` comes from the seeded mock menu. With `apify-client`, call `client.actor("<user>/menu-normalizer").call({ items })`, then read the run dataset with `client.dataset(run.defaultDatasetId).listItems()`; stop waiting at 20 s and use the checked-in normalized snapshot if the Actor is unavailable. Upsert `menuItems` by `(restaurantId, name)` and record the project Actor run ID / `fetchedAt`.
-3. **Actor `menu-normalizer`.** Node + TypeScript on the `apify` SDK. Input: `{ items: [{ name, description?, ingredients?, price?, category? }] }`. For each item: parse price to cents; keyword pass (`keywords.ts`) sets allergens and diet; Bitdeer `tag` prompt in batches of 20 may add or raise allergens and add tags, cuisine, spice 0–4, `isDrink`, `shareable`; anything unreadable becomes `may_contain` for every allergen. Output per item via `Actor.pushData`: exactly the `menuItems` fields minus `restaurantId`. `.actor/actor.json` and an input schema with a README, published public on the Apify Store.
+2. **`menu:ingest` (action).** Accept `{ restaurantId, items? }`; when omitted, use the seeded raw mock menu. With `APIFY_TOKEN` and `APIFY_NORMALIZER_ACTOR`, call the project Actor with `{ items }`, read its output, stop waiting at 20 s, and use the checked-in normalized snapshot if the Actor is unavailable. Upsert `menuItems` by `(restaurantId, name)` and record the project Actor run ID / `fetchedAt`.
+3. **Actor `menu-normalizer`.** Node + TypeScript on the `apify` SDK. Input: `{ items: [{ name, description?, ingredients?, price?, category? }] }`. For each item: parse price to cents; keyword pass (`keywords.ts`) checks the name, description, and ingredients for allergens and diet; Bitdeer `tag` prompt in batches of 20 may add or raise allergens and add tags, cuisine, spice 0–4, `isDrink`, `shareable`; anything unreadable becomes `may_contain` for every allergen. Output per item via `Actor.pushData`: exactly the `menuItems` fields minus `restaurantId`. `.actor/actor.json` and an input schema with a README, published public on the Apify Store.
 4. **Seed fallback.** `seed.ts` includes the raw mock menu and a hand-checked normalized snapshot, so agents always have menu data. The MVP demo still runs the project Actor against the mock input to demonstrate the required Apify integration.
 
 5. **Should-have scraper path.** A separate Apify scraper Actor accepts a Google Maps location and finds candidate menu data for an authenticated restaurant owner profile. The owner reviews and edits the results; then `menu:ingest` sends the accepted items through the project normalizer/tagger above. Do not make this scraper a dependency of the demo.
@@ -670,7 +670,7 @@ export const negotiate = workflow.define({
 - [ ] A script calling `parties:join` ×4, `setHunger` ×4, `pick` ×4 and `confirm` ×4 reaches `placed` with no client
 - [ ] `convex-test` covers join (full, already, concurrent), every status transition, timers firing after reset, and totals summing exactly
 - [ ] With models disabled, negotiation still commits within 30 s via fallbacks
-- [ ] `menu:ingest` runs the project Actor on the seeded mock menu and stores normalized records; our Actor is public on the Apify Store
+- [ ] Run the project Actor on the seeded mock menu and store normalized records; our Actor is public on the Apify Store
 - [ ] Every mutation that writes an order line refuses an unsafe item
 
 ### Task log
@@ -679,7 +679,7 @@ export const negotiate = workflow.define({
 - [x] `convex.config.ts` registers `@convex-dev/workflow`; `@convex-dev/agent` is deferred for the MVP (High-Level Design D10)
 - [ ] Confirm the implemented `shared/enums.ts` and `shared/types.ts` contract with Role 3; iOS mirrors the shared allergen, diet, hunger, status, and personality enums
 - [x] `schema.ts` implements the current backend contract; it extends the original schema above, and `restaurants.mapsUrl` is optional
-- [ ] `seed.ts --scenario base` with a hand-made menu
+- [x] Base seed writes the hand-checked snapshot, then best-effort runs `menu:ingest` on the raw mock menu
 - [ ] `users:upsert`, `users:me`
 - [x] `parties:create`, `join`, `current`, `startWithFewer`, `reset` + tests (including concurrent last-seat joins and stale timers after reset)
 - [ ] `messages:list`, `insertPaced` with dedupe
@@ -688,10 +688,11 @@ export const negotiate = workflow.define({
 - [x] `parties:setHunger` starting the workflow; 30 s rescue (fallback workflow and rescue coverage added)
 - [x] `orders:candidates`, `pick`, `autoPick`, `lines` with totals, `addable`, `add`, `remove`, `confirm`, `autoConfirm` + tests; Role 3's `isSafeFor` and `substituteFor` are available
 - [ ] `seed.ts --scenario negotiated` and `--scenario placed`
-- [ ] Add raw mock menu fixture and checked normalized snapshot
-- [ ] Actor: input schema, price parsing, keyword pass, Bitdeer tagging, output; *needs* `keywords.ts` and `tag` prompt (Role 3)
-- [ ] Publish the Actor to the Apify Store with a README
-- [ ] `menu:ingest`, `menu:status`; run project Actor on the mock fixture and refresh checked snapshot
+- [x] Raw mock menu (`RAW_MENU`) and checked normalized snapshot (`SEED_MENU`) in `convex/seedData.ts`
+- [x] Actor input schema, price parsing, ingredient-aware keyword pass, Bitdeer tagging, and normalized output; Role 3 keyword rules and tag prompt are available
+- [ ] Publish the Actor to the Apify Store (Actor README is in `apify/menu-normalizer/README.md`)
+- [x] `menu:ingest`, `menu:status`; base seed invokes ingest and keeps the checked snapshot as fallback
+- [ ] Run the published project Actor on the mock fixture and refresh/verify the checked snapshot
 - [ ] `users:followups`, `users:summarize`; *needs* Role 3's `followupsFor`, `summarize`
 - [ ] Demo deployment with env vars and seed; end-to-end script test
 - [ ] README sections: Convex architecture, Apify Actor link
@@ -702,7 +703,7 @@ Four milestones mark when the seams between roles go live; each is reached when 
 
 1. **Contracts frozen.** `schema.ts`, `shared/enums.ts`, `shared/types.ts` merged; dev deployment URL shared; Role 3's `steps.ts` returns fallbacks; Role 2 shows live UWB distance between two phones. Unblocks everyone working against real types.
 2. **Data flows.** Seeded deployment live; Role 1's screens read real subscriptions; Role 2's tap and QR call `parties:join`; Role 4's workflow runs end to end on Role 3's fallback agents.
-3. **Real brains and normalized mock menu.** During demo setup, `scripts/seed.ts` sends the raw mock fixture through `menu:ingest`, which runs the project Apify Actor and fills `menuItems`; Role 3's model steps replace fallbacks; bubbles play on the restaurant screen in step with diner phones. The separate menu scraper remains a should-have.
+3. **Real brains and normalized mock menu.** During demo setup, `npm run seed` writes the checked snapshot, then sends the raw mock fixture through `menu:ingest`, which runs the project Apify Actor when configured and fills `menuItems`; Role 3's model steps replace fallbacks; bubbles play on the restaurant screen in step with diner phones. The separate menu scraper remains a should-have.
 4. **Happy path.** Full flow on all 5 phones from tap to `placed`, twice in a row, with zero safety-test failures. After this: should-haves, polish and rehearsal only.
 
 **Mocks so nobody waits.**

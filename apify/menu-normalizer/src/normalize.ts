@@ -2,7 +2,7 @@
 // Output contract = convex/menu.ts `normalizedItem`. Keep the two in sync.
 import { ALLERGENS, DRINK_CATEGORIES, MEAT_KEYWORDS, PORK_KEYWORDS, SHAREABLE_CATEGORIES, keywordHits, type Allergen } from "./keywords.js";
 
-export type RawItem = { name: string; description?: string; price?: string | number; category?: string };
+export type RawItem = { name: string; description?: string; ingredients?: string[]; price?: string | number; category?: string };
 export type Level = "contains" | "may_contain" | "not_detected";
 export type Diet = "vegetarian" | "vegan" | "halal" | "no_pork";
 
@@ -44,7 +44,7 @@ export function parsePriceCents(price: RawItem["price"]): number {
 
 /** Deterministic first pass. Without an LLM result, the item stays usable but conservative. */
 export function keywordPass(raw: RawItem, index: number): NormalizedItem {
-  const text = `${raw.name} ${raw.description ?? ""}`;
+  const text = `${raw.name} ${raw.description ?? ""} ${(raw.ingredients ?? []).join(" ")}`;
   const hits = keywordHits(text);
   const lower = text.toLowerCase();
   const category = (raw.category ?? "mains").toLowerCase().trim() || "mains";

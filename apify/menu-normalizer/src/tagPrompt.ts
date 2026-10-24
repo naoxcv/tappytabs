@@ -13,4 +13,4 @@ export const TAG_SYSTEM = [
 ].join("\n");
 
 export const tagUser = (batch: { index: number; item: RawItem }[]) =>
-  `<items>\n${JSON.stringify(batch.map(({ index, item }) => ({ index, name: item.name, description: item.description ?? "", category: item.category ?? "" })))}\n</items>`;
+  `<items>\n${JSON.stringify(batch.map(({ index, item }) => ({ index, name: item.name, description: item.description ?? "", ingredients: item.ingredients ?? [], category: item.category ?? "" })))}\n</items>`;

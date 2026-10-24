@@ -6,8 +6,19 @@
     "items": {
       "title": "Menu items",
       "type": "array",
-      "description": "Raw items: [{ name, description?, price?, category? }]. Price may be a string like \"$12.50\" or a number.",
+      "description": "Raw items: [{ name, description?, ingredients?, price?, category? }]. Price may be a string like \"$12.50\" or a number.",
       "editor": "json",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string", "description": "Menu item name." },
+          "description": { "type": "string" },
+          "ingredients": { "type": "array", "items": { "type": "string" } },
+          "price": { "type": ["string", "number"] },
+          "category": { "type": "string" }
+        },
+        "required": ["name"]
+      },
       "prefill": [{ "name": "Pad Thai", "description": "Rice noodles, egg, crushed peanuts", "price": "$18.00", "category": "Mains" }]
     },
     "batchSize": { "title": "LLM batch size", "type": "integer", "description": "Items per tagging call.", "default": 20, "minimum": 1, "maximum": 50 }

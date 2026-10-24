@@ -6,7 +6,6 @@ import type { NormalizedItem } from "./menu";
 
 export const DEMO_RESTAURANT = {
   name: "Tappy Kitchen (demo)",
-  mapsUrl: "https://maps.google.com/?q=REPLACE_WITH_REAL_RESTAURANT",
 };
 export const DEMO_HOST_DEVICE = "demo-restaurant";
 
