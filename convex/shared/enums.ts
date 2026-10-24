@@ -45,9 +45,9 @@ export const TIMING = {
   stepTimeoutMs: 8_000,
   rescueAfterMs: 30_000,
   ingestTimeoutMs: 20_000,
-  bubbleGapMs: 1_500,
+  bubbleGapMs: 1_800,
   firstBubbleDelayMs: 250,
-  bubbleEndHoldMs: 500,
+  bubbleEndHoldMs: 1_500,
   pickWindowMs: 45_000,
   confirmWindowMs: 45_000,
 } as const;

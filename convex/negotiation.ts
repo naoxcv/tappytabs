@@ -184,12 +184,15 @@ export const commit = internalMutation({
       summaryPosted = await postBubbleIfRoom(ctx, partyId, undefined, summaryTemplate(sharedNames, plan.mains.length));
     }
     if (summaryPosted === null) {
-      await postBubbleIfRoom(ctx, partyId, undefined, "Your mains are ready. Check your phones to choose yours!");
+      summaryPosted = await postBubbleIfRoom(ctx, partyId, undefined, "Your mains are ready. Check your phones to choose yours!");
     }
     await ctx.db.patch(partyId, { committedAt: Date.now() });
-    // Picks become available as soon as the plan is committed; the restaurant transcript
-    // continues on its own showAt schedule while diners make their choices.
-    await ctx.scheduler.runAfter(TIMING.bubbleEndHoldMs, internal.parties.advance, { partyId, epoch });
+    // Let the final summary bubble finish before opening the pick screen.
+    await ctx.scheduler.runAt(
+      (summaryPosted ?? Date.now()) + TIMING.bubbleEndHoldMs,
+      internal.parties.advance,
+      { partyId, epoch },
+    );
   },
 });
 

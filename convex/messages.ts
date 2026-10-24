@@ -5,7 +5,7 @@ import { internalMutation, query, type MutationCtx } from "./_generated/server";
 import { TIMING } from "./shared/enums";
 import { splitBubbleText } from "./agents/bubbles";
 
-/** Post one bubble, paced 2.5 s after the previous one. Dedupes on (party, speaker, text) so retries are harmless. */
+/** Post one bubble, paced 1.8 s after the previous one. Dedupes on (party, speaker, text) so retries are harmless. */
 export async function postBubble(
   ctx: MutationCtx,
   partyId: Id<"parties">,
