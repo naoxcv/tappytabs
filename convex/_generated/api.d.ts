@@ -33,6 +33,7 @@ import type * as negotiation from "../negotiation.js";
 import type * as orders from "../orders.js";
 import type * as parties from "../parties.js";
 import type * as seed from "../seed.js";
+import type * as seedActions from "../seedActions.js";
 import type * as seedData from "../seedData.js";
 import type * as shared_enums from "../shared/enums.js";
 import type * as shared_errors from "../shared/errors.js";
@@ -72,6 +73,7 @@ declare const fullApi: ApiFromModules<{
   orders: typeof orders;
   parties: typeof parties;
   seed: typeof seed;
+  seedActions: typeof seedActions;
   seedData: typeof seedData;
   "shared/enums": typeof shared_enums;
   "shared/errors": typeof shared_errors;

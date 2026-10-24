@@ -22,14 +22,15 @@ final class Proximity: NSObject {
     enum State: Equatable { case idle, searching, connected, tapped, rejected(String) }
 
     private(set) var state: State = .idle
+    private(set) var debugEvent = "idle"
+    private(set) var debugHistory: [String] = []
     /// userId (or "restaurant") → metres, for the debug overlay.
     private(set) var debugDistances: [String: Float] = [:]
     private(set) var debugTapCounts: [String: Int] = [:]
     var config = TapConfig()
 
     var supportsTap: Bool {
-        if #available(iOS 16.0, *) { return NISession.deviceCapabilities.supportsPreciseDistanceMeasurement }
-        return NISession.isSupported
+        NISession.deviceCapabilities.supportsPreciseDistanceMeasurement
     }
 
     // Multipeer
@@ -37,6 +38,9 @@ final class Proximity: NSObject {
     @ObservationIgnored private var session: MCSession?
     @ObservationIgnored private var advertiser: MCNearbyServiceAdvertiser?
     @ObservationIgnored private var browser: MCNearbyServiceBrowser?
+    @ObservationIgnored private var discoveredHosts: [MCPeerID: String] = [:]
+    @ObservationIgnored private var isBrowsing = false
+    @ObservationIgnored private var pendingInvites: Set<MCPeerID> = []
 
     // NI: one session per remote peer
     @ObservationIgnored private var niSessions: [MCPeerID: NISession] = [:]
@@ -67,7 +71,9 @@ final class Proximity: NSObject {
         browser.delegate = self
         browser.startBrowsingForPeers()
         self.browser = browser
+        isBrowsing = true
         state = .searching
+        record("browsing for restaurant")
     }
 
     func startHosting(partyId: String, onTap: @escaping (_ userId: String) -> Void) {
@@ -81,6 +87,7 @@ final class Proximity: NSObject {
         advertiser.startAdvertisingPeer()
         self.advertiser = advertiser
         state = .searching
+        record("advertising party")
     }
 
     /// Restaurant → diner, e.g. "Table is full".
@@ -92,20 +99,40 @@ final class Proximity: NSObject {
     func stop() {
         advertiser?.stopAdvertisingPeer(); advertiser = nil
         browser?.stopBrowsingForPeers(); browser = nil
+        isBrowsing = false
+        discoveredHosts = [:]
+        pendingInvites = []
         session?.disconnect(); session = nil
         niSessions.values.forEach { $0.invalidate() }
         niSessions = [:]; peerUserIds = [:]; detectors = [:]
         debugDistances = [:]; debugTapCounts = [:]
         state = .idle
+        debugEvent = "idle"
+        debugHistory = []
     }
 
     // MARK: internals
+
+    private func record(_ event: String) {
+        debugEvent = event
+        debugHistory.append(event)
+        if debugHistory.count > 6 { debugHistory.removeFirst() }
+    }
 
     private func setUpSession(_ peer: MCPeerID) {
         self.peer = peer
         let s = MCSession(peer: peer, securityIdentity: nil, encryptionPreference: .optional)
         s.delegate = self
         session = s
+    }
+
+    private func invite(_ peerID: MCPeerID) {
+        guard !isHost, state == .searching, let partyId = discoveredHosts[peerID],
+              let browser, let session, !pendingInvites.contains(peerID) else { return }
+        pendingInvites.insert(peerID)
+        record("inviting \(peerID.displayName)")
+        onConnected?(partyId)
+        browser.invitePeer(peerID, to: session, withContext: nil, timeout: 10)
     }
 
     private func send(_ envelope: Envelope, to peers: [MCPeerID]) {
@@ -162,21 +189,42 @@ final class Proximity: NSObject {
 extension Proximity: MCSessionDelegate {
     func session(_ session: MCSession, peer peerID: MCPeerID, didChange state: MCSessionState) {
         DispatchQueue.main.async { [self] in
+            guard self.session === session else { return }
             switch state {
             case .connected:
-                if !isHost { self.state = .connected }
+                pendingInvites.remove(peerID)
+                if !isHost {
+                    self.state = .connected
+                    browser?.stopBrowsingForPeers()
+                    isBrowsing = false
+                }
+                record("connected to \(peerID.displayName)")
                 startRanging(with: peerID)
             case .notConnected:
+                pendingInvites.remove(peerID)
                 niSessions[peerID]?.invalidate()
                 niSessions[peerID] = nil; detectors[peerID] = nil
-                if !isHost, self.state != .tapped { self.state = .searching }
-            default: break
+                if !isHost, self.state != .tapped {
+                    self.state = .searching
+                    if !isBrowsing {
+                        browser?.startBrowsingForPeers()
+                        isBrowsing = browser != nil
+                    }
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 2) { [weak self] in self?.invite(peerID) }
+                }
+                record("disconnected from \(peerID.displayName)")
+            case .connecting:
+                record("connecting to \(peerID.displayName)")
+            @unknown default: break
             }
         }
     }
     func session(_ session: MCSession, didReceive data: Data, fromPeer peerID: MCPeerID) {
         guard let env = try? JSONDecoder().decode(Envelope.self, from: data) else { return }
-        DispatchQueue.main.async { self.handle(env, from: peerID) }
+        DispatchQueue.main.async {
+            guard self.session === session else { return }
+            self.handle(env, from: peerID)
+        }
     }
     func session(_ session: MCSession, didReceive stream: InputStream, withName streamName: String, fromPeer peerID: MCPeerID) {}
     func session(_ session: MCSession, didStartReceivingResourceWithName resourceName: String, fromPeer peerID: MCPeerID, with progress: Progress) {}
@@ -184,22 +232,38 @@ extension Proximity: MCSessionDelegate {
 }
 
 extension Proximity: MCNearbyServiceAdvertiserDelegate {
+    func advertiser(_ advertiser: MCNearbyServiceAdvertiser, didNotStartAdvertisingPeer error: Error) {
+        DispatchQueue.main.async { self.record("advertising failed: \(error.localizedDescription)") }
+    }
+
     func advertiser(_ advertiser: MCNearbyServiceAdvertiser, didReceiveInvitationFromPeer peerID: MCPeerID,
                     withContext context: Data?, invitationHandler: @escaping (Bool, MCSession?) -> Void) {
+        DispatchQueue.main.async { self.record("invited by \(peerID.displayName)") }
         invitationHandler(true, session) // auto-accept, no UI
     }
 }
 
 extension Proximity: MCNearbyServiceBrowserDelegate {
+    func browser(_ browser: MCNearbyServiceBrowser, didNotStartBrowsingForPeers error: Error) {
+        DispatchQueue.main.async { self.record("browsing failed: \(error.localizedDescription)") }
+    }
+
     func browser(_ browser: MCNearbyServiceBrowser, foundPeer peerID: MCPeerID, withDiscoveryInfo info: [String: String]?) {
-        guard let partyId = info?["partyId"], let session else { return }
+        guard let partyId = info?["partyId"] else { return }
         DispatchQueue.main.async { [self] in
-            onConnected?(partyId)
-            browser.invitePeer(peerID, to: session, withContext: nil, timeout: 10)
-            browser.stopBrowsingForPeers() // first restaurant wins
+            guard self.browser === browser else { return }
+            record("found \(peerID.displayName)")
+            discoveredHosts[peerID] = partyId
+            invite(peerID)
         }
     }
-    func browser(_ browser: MCNearbyServiceBrowser, lostPeer peerID: MCPeerID) {}
+    func browser(_ browser: MCNearbyServiceBrowser, lostPeer peerID: MCPeerID) {
+        DispatchQueue.main.async { [self] in
+            guard self.browser === browser else { return }
+            discoveredHosts[peerID] = nil
+            if state == .searching { record("lost \(peerID.displayName)") }
+        }
+    }
 }
 
 extension Proximity: NISessionDelegate {

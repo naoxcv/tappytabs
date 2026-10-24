@@ -28,7 +28,7 @@ struct PartySetupView: View {
             Button("Open table") { Task { await open() } }.buttonStyle(BigButtonStyle()).disabled(restaurant == nil)
         }
         .padding()
-        .task { await load() }
+        .task(id: "\(app.backendKind.rawValue)|\(app.convexURL)") { await load() }
     }
 
     private var menuLine: some View {
@@ -51,12 +51,23 @@ struct PartySetupView: View {
     }
 
     private func load() async {
+        menuSub = nil
+        restaurant = nil
+        menu = nil
+        error = nil
         do {
-            restaurant = try await app.backend.restaurants().first
+            let backend = app.backend
+            let nextRestaurant = try await backend.restaurants().first
+            try Task.checkCancellation()
+            restaurant = nextRestaurant
             if let r = restaurant {
-                menuSub = app.backend.menuStatus(r.id).replaceError(with: nil).sink { menu = $0 }
+                menuSub = backend.menuStatus(r.id).replaceError(with: nil).sink { menu = $0 }
             }
-        } catch { self.error = TTError.from(error).userMessage }
+        } catch is CancellationError {
+            return
+        } catch {
+            if !Task.isCancelled { self.error = TTError.from(error).userMessage }
+        }
     }
 
     private func fetch() async {

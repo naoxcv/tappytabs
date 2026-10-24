@@ -8,6 +8,9 @@ struct ProximityDebugOverlay: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             Text("UWB debug · \(stateText)").font(.caption.bold())
+            ForEach(Array(proximity.debugHistory.enumerated()), id: \.offset) { entry in
+                Text(entry.element).font(.caption2.monospaced()).fixedSize(horizontal: false, vertical: true)
+            }
             if !proximity.supportsTap { Text("No precise distance on this phone: QR only").font(.caption2).foregroundStyle(.red) }
             ForEach(proximity.debugDistances.keys.sorted(), id: \.self) { key in
                 let d = proximity.debugDistances[key]

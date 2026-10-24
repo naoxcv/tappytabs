@@ -103,7 +103,7 @@
 		92E1913001A81FD2709E4953 /* remove_result.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = remove_result.json; sourceTree = "<group>"; };
 		97AC9926C975AEB944A8E216 /* AppModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppModel.swift; sourceTree = "<group>"; };
 		A6E86F4ED0A1B933678772FD /* ProximityDebugOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProximityDebugOverlay.swift; sourceTree = "<group>"; };
-		ACF7EC6D8FE8C5BC12DDA62D /* TappyTabs.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = TappyTabs.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		ACF7EC6D8FE8C5BC12DDA62D /* TappyTabs.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TappyTabs.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		AD44F0FA209F27A88E79C902 /* TapInView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TapInView.swift; sourceTree = "<group>"; };
 		B4B2FF440BE7B2C50E7A7C2E /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
 		BE3B0A2974E205429510BFB4 /* party_pick.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = party_pick.json; sourceTree = "<group>"; };
@@ -337,7 +337,6 @@
 				LastUpgradeCheck = 1430;
 				TargetAttributes = {
 					17CDC0576A885FC1C3DCA4C9 = {
-						DevelopmentTeam = "";
 						ProvisioningStyle = Automatic;
 					};
 					F65FAB64E6D413A47A826529 = {
@@ -556,13 +555,14 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
+				DEVELOPMENT_TEAM = HJS3794H8M;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = TappyTabs/Resources/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.tappytabs.app;
+				PRODUCT_BUNDLE_IDENTIFIER = com.naotappytabs.app;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = 1;
 			};
@@ -573,13 +573,14 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
+				DEVELOPMENT_TEAM = HJS3794H8M;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = TappyTabs/Resources/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.tappytabs.app;
+				PRODUCT_BUNDLE_IDENTIFIER = com.naotappytabs.app;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = 1;
 			};
