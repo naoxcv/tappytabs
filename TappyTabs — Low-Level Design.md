@@ -552,6 +552,8 @@ Role 4 owns the Convex deployment end to end: schema, every public function, the
 
 ### Design: schema
 
+The schema below records the original contract shape. The implementation has since added fields needed by the current backend contract: `users.likedCategories`; restaurant `menuSource`; menu-item `tagStatus`; party `epoch` and lifecycle timestamps; member `joinedAt`; order-line `kind`; and `agentLogs.provider`. `restaurants.mapsUrl` is optional, as specified here. For the current table definitions, use `convex/schema.ts`; the high-level design's §5 data model describes the current contract.
+
 ```typescript
 const allergenV = v.union(...ALLERGENS.map(a => v.literal(a)));
 const dietV = v.union(...DIETS.map(d => v.literal(d)));
@@ -674,9 +676,9 @@ export const negotiate = workflow.define({
 ### Task log
 
 - [ ] Repo, `npx convex dev`, share the dev URL
-- [ ] `convex.config.ts` registering `@convex-dev/workflow` and `@convex-dev/agent`
-- [ ] Agree `shared/enums.ts` and `shared/types.ts` with Role 3
-- [ ] `schema.ts` as above
+- [x] `convex.config.ts` registers `@convex-dev/workflow`; `@convex-dev/agent` is deferred for the MVP (High-Level Design D10)
+- [ ] Confirm the implemented `shared/enums.ts` and `shared/types.ts` contract with Role 3; iOS mirrors the shared allergen, diet, hunger, status, and personality enums
+- [x] `schema.ts` implements the current backend contract; it extends the original schema above, and `restaurants.mapsUrl` is optional
 - [ ] `seed.ts --scenario base` with a hand-made menu
 - [ ] `users:upsert`, `users:me`
 - [ ] `parties:create`, `join`, `current`, `startWithFewer`, `reset` + tests
