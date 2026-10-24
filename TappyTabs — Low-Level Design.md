@@ -667,7 +667,7 @@ export const negotiate = workflow.define({
 
 ### Acceptance criteria
 
-- [ ] A script calling `parties:join` ×4, `setHunger` ×4, `pick` ×4 and `confirm` ×4 reaches `placed` with no client
+- [x] A script calling `parties:join` ×4, `setHunger` ×4, `pick` ×4 and `confirm` ×4 reaches `placed` with no client (passed on isolated `dev/e2e` deployment)
 - [ ] `convex-test` covers join (full, already, concurrent), every status transition, timers firing after reset, and totals summing exactly
 - [ ] With models disabled, negotiation still commits within 30 s via fallbacks
 - [ ] Run the project Actor on the seeded mock menu and store normalized records; our Actor is public on the Apify Store
@@ -695,7 +695,7 @@ export const negotiate = workflow.define({
 - [x] Add `npm run menu:snapshot` to export a successful live ingest into the checked fallback fixture
 - [x] Run the project Actor on the mock fixture; verify all 28 rows are tagged and refresh the checked snapshot
 - [x] Backend E2E script passed on the isolated Convex `dev/e2e` deployment; original development deployment data was left untouched
-- [ ] Demo deployment with env vars and tagged 28-item menu seed
+- [x] Demo deployment configured at `https://oceanic-canary-660.convex.cloud`; provider and Apify env vars set; tagged 28-item menu seeded
 - [ ] Full iOS happy path on five demo phones, twice; record run results
 - [x] README section: Convex architecture and setup, with a link to the repository Actor docs
 - [ ] Add the public Apify Store link to the README after Actor publication
