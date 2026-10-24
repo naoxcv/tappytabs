@@ -680,7 +680,7 @@ export const negotiate = workflow.define({
 - [ ] Confirm the implemented `shared/enums.ts` and `shared/types.ts` contract with Role 3; iOS mirrors the shared allergen, diet, hunger, status, and personality enums
 - [x] `schema.ts` implements the current backend contract; it extends the original schema above, and `restaurants.mapsUrl` is optional
 - [x] Base seed writes the hand-checked snapshot, then best-effort runs `menu:ingest` on the raw mock menu
-- [ ] `users:upsert`, `users:me`
+- [x] `users:upsert`, `users:me`, `users:followups`, `users:summarize` + fallback and persistence tests
 - [x] `parties:create`, `join`, `current`, `startWithFewer`, `reset` + tests (including concurrent last-seat joins and stale timers after reset)
 - [ ] `messages:list`, `insertPaced` with dedupe
 - [ ] `agentLogs:insert` for Role 3
@@ -693,9 +693,9 @@ export const negotiate = workflow.define({
 - [ ] Publish the Actor to the Apify Store (Actor README is in `apify/menu-normalizer/README.md`)
 - [x] `menu:ingest`, `menu:status`; base seed invokes ingest and keeps the checked snapshot as fallback
 - [ ] Run the published project Actor on the mock fixture and refresh/verify the checked snapshot
-- [ ] `users:followups`, `users:summarize`; *needs* Role 3's `followupsFor`, `summarize`
 - [ ] Demo deployment with env vars and seed; end-to-end script test
-- [ ] README sections: Convex architecture, Apify Actor link
+- [x] README section: Convex architecture and setup, with a link to the repository Actor docs
+- [ ] Add the public Apify Store link to the README after Actor publication
 
 ## Integration milestones, mocks and conventions
 

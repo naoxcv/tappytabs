@@ -97,6 +97,51 @@ describe("parties:join", () => {
   });
 });
 
+describe("users", () => {
+  test("upsert is keyed by device and me returns the current profile", async () => {
+    const t = convexTest(schema, modules);
+    const profile = {
+      deviceId: "profile-test", name: "  Alex  ", allergies: [], diet: [], spice: 7,
+      likes: ["noodles"], dislikes: [], cuisines: ["Thai"], avatarId: "avatar_2",
+    };
+    const firstId = await t.mutation(api.users.upsert, profile);
+    const created = await t.query(api.users.me, { deviceId: "profile-test" });
+    expect(created?._id).toBe(firstId);
+    expect(created?.name).toBe("Alex");
+    expect(created?.spice).toBe(4);
+
+    const secondId = await t.mutation(api.users.upsert, { ...profile, name: "Alex Updated", spice: -1 });
+    expect(secondId).toBe(firstId);
+    expect((await t.query(api.users.me, { deviceId: "profile-test" }))?.name).toBe("Alex Updated");
+    expect((await t.query(api.users.me, { deviceId: "missing" }))).toBeNull();
+  });
+
+  test("followups and summarize use deterministic fallbacks and persist the summary", async () => {
+    vi.stubEnv("ANTHROPIC_API_KEY", "");
+    vi.stubEnv("BITDEER_API_KEY", "");
+    try {
+      const t = convexTest(schema, modules);
+      const followups = await t.action(api.users.followups, {
+        draft: {
+          name: "Alex", allergies: [], diet: [], spice: 2, likes: ["noodles"], dislikes: [],
+          cuisines: ["Thai"], avatarId: "avatar_2",
+        },
+      });
+      expect(followups.length).toBeGreaterThan(0);
+      expect(followups.length).toBeLessThanOrEqual(3);
+
+      const seeded = await t.mutation(internal.seed.base, {});
+      const result = await t.action(api.users.summarize, { userId: seeded.userIds[0], answers: [] });
+      expect(result.profileSummary.length).toBeGreaterThan(0);
+      const saved = await t.query(api.users.me, { deviceId: "demo-diner-1" });
+      expect(saved?.profileSummary).toBe(result.profileSummary);
+      expect(saved?.personality).toBe(result.personality);
+    } finally {
+      vi.unstubAllEnvs();
+    }
+  });
+});
+
 describe("negotiation rescue", () => {
   test("last hunger choice starts the workflow and fallback path reaches placed", async () => {
     vi.useFakeTimers();

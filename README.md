@@ -89,6 +89,29 @@ Must-haves define the demo; should-haves and stretch items are built only after 
 - **Platform.** Native iOS. Every demo phone, including the restaurant phone, is an iPhone 11 or later with an ultra-wideband chip (not SE or 16e), Developer Mode on, app in the foreground during taps.
 - **Tooling decisions already made.** Convex is the backend (TypeScript), including agents. Claude and Bitdeer AI Model Studio provide LLM reasoning. The MVP runs our Apify menu normalizer/allergen tagger on a mock menu; a separate Apify scraper Actor that finds a menu from a Google Maps location is a should-have. Detailed design is in the software design documents.
 
+## Backend architecture and setup
+
+Convex owns profiles, restaurants and menu items, party state, order lines, and the live message stream. The `@convex-dev/workflow` component runs negotiation; deterministic safety and fallback logic lives in TypeScript, with Claude and Bitdeer used for bounded language tasks. Menu ingestion calls the [TappyTabs menu normalizer Actor source and README](apify/menu-normalizer/README.md).
+
+```text
+iOS app ──subscriptions/mutations──> Convex API + schema
+                                      ├─ party and order state machine
+                                      ├─ negotiation workflow ──> Claude / Bitdeer
+                                      └─ menu:ingest ──> Apify menu normalizer
+```
+
+For a local backend, install dependencies, start Convex, then seed from a second terminal:
+
+```bash
+npm ci
+npm run dev:local
+npm run seed
+```
+
+The seed writes the checked menu snapshot first, then tries the configured normalizer Actor using the raw mock menu. If Apify is unavailable or unconfigured, the snapshot remains in place. `npm run seed:negotiated` and `npm run seed:placed` prepare screen fixtures. `npm run e2e` exercises the full backend flow and **wipes app data in the active Convex deployment**, so use a disposable local or personal deployment.
+
+To enable live model and menu processing, set Convex environment variables with `npx convex env set`: `ANTHROPIC_API_KEY`, `CLAUDE_MODEL`, `BITDEER_API_KEY`, `BITDEER_MODEL`, `APIFY_TOKEN`, `APIFY_NORMALIZER_ACTOR`, and optionally `APIFY_SCRAPER_ACTOR` plus `DEMO_SEED`. The demo deployment URL and successful live Actor run still need to be supplied by the deployment owner. The Actor's public Apify Store listing will be linked here after publication.
+
 ## Success criteria and demo
 
 The demo is a 2-minute live run with 3–4 phones, ending with the order landing on the restaurant device.
