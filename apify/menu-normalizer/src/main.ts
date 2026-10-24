@@ -23,14 +23,23 @@ async function tagBatch(batch: { index: number; item: RawItem }[]): Promise<Map<
   const out = new Map<number, LlmTags>();
   if (!client) return out;
   try {
+    // Give the model batch-local indexes, then translate them back to source indexes.
+    // Models commonly restart numbering at zero for each independent batch.
+    const requestBatch = batch.map(({ item }, index) => ({ index, item }));
     const res = await client.chat.completions.create({
       model: model!,
       temperature: 0,
       response_format: { type: "json_object" },
-      messages: [{ role: "system", content: TAG_SYSTEM }, { role: "user", content: tagUser(batch) }],
+      messages: [{ role: "system", content: TAG_SYSTEM }, { role: "user", content: tagUser(requestBatch) }],
     }, { timeout: 45_000, maxRetries: 0 });
     const parsed = JSON.parse(res.choices[0]?.message?.content ?? "{}") as { items?: (LlmTags & { index: number })[] };
-    for (const row of parsed.items ?? []) if (typeof row.index === "number") out.set(row.index, row);
+    for (const row of parsed.items ?? []) {
+      if (!Number.isInteger(row.index)) continue;
+      const sourceIndex = batch[row.index]?.index ?? (batch.some((entry) => entry.index === row.index) ? row.index : undefined);
+      if (sourceIndex !== undefined) out.set(sourceIndex, row);
+    }
+    const missing = batch.filter(({ index }) => !out.has(index)).map(({ index }) => index);
+    if (missing.length) log.warning(`tag response missing ${missing.length}/${batch.length} item(s), source indices: ${missing.join(", ")}`);
   } catch (e) {
     log.warning(`tag batch failed: ${String(e)}`);
   }
