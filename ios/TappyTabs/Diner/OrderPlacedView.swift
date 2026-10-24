@@ -10,8 +10,8 @@ struct OrderPlacedView: View {
             AvatarView(avatarId: store.me?.avatarId ?? "avatar_1", size: 96, state: .happy).padding(.top, 24)
             Text("Sent to the restaurant").font(AppTypography.style(.largeTitle, weight: .bold))
             List {
-                Section("For the table") { ForEach(store.sharedLines) { LineRow(line: $0, avatars: $0.sharedBy.compactMap { store.avatar(of: $0) }) } }
-                Section("Yours") { ForEach(store.myLines()) { LineRow(line: $0, avatars: []) } }
+                Section(header: Text("For the table").font(AppTypography.headline)) { ForEach(store.sharedLines) { LineRow(line: $0, avatars: $0.sharedBy.compactMap { store.avatar(of: $0) }) } }
+                Section(header: Text("Yours").font(AppTypography.headline)) { ForEach(store.myLines()) { LineRow(line: $0, avatars: []) } }
                 Section {
                     HStack { Text("Your share").bold(); Spacer(); PriceText(cents: store.myShareCents).bold() }
                     HStack { Text("Table total"); Spacer(); PriceText(cents: store.lines.totals.total) }

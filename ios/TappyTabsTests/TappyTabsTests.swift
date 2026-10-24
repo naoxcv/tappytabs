@@ -1,7 +1,22 @@
 // Owner: Role 1 (fixtures, store) + Role 2 (tap detector, join links).
 import XCTest
 import UIKit
+import SwiftUI
 @testable import TappyTabs
+
+final class AppTypographyTests: XCTestCase {
+    @MainActor
+    func testFontFamiliesAreRegisteredForHeadingsAndBodyText() throws {
+        for style in [Font.TextStyle.largeTitle, .title, .title2, .title3, .headline, .body, .callout, .subheadline, .footnote, .caption, .caption2] {
+            for weight in [Font.Weight.regular, .medium, .semibold, .bold, .black] {
+                let name = AppTypography.postScriptName(for: weight, style: style)
+                let font = try XCTUnwrap(UIFont(name: name, size: 17), "Missing bundled font: \(name)")
+                let heading = [Font.TextStyle.largeTitle, .title, .title2, .title3, .headline].contains(style)
+                XCTAssertTrue(font.familyName.hasPrefix(heading ? "Raleway" : "Open Sans"), name)
+            }
+        }
+    }
+}
 
 final class TapDetectorTests: XCTestCase {
     func testFiresAfterConsecutiveCloseReadings() {
@@ -83,6 +98,23 @@ final class PartyStoreTests: XCTestCase {
 
 
 final class AgentAvatarTests: XCTestCase {
+    @MainActor
+    func testLaunchAnimationCompletesOnceAndCanReplay() {
+        let view = AgentDrawingView(frame: CGRect(x: 0, y: 0, width: 180, height: 180))
+        var completions = 0
+        view.configure(name: "cat", state: .launching, reduced: false, active: true,
+                       onAnimationComplete: { completions += 1 })
+        for _ in 0..<30 { view.advance(dt: 1.0 / 30, pointer: nil) }
+        XCTAssertEqual(completions, 0)
+        for _ in 0..<30 { view.advance(dt: 1.0 / 30, pointer: nil) }
+        XCTAssertEqual(completions, 1)
+        view.configure(name: "cat", state: .idle, reduced: true, active: true)
+        view.configure(name: "cat", state: .launching, reduced: true, active: true,
+                       onAnimationComplete: { completions += 1 })
+        for _ in 0..<45 { view.advance(dt: 1.0 / 30, pointer: nil) }
+        XCTAssertEqual(completions, 2)
+    }
+
     func testLegacyIDsKeepTheirCharactersWhenReordered() {
         let expected = ["tomato", "mushroom", "bokchoy", "garlic", "cat", "tomato", "mushroom", "bokchoy"]
         for n in (1...8).reversed() {

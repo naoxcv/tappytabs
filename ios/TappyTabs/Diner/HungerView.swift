@@ -17,7 +17,7 @@ struct HungerView: View {
                 } label: {
                     HStack {
                         Text(h.emoji).font(.system(size: 40))
-                        Text(h.label).font(AppTypography.style(.title2, weight: .bold))
+                        Text(h.label).font(AppTypography.custom(22, weight: .bold))
                         Spacer()
                         if sending == h { ProgressView() }
                         if store.me?.hunger == h { Image(systemName: "checkmark.circle.fill") }

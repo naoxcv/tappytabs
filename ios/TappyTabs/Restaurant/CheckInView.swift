@@ -18,13 +18,13 @@ struct CheckInView: View {
             layout {
                 VStack(spacing: 12) {
                     Text("\(members.count) of \(Int(store.party?.size ?? 0)) checked in")
-                        .font(AppTypography.custom(32, weight: .bold)).contentTransition(.numericText())
+                        .font(AppTypography.custom(32, relativeTo: .largeTitle, weight: .bold)).contentTransition(.numericText())
                     Text("Hold your phone to this one").foregroundStyle(.secondary)
                     LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 3), spacing: 8) {
                         ForEach(members) { m in
                             VStack(spacing: 0) {
                                 AvatarView(avatarId: m.avatarId, size: 64, state: store.lastError == nil ? .happy : .confused)
-                                Text(m.name).font(AppTypography.headline)
+                                Text(m.name).font(AppTypography.style(.body, weight: .semibold))
                             }
                             .transition(.scale.combined(with: .opacity))
                         }

@@ -3,23 +3,19 @@ import SwiftUI
 
 struct ModeSelectView: View {
     @Environment(AppModel.self) private var app
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    var isLaunching = false
+    var onLaunchComplete: (() -> Void)? = nil
 
     var body: some View {
         GeometryReader { geometry in
+            let bottomPadding: CGFloat = max(geometry.safeAreaInsets.bottom == 0 ? 24 : 12, 12)
             VStack(spacing: 0) {
                 Spacer(minLength: 24)
-                VStack(spacing: 0) {
-                    Image("agent_cat")
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 200, height: 200)
-                        .accessibilityHidden(true)
-                    Text("TappyTabs")
-                        .font(AppTypography.custom(36, weight: .black))
-                        .tracking(-1.2)
-                        .foregroundStyle(Theme.accent)
-                        .offset(y: -28)
-                }
+                LaunchBrandView(onLaunchComplete: onLaunchComplete)
+                    .scaleEffect(reduceMotion || !isLaunching ? 1 : 0.9)
+                    .offset(y: reduceMotion || !isLaunching ? 0 : (104 + bottomPadding) / 2)
+                    .animation(reduceMotion ? nil : .smooth(duration: 0.6), value: isLaunching)
                 Spacer(minLength: 40)
                 VStack(spacing: 10) {
                     Button { app.mode = .diner } label: {
@@ -44,10 +40,32 @@ struct ModeSelectView: View {
                     .buttonStyle(.plain)
                 }
                 .padding(.horizontal, 32)
-                .padding(.bottom, max(geometry.safeAreaInsets.bottom == 0 ? 24 : 12, 12))
+                .padding(.bottom, bottomPadding)
+                .opacity(isLaunching ? 0 : 1)
+                .offset(y: reduceMotion || !isLaunching ? 0 : 16)
+                .animation(reduceMotion ? .easeOut(duration: 0.15) : .easeOut(duration: 0.35).delay(0.25), value: isLaunching)
+                .allowsHitTesting(!isLaunching)
+                .accessibilityHidden(isLaunching)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(Color.black.ignoresSafeArea())
+        }
+    }
+}
+
+struct LaunchBrandView: View {
+    var onLaunchComplete: (() -> Void)? = nil
+
+    var body: some View {
+        VStack(spacing: 0) {
+            AvatarView(avatarId: AvatarCatalog.restaurant, size: 200, state: .launching,
+                       onAnimationComplete: onLaunchComplete)
+                .accessibilityHidden(true)
+            Text("TappyTabs")
+                .font(AppTypography.custom(36, relativeTo: .largeTitle, weight: .black))
+                .tracking(-1.2)
+                .foregroundStyle(Theme.accent)
+                .offset(y: -28)
         }
     }
 }

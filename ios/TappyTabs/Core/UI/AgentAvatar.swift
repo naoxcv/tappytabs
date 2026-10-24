@@ -1,7 +1,7 @@
 import SwiftUI
 import UIKit
 
-enum AgentAvatarState { case idle, thinking, happy, confused }
+enum AgentAvatarState { case idle, thinking, happy, confused, launching }
 
 /// Existing call sites retain their API. Small avatars use the supplied transparent PNGs.
 struct AvatarView: View {
@@ -10,6 +10,7 @@ struct AvatarView: View {
     var highlighted = false
     var state: AgentAvatarState = .idle
     var animated = true
+    var onAnimationComplete: (() -> Void)? = nil
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.scenePhase) private var scenePhase
 
@@ -17,7 +18,8 @@ struct AvatarView: View {
         let name = AvatarCatalog.character(avatarId)
         Group {
             if animated && size >= 48 {
-                AgentDrawing(name: name, state: state, reduceMotion: reduceMotion, active: scenePhase == .active)
+                AgentDrawing(name: name, state: state, reduceMotion: reduceMotion, active: scenePhase == .active,
+                             onAnimationComplete: onAnimationComplete)
             } else {
                 Image("agent_\(name)").resizable().scaledToFit()
             }
@@ -37,9 +39,11 @@ private struct AgentDrawing: UIViewRepresentable {
     let name: String
     let state: AgentAvatarState
     let reduceMotion, active: Bool
+    let onAnimationComplete: (() -> Void)?
     func makeUIView(context: Context) -> AgentDrawingView { AgentDrawingView() }
     func updateUIView(_ view: AgentDrawingView, context: Context) {
-        view.configure(name: name, state: state, reduced: reduceMotion, active: active)
+        view.configure(name: name, state: state, reduced: reduceMotion, active: active,
+                       onAnimationComplete: onAnimationComplete)
     }
     static func dismantleUIView(_ view: AgentDrawingView, coordinator: ()) { AgentAnimationLoop.shared.remove(view) }
 }
@@ -153,6 +157,8 @@ final class AgentDrawingView: UIView {
     private var air = false, secondBlink = false
     private var blink = -1.0, nextBlink = 1.0, nextHop = 3.0, nextGlance = 1.0
     private var eyeScale = 1.0
+    private var launchCompleted = false
+    private var onAnimationComplete: (() -> Void)?
 
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -176,7 +182,9 @@ final class AgentDrawingView: UIView {
         }
         return !rect.isEmpty && rect.intersects(window.bounds)
     }
-    func configure(name: String, state: AgentAvatarState, reduced: Bool, active: Bool) {
+    func configure(name: String, state: AgentAvatarState, reduced: Bool, active: Bool,
+                   onAnimationComplete: (() -> Void)? = nil) {
+        self.onAnimationComplete = onAnimationComplete
         if self.name != name {
             self.name = name; p = AgentPersonality.all[name]!
             elapsed = 0; nextBlink = .random(in: 0.5...2); nextGlance = .random(in: 0.5...2)
@@ -186,6 +194,10 @@ final class AgentDrawingView: UIView {
         self.reduced = reduced; self.active = active
         if reduced { hy = 0; hv = 0; wind = 0; air = false; squash = 0; velocity = 0 }
         if state != self.state {
+            if state == .launching {
+                elapsed = 0; launchCompleted = false; ex = 0; ey = 0
+                hy = 0; hv = 0; wind = 0; air = false; squash = 0; velocity = 0
+            }
             if state == .happy && !reduced { wind = 0.13 }
             if state == .thinking { nextBlink = elapsed + .random(in: p.bk) * 1.5 }
             self.state = state
@@ -193,7 +205,21 @@ final class AgentDrawingView: UIView {
         setNeedsDisplay()
     }
     func advance(dt: Double, pointer: CGPoint?) {
+        if state == .launching && launchCompleted { return }
         elapsed += dt; t += dt
+        if state == .launching {
+            eyeScale = 1
+            for start in [0.35, 0.70] {
+                let progress = (elapsed - start) / 0.18
+                if (0...1).contains(progress) { eyeScale = 1 - 0.92 * sin(.pi * progress) }
+            }
+            if elapsed >= 1.2 && !launchCompleted {
+                launchCompleted = true
+                onAnimationComplete?()
+            }
+            setNeedsDisplay()
+            return
+        }
         if elapsed > nextBlink && blink < 0 { blink = 0 }
         eyeScale = 1
         if blink >= 0 {
@@ -249,8 +275,9 @@ final class AgentDrawingView: UIView {
         guard let ctx = UIGraphicsGetCurrentContext(), let drawing = AgentPaths.drawings[name] else { return }
         ctx.saveGState()
         ctx.scaleBy(x: bounds.width / 1024, y: bounds.height / 1024)
-        let breath = reduced ? 0 : p.br * sin(t * p.bs)
-        let rotation = reduced ? 0 : p.sw * sin(t * p.bs * 0.6) + p.ln * ex + (state == .confused ? 9 : 0)
+        let still = reduced || state == .launching
+        let breath = still ? 0 : p.br * sin(t * p.bs)
+        let rotation = still ? 0 : p.sw * sin(t * p.bs * 0.6) + p.ln * ex + (state == .confused ? 9 : 0)
         ctx.translateBy(x: 512, y: 860 - hy)
         ctx.rotate(by: rotation * .pi / 180)
         ctx.scaleBy(x: 1 + squash * 0.6 - breath * 0.5, y: 1 - squash + breath)

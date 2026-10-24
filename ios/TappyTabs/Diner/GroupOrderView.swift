@@ -13,21 +13,21 @@ struct GroupOrderView: View {
             if let deadline = store.party?.confirmDeadline {
                 Countdown(deadlineMs: deadline, offsetMs: store.serverOffsetMs)
             }
-            Section("For the table") {
+            Section(header: Text("For the table").font(AppTypography.headline)) {
                 if store.sharedLines.isEmpty { Text("Nothing shared").foregroundStyle(.secondary) }
                 ForEach(store.sharedLines) { line in
                     LineRow(line: line, avatars: line.sharedBy.compactMap { store.avatar(of: $0) })
                         .swipeActions { if !confirmed { removeButton(line) } }
                 }
             }
-            Section("Yours") {
+            Section(header: Text("Yours").font(AppTypography.headline)) {
                 ForEach(store.myLines()) { line in
                     LineRow(line: line, avatars: [])
                         .swipeActions { if !confirmed { removeButton(line) } }
                 }
                 if !confirmed { Button { showAdd = true } label: { Label("Add something", systemImage: "plus") } }
             }
-            Section("Everyone else") {
+            Section(header: Text("Everyone else").font(AppTypography.headline)) {
                 ForEach(store.party?.members.filter { $0.userId != store.userId } ?? []) { m in
                     HStack {
                         AvatarView(avatarId: m.avatarId, size: 28)
@@ -93,7 +93,7 @@ struct SubstituteSheet: View {
         VStack(spacing: 16) {
             Text("Swap for \(sub.name)?").font(AppTypography.style(.title2, weight: .bold))
             Text(sub.reason).foregroundStyle(.secondary)
-            PriceText(cents: sub.priceCents).font(AppTypography.title3)
+            PriceText(cents: sub.priceCents).font(AppTypography.custom(20))
             if sub.askServer { AskServerBadge() }
             Button("Swap") { Task { await store.add(sub.itemId, shared: false); dismiss() } }.buttonStyle(BigButtonStyle())
             Button("No thanks") { dismiss() }

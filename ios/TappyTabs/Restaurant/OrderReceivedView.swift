@@ -7,7 +7,7 @@ struct ProgressBoardView: View {
         VStack(spacing: 24) {
             Spacer()
             let members = store.party?.members ?? []
-            Text("\(members.filter(\.confirmed).count) of \(members.count) confirmed").font(AppTypography.custom(40, weight: .bold))
+            Text("\(members.filter(\.confirmed).count) of \(members.count) confirmed").font(AppTypography.custom(40, relativeTo: .largeTitle, weight: .bold))
             MemberTicks(members: members) { $0.confirmed }
             if let d = store.party?.confirmDeadline { Countdown(deadlineMs: d, offsetMs: store.serverOffsetMs) }
             Spacer()
@@ -24,11 +24,11 @@ struct OrderReceivedView: View {
             AvatarView(avatarId: AvatarCatalog.restaurant, size: 80, state: .happy)
             Text("Order received").font(AppTypography.style(.largeTitle, weight: .bold)).padding()
             List {
-                Section("For the table") {
+                Section(header: Text("For the table").font(AppTypography.headline)) {
                     ForEach(store.sharedLines) { line in ticketRow(line) }
                 }
                 ForEach(store.party?.members ?? []) { m in
-                    Section(m.name) { ForEach(store.myLines(m.userId)) { line in ticketRow(line) } }
+                    Section(header: Text(m.name).font(AppTypography.headline)) { ForEach(store.myLines(m.userId)) { line in ticketRow(line) } }
                 }
                 Section {
                     HStack { Text("Table total").bold(); Spacer(); PriceText(cents: store.lines.totals.total).bold() }

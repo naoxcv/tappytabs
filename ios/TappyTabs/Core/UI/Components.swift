@@ -9,14 +9,14 @@ enum Theme {
     static let restaurantBubble = Color(.tertiarySystemFill)
 }
 
-/// Shared Raleway styles that preserve Dynamic Type and the app's existing hierarchy.
+/// Shared typography that preserves Dynamic Type and the app's existing hierarchy.
 enum AppTypography {
     static func custom(
         _ size: CGFloat,
         relativeTo style: Font.TextStyle = .body,
         weight: Font.Weight = .regular
     ) -> Font {
-        .custom(postScriptName(for: weight), size: size, relativeTo: style)
+        .custom(postScriptName(for: weight, style: style), size: size, relativeTo: style).weight(weight)
     }
 
     static func style(_ style: Font.TextStyle, weight: Font.Weight = .regular) -> Font {
@@ -37,7 +37,16 @@ enum AppTypography {
         return custom(size, relativeTo: style, weight: weight)
     }
 
-    private static func postScriptName(for weight: Font.Weight) -> String {
+    static func postScriptName(for weight: Font.Weight, style: Font.TextStyle) -> String {
+        switch style {
+        case .largeTitle, .title, .title2, .title3, .headline: break
+        default:
+            if weight == .black || weight == .heavy { return "OpenSansRoman-ExtraBold" }
+            if weight == .bold { return "OpenSansRoman-Bold" }
+            if weight == .semibold { return "OpenSansRoman-SemiBold" }
+            if weight == .light || weight == .ultraLight || weight == .thin { return "OpenSansRoman-Light" }
+            return "OpenSans-Regular"
+        }
         if weight == .black { return "RalewayRoman-Black" }
         if weight == .heavy { return "RalewayRoman-ExtraBold" }
         if weight == .bold { return "RalewayRoman-Bold" }
@@ -184,7 +193,7 @@ struct BigButtonStyle: ButtonStyle {
     var tint: Color = Theme.accent
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .font(AppTypography.headline)
+            .font(AppTypography.style(.body, weight: .semibold))
             .frame(maxWidth: .infinity, minHeight: 54)
             .background(tint.opacity(configuration.isPressed ? 0.7 : 1), in: RoundedRectangle(cornerRadius: 16))
             .foregroundStyle(Theme.accentForeground)

@@ -6,8 +6,10 @@ import UIKit
 struct TappyTabsApp: App {
     @UIApplicationDelegateAdaptor(OrientationDelegate.self) private var orientationDelegate
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var app = AppModel()
     @State private var pendingJoinCode: String?
+    @State private var showingLaunch = true
 
     init() {
         guard let titleFont = UIFont(name: "RalewayRoman-Regular", size: 17),
@@ -23,7 +25,19 @@ struct TappyTabsApp: App {
 
     var body: some Scene {
         WindowGroup {
-            RootView(pendingJoinCode: $pendingJoinCode)
+            Group {
+                if app.mode == nil {
+                    ModeSelectView(isLaunching: showingLaunch, onLaunchComplete: finishLaunch)
+                } else if showingLaunch {
+                    LaunchBrandView(onLaunchComplete: finishLaunch)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .background(Color.black.ignoresSafeArea())
+                    .transition(.opacity)
+                } else {
+                    RootView(pendingJoinCode: $pendingJoinCode)
+                        .transition(.opacity)
+                }
+            }
                 .environment(app)
                 .onOpenURL { url in pendingJoinCode = JoinLink.joinCode(from: url) }
                 .tint(Theme.accent)
@@ -33,6 +47,12 @@ struct TappyTabsApp: App {
                 .onChange(of: scenePhase) { _, phase in
                     if phase == .active { OrientationDelegate.update(for: app.mode) }
                 }
+        }
+    }
+
+    private func finishLaunch() {
+        withAnimation(reduceMotion ? .easeOut(duration: 0.15) : .easeInOut(duration: 0.6)) {
+            showingLaunch = false
         }
     }
 }
@@ -118,14 +138,14 @@ struct DebugMenu: View {
         NavigationStack {
             Form {
                 if app.mode == .diner && app.partyId == nil {
-                    Section("Tap test") {
+                    Section(header: Text("Tap test").font(AppTypography.headline)) {
                         Button("Restart tap search") {
                             app.leaveTable()
                             dismiss()
                         }
                     }
                 }
-                Section("Backend") {
+                Section(header: Text("Backend").font(AppTypography.headline)) {
                     Picker("Data", selection: $app.backendKind) {
                         ForEach(AppModel.BackendKind.allCases) { Text($0.rawValue.capitalized).tag($0) }
                     }.pickerStyle(.segmented)
@@ -136,7 +156,7 @@ struct DebugMenu: View {
                         Button("Demo") { app.convexURL = Env.demoURL }
                     }
                 }
-                Section("Test identities") {
+                Section(header: Text("Test identities").font(AppTypography.headline)) {
                     LabeledContent("deviceId", value: app.deviceId)
                     LabeledContent("userId", value: app.userId ?? "–")
                     ForEach(1...4, id: \.self) { n in
@@ -144,7 +164,7 @@ struct DebugMenu: View {
                             .disabled(selectingDiner != nil)
                     }
                     if let selectingDiner { ProgressView("Loading demo diner \(selectingDiner)…") }
-                    if let identityMessage { Text(identityMessage).font(.footnote) }
+                    if let identityMessage { Text(identityMessage).font(AppTypography.footnote) }
                     Button("Be the demo restaurant") {
                         identityRequestID = UUID()
                         selectingDiner = nil
@@ -156,7 +176,7 @@ struct DebugMenu: View {
                     Button("Sign out (re-run onboarding)", role: .destructive) { app.signOut() }
                 }
                 if let mock = app.mock {
-                    Section("Mock: jump to status") {
+                    Section(header: Text("Mock: jump to status").font(AppTypography.headline)) {
                         ForEach(PartyStatus.allCases, id: \.self) { s in
                             Button(s.rawValue) {
                                 if app.partyId == nil { app.partyId = mock.ids.partyId }
@@ -173,7 +193,7 @@ struct DebugMenu: View {
                         Task { await leaveJoinedTable() }
                     }.disabled(leavingTable)
                     if leavingTable { ProgressView("Leaving table…") }
-                    if let leaveError { Text(leaveError).foregroundStyle(.red).font(.footnote) }
+                    if let leaveError { Text(leaveError).foregroundStyle(.red).font(AppTypography.footnote) }
                     Button("Switch mode") { app.switchMode(); dismiss() }
                 }
             }

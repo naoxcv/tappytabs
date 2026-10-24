@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		AA1122334455667788990022 /* OpenSans-Variable.ttf in Resources */ = {isa = PBXBuildFile; fileRef = AA1122334455667788990021 /* OpenSans-Variable.ttf */; };
+		AA1122334455667788990032 /* OpenSans-OFL.txt in Resources */ = {isa = PBXBuildFile; fileRef = AA1122334455667788990031 /* OpenSans-OFL.txt */; };
 		C280CA1045E74AA2960FA34E /* Raleway-Variable.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 9008DD017F774446A2D27687 /* Raleway-Variable.ttf */; };
 		14901C06AF6445A6C03BDCBE /* messages.json in Resources */ = {isa = PBXBuildFile; fileRef = D3DC698F30EFC43DA0663DDF /* messages.json */; };
 		168764815A98619FD290D2BE /* party_confirm.json in Resources */ = {isa = PBXBuildFile; fileRef = 0743084581CF6E250736C989 /* party_confirm.json */; };
@@ -69,6 +71,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		AA1122334455667788990021 /* OpenSans-Variable.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "OpenSans-Variable.ttf"; sourceTree = "<group>"; };
+		AA1122334455667788990031 /* OpenSans-OFL.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "OpenSans-OFL.txt"; sourceTree = "<group>"; };
 		9008DD017F774446A2D27687 /* Raleway-Variable.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Raleway-Variable.ttf"; sourceTree = "<group>"; };
 		01C1F4CF26D4683E1B47FFBF /* ModeSelectView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModeSelectView.swift; sourceTree = "<group>"; };
 		039C2B1D20CE333F61A98D39 /* MockBackend.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockBackend.swift; sourceTree = "<group>"; };
@@ -255,6 +259,8 @@
 			isa = PBXGroup;
 			children = (
 				9008DD017F774446A2D27687 /* Raleway-Variable.ttf */,
+				AA1122334455667788990021 /* OpenSans-Variable.ttf */,
+				AA1122334455667788990031 /* OpenSans-OFL.txt */,
 			);
 			path = Fonts;
 			sourceTree = "<group>";
@@ -401,6 +407,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				C280CA1045E74AA2960FA34E /* Raleway-Variable.ttf in Resources */,
+				AA1122334455667788990022 /* OpenSans-Variable.ttf in Resources */,
+				AA1122334455667788990032 /* OpenSans-OFL.txt in Resources */,
 				9F811EE89CED9A596A3E7845 /* Assets.xcassets in Resources */,
 				F9A6C02124D51CA97ADD4C0C /* OnboardingCards.json in Resources */,
 				8908B073D4C186D5C280AC3E /* addable_personal.json in Resources */,

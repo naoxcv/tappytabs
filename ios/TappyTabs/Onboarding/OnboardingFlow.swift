@@ -61,12 +61,12 @@ struct OnboardingFlow: View {
             .transition(.push(from: .trailing))
             .animation(.easeInOut, value: model.step)
             if let testProfileError {
-                Text(testProfileError).font(.footnote).foregroundStyle(.red).padding(.horizontal)
+                Text(testProfileError).font(AppTypography.footnote).foregroundStyle(.red).padding(.horizontal)
             }
             Button(creatingTestProfile ? "Creating test diner…" : "Skip onboarding for tap test") {
                 Task { await createTestProfile() }
             }
-            .font(.footnote)
+            .font(AppTypography.footnote)
             .disabled(creatingTestProfile)
             .padding(.bottom)
         }
@@ -119,7 +119,7 @@ struct BasicsStep: View {
     @Bindable var model: OnboardingModel
     var body: some View {
         StepScaffold(title: "Hi! What's your name?", canContinue: !model.draft.name.trimmingCharacters(in: .whitespaces).isEmpty, onNext: model.next) {
-            TextField("First name", text: $model.draft.name).font(AppTypography.title2).textFieldStyle(.roundedBorder).textContentType(.givenName)
+            TextField("First name", text: $model.draft.name).font(AppTypography.custom(22)).textFieldStyle(.roundedBorder).textContentType(.givenName)
         }
     }
 }
@@ -165,7 +165,7 @@ struct SpiceStep: View {
             VStack(spacing: 24) {
                 Text(String(repeating: "🌶️", count: Int(model.draft.spice) + 1)).font(.system(size: 44))
                 Slider(value: $model.draft.spice, in: 0...4, step: 1)
-                Text(["None", "Mild", "Medium", "Hot", "Bring it"][Int(model.draft.spice)]).font(AppTypography.title3)
+                Text(["None", "Mild", "Medium", "Hot", "Bring it"][Int(model.draft.spice)]).font(AppTypography.custom(20))
             }.padding(.top, 40)
         }
     }

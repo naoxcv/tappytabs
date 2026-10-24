@@ -60,7 +60,7 @@ struct CandidateCard: View {
                         .background(Theme.accent, in: Capsule())
                 }
                 Spacer()
-                PriceText(cents: candidate.priceCents).font(big ? AppTypography.style(.title3, weight: .bold) : AppTypography.headline)
+                PriceText(cents: candidate.priceCents).font(AppTypography.custom(big ? 20 : 17, weight: .bold))
             }
             Text(candidate.name).font(big ? AppTypography.style(.title, weight: .bold) : AppTypography.style(.title3, weight: .bold))
             Text(candidate.reason).font(AppTypography.subheadline).foregroundStyle(.secondary)

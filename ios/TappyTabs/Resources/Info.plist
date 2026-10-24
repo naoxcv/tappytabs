@@ -54,6 +54,7 @@
 	<key>UIAppFonts</key>
 	<array>
 		<string>Raleway-Variable.ttf</string>
+		<string>OpenSans-Variable.ttf</string>
 	</array>
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
