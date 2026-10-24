@@ -11,7 +11,7 @@ import { callJson, type CallLog } from "./models/provider";
 import { draftPrompt, draftSchema, repairDraft } from "./prompts/draft";
 import { repairSummary, summaryPrompt, summarySchema } from "./prompts/summaryBubble";
 import { repairVote, votePrompt, voteSchema } from "./prompts/vote";
-import { fallbackDraft, fallbackVote, isSharePlate, mainPool } from "./ranking";
+import { fallbackDraft, fallbackVote, isSharePlate, mainPool, rankItems, scoreContext, scoreItem } from "./ranking";
 import { buildPlan, sharedTarget, tally } from "./rules";
 import { safeSet, sharedSafeSet } from "./safety";
 
@@ -40,7 +40,8 @@ export const draftStep = internalAction({
       const hunger = c.hungers[userId] ?? "normal";
       fb = fallbackDraft(c.menu, user, hunger);
       const mine = safeSet(c.menu, user);
-      const mains = mainPool(mine);
+      const scoreCtx = scoreContext(c.menu);
+      const mains = rankItems(mainPool(mine), (item) => scoreItem(item, user, hunger, scoreCtx));
       const drinks = mine.filter((i) => i.isDrink);
       const shared = sharedSafeSet(c.menu, [user]).filter(isSharePlate); // pooling re-checks against the whole party
       const p = draftPrompt({ user, hunger, mains, drinks, shared });
@@ -49,11 +50,30 @@ export const draftStep = internalAction({
         onLog: logTo(ctx, partyId, userId),
       });
       if (!r) return fb;
-      return repairDraft(r.data, {
+      const repaired = repairDraft(r.data, {
         mains: new Set(mains.map((m) => m._id)),
         drinks: new Set(drinks.map((d) => d._id)),
         shared: new Set(shared.map((s) => s._id)),
       }, fb);
+      if (user.personality !== "budget_minded") return repaired;
+
+      // Keep the code-ranked value pick available and in first place for budget-minded diners.
+      const preferred = fb.mains[0];
+      const budgetMains = preferred && !repaired.mains.some((m) => m.itemId === preferred.itemId)
+        ? [preferred, ...repaired.mains].slice(0, 3)
+        : repaired.mains;
+      const selected = budgetMains.flatMap((m) => {
+        const item = mains.find((candidate) => candidate._id === m.itemId);
+        return item ? [item] : [];
+      });
+      const scoreOrder = new Map(
+        rankItems(selected, (item) => scoreItem(item, user, hunger, scoreCtx))
+          .map((item, index) => [item._id, index]),
+      );
+      return {
+        ...repaired,
+        mains: [...budgetMains].sort((a, b) => (scoreOrder.get(a.itemId) ?? 99) - (scoreOrder.get(b.itemId) ?? 99)),
+      };
     } catch {
       return fb;
     }

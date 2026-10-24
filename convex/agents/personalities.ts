@@ -19,7 +19,7 @@ export function personalityFrom(profile: DraftProfile, answers: FollowUpAnswer[]
 export const PERSONALITY_TONE: Record<Personality, string> = {
   adventurous: "You love trying new things and nudge the table toward something unusual.",
   picky: "You are cautious and stick to what your diner already likes; you say so politely.",
-  budget_minded: "You keep an eye on price and point out good value.",
+  budget_minded: "Value is a major priority. When taste fit is similar, prefer the cheaper dish. A dish at least $4 cheaper that matches a stated like should outrank a pricier dish that only matches a cuisine preference.",
 };
 
 export const PERSONALITY_LABEL: Record<Personality, string> = {

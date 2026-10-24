@@ -20,6 +20,12 @@ async function waitFor(ctx: ActionCtx, partyId: Id<"parties">, status: string, t
 type E2EResult = {
   ok: boolean; partyId: Id<"parties">; negotiationMs: number; totalMs: number;
   lines: string[]; total: number; bubbles: string[];
+  recommendations: {
+    diner: string;
+    mains: { rank: number; dish: string; reason: string; askServer: boolean }[];
+    drink: { dish: string; reason: string; askServer: boolean } | null;
+  }[];
+  sharedDishes: { dish: string; sharedBy: string[] }[];
 };
 
 export const happyPath = internalAction({
@@ -38,9 +44,21 @@ export const happyPath = internalAction({
     const tNeg = Date.now();
     await waitFor(ctx, partyId, "pick", 60_000);
     const negotiationMs = Date.now() - tNeg;
+    const recommendations: E2EResult["recommendations"] = [];
+    const dinerNames = new Map<string, string>();
     for (const [i, userId] of userIds.entries()) {
       const cands = await ctx.runQuery(api.orders.candidates, { partyId, userId });
-      const top = cands.find((c) => !c.isDrink);
+      const user = await ctx.runQuery(internal.users.get, { userId });
+      const diner = user?.name ?? `Diner ${i + 1}`;
+      dinerNames.set(userId, diner);
+      const mains = cands.filter((c) => !c.isDrink);
+      const drink = cands.find((c) => c.isDrink);
+      recommendations.push({
+        diner,
+        mains: mains.map((c) => ({ rank: c.rank, dish: c.name, reason: c.reason, askServer: c.askServer })),
+        drink: drink ? { dish: drink.name, reason: drink.reason, askServer: drink.askServer } : null,
+      });
+      const top = mains[0];
       if (!top) throw new Error(`no candidates for diner ${i + 1}`);
       await ctx.runMutation(api.orders.pick, { partyId, userId, deviceId: `demo-diner-${i + 1}`, itemId: top.itemId });
     }
@@ -53,6 +71,12 @@ export const happyPath = internalAction({
     const shares = Object.values(totals.perUser as Record<string, number>).reduce((a, b) => a + b, 0);
     if (shares !== totals.total) throw new Error(`shares ${shares} != total ${totals.total}`);
     const bubbles = (await ctx.runQuery(api.messages.list, { partyId })).messages.map((m) => m.text);
-    return { ok: true, partyId, negotiationMs, totalMs: Date.now() - t0, lines: lines.map((l) => l.name), total: totals.total, bubbles };
+    const sharedDishes = lines
+      .filter((line) => line.kind === "shared")
+      .map((line) => ({ dish: line.name, sharedBy: line.sharedBy.map((id) => dinerNames.get(id) ?? "Someone") }));
+    return {
+      ok: true, partyId, negotiationMs, totalMs: Date.now() - t0,
+      lines: lines.map((l) => l.name), total: totals.total, bubbles, recommendations, sharedDishes,
+    };
   },
 });

@@ -28,6 +28,7 @@ export function draftPrompt(args: {
     PERSONALITY_TONE[user.personality ?? "adventurous"],
     "Pick up to 3 ranked mains and 1 drink for your diner, and propose 0–2 dishes for the whole table to share.",
     "Prefer items without askServer. Give a one-line reason per pick (max 60 chars).",
+    "The candidate list is ordered by a code-based fit score; use that order as your default and only depart from it for a clear preference reason.",
     "The server writes the opening bubble from your selected dishes, so focus on ranking candidates and concise reasons.",
     COMMON_RULES,
   ].join("\n");

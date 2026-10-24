@@ -27,7 +27,7 @@ export function scoreContext(menu: MenuItemLite[]): ScoreContext {
 /**
  * Weights (tune with the 4 seeded profiles; keep them here, not in prompts):
  *  +3 per liked tag, +2 cuisine in cuisines, −4 per disliked tag, −2 per spice level above tolerance,
- *  +1 shareable when starving, −1 per $5 over median for budget_minded, +2 for an unliked category for
+ *  +1 shareable when starving, budget-minded gets ±2 points per $5 from median price, +2 for an unliked category for
  *  adventurous, −2 askServer for picky, −5 askServer for everyone (clean items always rank first).
  */
 export function scoreItem(
@@ -43,8 +43,8 @@ export function scoreItem(
   if (item.cuisine && user.cuisines.map((c) => c.toLowerCase()).includes(item.cuisine.toLowerCase())) s += 2;
   if (item.spice > user.spice) s -= 2 * (item.spice - user.spice);
   if (hunger === "starving" && item.shareable) s += 1;
-  if (user.personality === "budget_minded" && item.priceCents > ctx.medianPriceCents) {
-    s -= Math.floor((item.priceCents - ctx.medianPriceCents) / 500);
+  if (user.personality === "budget_minded") {
+    s += Math.round(((ctx.medianPriceCents - item.priceCents) * 2) / 500);
   }
   if (user.personality === "adventurous" && !user.likes.some((l) => tags.has(l.toLowerCase()))) s += 2;
   if (item.askServer) s -= user.personality === "picky" ? 7 : 5;
