@@ -3,7 +3,7 @@ import { v } from "convex/values";
 import type { Id } from "./_generated/dataModel";
 import { internalMutation, query, type MutationCtx } from "./_generated/server";
 import { TIMING } from "./shared/enums";
-import { clip } from "./agents/bubbles";
+import { splitBubbleText } from "./agents/bubbles";
 
 /** Post one bubble, paced 2.5 s after the previous one. Dedupes on (party, speaker, text) so retries are harmless. */
 export async function postBubble(
@@ -12,18 +12,28 @@ export async function postBubble(
   fromUserId: Id<"users"> | undefined,
   text: string,
 ): Promise<number> {
-  const body = clip(text);
+  const bodies = splitBubbleText(text);
+  if (bodies.length === 0) return Date.now();
   const existing = await ctx.db
     .query("messages")
     .withIndex("by_party_showAt", (q) => q.eq("partyId", partyId))
     .collect();
-  const dup = existing.find((m) => m.fromUserId === fromUserId && m.text === body);
-  if (dup) return dup.showAt;
-  const now = Date.now();
-  const last = existing.at(-1);
-  const showAt = last ? Math.max(now, last.showAt + TIMING.bubbleGapMs) : now + TIMING.firstBubbleDelayMs;
-  await ctx.db.insert("messages", { partyId, fromUserId, text: body, showAt });
-  return showAt;
+  let last = existing.at(-1);
+  let finalShowAt = Date.now();
+  for (const body of bodies) {
+    const dup = existing.find((m) => m.fromUserId === fromUserId && m.text === body);
+    if (dup) {
+      finalShowAt = dup.showAt;
+      continue;
+    }
+    const now = Date.now();
+    const showAt = last ? Math.max(now, last.showAt + TIMING.bubbleGapMs) : now + TIMING.firstBubbleDelayMs;
+    const _id = await ctx.db.insert("messages", { partyId, fromUserId, text: body, showAt });
+    last = { _id, partyId, fromUserId, text: body, showAt, _creationTime: now };
+    existing.push(last);
+    finalShowAt = showAt;
+  }
+  return finalShowAt;
 }
 
 export const insertPaced = internalMutation({

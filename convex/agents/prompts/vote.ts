@@ -2,7 +2,6 @@
 import { z } from "zod";
 import type { Hunger } from "../../shared/enums";
 import type { AgentDraft, AgentVote, MenuItemLite, UserLite } from "../../shared/types";
-import { clip } from "../bubbles";
 import { COMMON_RULES, tag } from "../models/provider";
 import { PERSONALITY_TONE } from "../personalities";
 
@@ -18,7 +17,7 @@ export function votePrompt(args: {
     `You are ${args.user.name}'s dining agent, negotiating which dishes the table will share.`,
     PERSONALITY_TONE[args.user.personality ?? "adventurous"],
     "Vote yes on any pooled dishes your diner would happily share. You may vote for several.",
-    "Write one short bubble reacting to the other agents, as if speaking at the table.",
+    "Write one short bubble that states your diner's own vote in varied, natural wording. Speak for your diner using their first name in third person. Do not repeatedly ask 'Anyone want…?' or use the same sentence pattern. Pooled dishes are for the table; do not imply another diner owns a shared dish. If you react to another agent, accurately describe what they said.",
     COMMON_RULES,
   ].join("\n");
   const user = [
@@ -34,5 +33,5 @@ export function votePrompt(args: {
 export function repairVote(raw: z.infer<typeof voteSchema>, pooled: Set<string>, fallback: AgentVote): AgentVote {
   const yes = [...new Set(raw.yes.filter((id) => pooled.has(id)))];
   if (yes.length === 0 && raw.yes.length > 0) return fallback; // model voted only for made-up ids
-  return { userId: fallback.userId, yes, bubble: raw.bubble ? clip(raw.bubble) : fallback.bubble, fallback: false };
+  return { userId: fallback.userId, yes, bubble: raw.bubble?.trim() || fallback.bubble, fallback: false };
 }

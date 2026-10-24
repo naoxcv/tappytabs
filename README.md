@@ -43,7 +43,7 @@ The MVP is the full happy path for one real restaurant and 3–4 diners, working
 
 1. **Onboarding (once, under 90 s).** Diner enters a name, checks allergies and diet, sets spice tolerance, swipes like/dislike on 15–20 dish cards, optionally answers 2–3 AI follow-ups, and gets a profile summary and avatar.
 2. **Check-in.** Host enters party size. Each diner holds their phone to the restaurant phone; a buzz and animation confirm the join, and the restaurant screen shows "2 of 4 checked in". The last tap starts everything; "Start with fewer" covers a no-show. Each diner picks a hunger level: snack, normal or starving.
-3. **Negotiation.** Each diner agent drafts 1–3 candidates plus a drink within its owner's allergies. Agents then negotiate a group plan (personal mains, shared dishes, how many). Avatars talk in speech bubbles on the restaurant screen; phones show "your agent is negotiating".
+3. **Negotiation.** Each diner agent drafts 1–3 candidates plus a drink within its owner's allergies. Agents then negotiate a group plan (personal mains, shared dishes, how many). Avatars talk in speech bubbles on the restaurant screen, paced with a 1.5-second gap; diners can begin picking once the plan is ready while the conversation continues.
 4. **Personal pick (stage 1).** Each phone shows the agent's top pick plus 2 alternatives with a reason and price; the diner locks one in.
 5. **Group confirm (stage 2).** Every phone shows the full order. Anyone can add or remove items; removing offers the agent's substitute. Everyone confirms, and the order appears on the restaurant screen.
 

@@ -232,7 +232,7 @@ Pure functions Role 4 imports: `isSafeFor`, `safeSet`, `sharedSafeSet`, `addable
 |---|---|
 | ✅ | `safety.ts`: three levels, gluten also checks wheat, positive diet tags, personal vs shared mode, untagged items never recommended (D5). |
 | ✅ | `ranking.ts`: `scoreItem` weights (personalities, spice, askServer penalty), `mainPool`, `isSharePlate`, `fallbackDraft`, `fallbackVote`. |
-| ✅ | `rules.ts`: `sharedTarget`, `poolForParty` (allergy drops first, at most 2 drop bubbles, top-up to 2), `tally`, `buildPlan`; `substitute.ts`; `personalities.ts`; `bubbles.ts` with the exact `dropBubbleText` (the PRD line is a test). |
+| ✅ | `rules.ts`: `sharedTarget`, `poolForParty` (allergy drops first, at most 2 drop bubbles, top-up to 2), `tally`, `buildPlan`; `substitute.ts`; `personalities.ts`; `bubbles.ts` with the exact `dropBubbleText` (the PRD line is a test). Long bubble text splits into sequential sentence-sized messages; the workflow caps each transcript at 8 messages and reserves up to two for the final summary. |
 | ✅ | `models/provider.ts`: `callJson` with deadline, provider fallback, Zod parse, `agentLogs`. `claude.ts` (structured outputs, effort low, server-side refusal fallback on, no `temperature` or forced tool choice, since current models reject them); `bitdeer.ts` (OpenAI SDK + Bitdeer base URL, JSON mode). |
 | ✅ | Prompts with XML data tags and repair functions that never trust model ids; `steps.ts` with fallbacks; `profile.ts`. |
 | ✅ | 27 pure tests + the 500-run randomized suite with a "hostile model". |

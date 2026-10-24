@@ -9,7 +9,7 @@ import { TIMING, type Hunger } from "./shared/enums";
 import { agentDraftV, agentVoteV, planV, type AgentDraft, type AgentVote, type MenuItemLite, type Plan, type UserLite } from "./shared/types";
 import { membersOf, menuOf, usersOf } from "./lib/guards";
 import { postBubble } from "./messages";
-import { dropBubbleText, summaryTemplate, topUpBubble } from "./agents/bubbles";
+import { dropBubbleText, openingBubble, splitBubbleText, summaryTemplate } from "./agents/bubbles";
 import { fallbackDraft, fallbackVote } from "./agents/ranking";
 import { buildPlan, poolForParty, sharedTarget, tally } from "./agents/rules";
 import { isSafeFor, safeSet } from "./agents/safety";
@@ -18,8 +18,31 @@ export const workflow = new WorkflowManager(components.workflow, {
   workpoolOptions: { maxParallelism: 10 },
 });
 
+// Bound the transcript so 2.2 s bubble pacing does not dominate the live demo.
+// Keep one slot for the plan summary and, during pooling, one slot for a vote reaction.
+const MAX_NEGOTIATION_BUBBLES = 8;
+
+async function bubbleCount(ctx: MutationCtx, partyId: Id<"parties">): Promise<number> {
+  return (await ctx.db.query("messages")
+    .withIndex("by_party_showAt", (q) => q.eq("partyId", partyId))
+    .take(MAX_NEGOTIATION_BUBBLES)).length;
+}
+
+async function postBubbleIfRoom(
+  ctx: MutationCtx,
+  partyId: Id<"parties">,
+  fromUserId: Id<"users"> | undefined,
+  text: string,
+  reserve = 0,
+): Promise<number | null> {
+  const needed = splitBubbleText(text).length;
+  if (await bubbleCount(ctx, partyId) + needed + reserve > MAX_NEGOTIATION_BUBBLES) return null;
+  return postBubble(ctx, partyId, fromUserId, text);
+}
+
 /** Called from parties.setHunger once every diner has chosen. */
 export async function startNegotiation(ctx: MutationCtx, partyId: Id<"parties">, epoch: number) {
+  await postBubble(ctx, partyId, undefined, "The agents are checking the menu for options that fit the table.");
   await workflow.start(ctx, internal.negotiation.negotiate, { partyId, epoch });
   await ctx.scheduler.runAfter(TIMING.rescueAfterMs, internal.negotiation.rescue, { partyId, epoch });
 }
@@ -81,7 +104,7 @@ async function isLive(ctx: MutationCtx, partyId: Id<"parties">, epoch: number) {
   return !!p && p.epoch === epoch && p.status === "negotiating" && !p.committedAt;
 }
 
-/** Opening bubbles, then pool shared proposals and drop any that are unsafe for someone (with an exact bubble). */
+/** Keep every diner's opening bubble, then prioritize exact safety drops within the transcript budget. */
 export const poolAndPost = internalMutation({
   args: { partyId: v.id("parties"), epoch: v.number(), drafts: v.array(agentDraftV) },
   handler: async (ctx, { partyId, epoch, drafts }): Promise<{ pooled: string[]; live: boolean }> => {
@@ -89,10 +112,20 @@ export const poolAndPost = internalMutation({
     const party = (await ctx.db.get(partyId))!;
     const users = await usersOf(ctx, await membersOf(ctx, partyId));
     const menu = await menuOf(ctx, party.restaurantId);
-    for (const d of drafts) await postBubble(ctx, partyId, d.userId as Id<"users">, d.bubble);
-    const { pooled, drops, topUps } = poolForParty(drafts, menu, users);
-    for (const d of drops) await postBubble(ctx, partyId, undefined, dropBubbleText(d.item, d.failed));
-    for (const item of topUps) await postBubble(ctx, partyId, undefined, topUpBubble(item));
+    // Openings fit for the supported maximum party size of six, leaving room for the plan summary.
+    for (const [index, d] of drafts.entries()) {
+      const user = users.find((u) => u._id === d.userId);
+      const mainName = menu.find((m) => m._id === d.mains[0]?.itemId)?.name;
+      const sharedName = menu.find((m) => m._id === d.sharedProposals[0])?.name;
+      const text = user ? openingBubble(user, mainName, sharedName, index) : d.bubble;
+      await postBubbleIfRoom(ctx, partyId, d.userId as Id<"users">, text, drafts.length - index - 1 + 1);
+    }
+    const { pooled, drops } = poolForParty(drafts, menu, users);
+    // Reserve two slots for a potentially split summary. Safety explanations take priority
+    // over vote and restaurant top-up narration; the selected plan still includes top-ups.
+    for (const d of drops) {
+      if (!(await postBubbleIfRoom(ctx, partyId, undefined, dropBubbleText(d.item, d.failed), 2))) break;
+    }
     return { pooled, live: true };
   },
 });
@@ -101,7 +134,10 @@ export const postVotes = internalMutation({
   args: { partyId: v.id("parties"), epoch: v.number(), votes: v.array(agentVoteV) },
   handler: async (ctx, { partyId, epoch, votes }) => {
     if (!(await isLive(ctx, partyId, epoch))) return;
-    for (const vote of votes) await postBubble(ctx, partyId, vote.userId as Id<"users">, vote.bubble);
+    // Keep up to two slots for a summary that needs splitting.
+    for (const vote of votes) {
+      if (!(await postBubbleIfRoom(ctx, partyId, vote.userId as Id<"users">, vote.bubble, 2))) break;
+    }
   },
 });
 
@@ -142,9 +178,18 @@ export const commit = internalMutation({
         partyId, itemId: item._id, qty: s.qty, kind: "shared", sharedBy: sharers.map((u) => u._id), addedBy: "agent",
       });
     }
-    const showAt = await postBubble(ctx, partyId, undefined, plan.summaryBubble);
+    const sharedNames = plan.shared.map((s) => byId.get(s.itemId)?.name ?? "a dish");
+    let summaryPosted = await postBubbleIfRoom(ctx, partyId, undefined, plan.summaryBubble);
+    if (summaryPosted === null) {
+      summaryPosted = await postBubbleIfRoom(ctx, partyId, undefined, summaryTemplate(sharedNames, plan.mains.length));
+    }
+    if (summaryPosted === null) {
+      await postBubbleIfRoom(ctx, partyId, undefined, "Your mains are ready. Check your phones to choose yours!");
+    }
     await ctx.db.patch(partyId, { committedAt: Date.now() });
-    await ctx.scheduler.runAt(showAt + 1_500, internal.parties.advance, { partyId, epoch });
+    // Picks become available as soon as the plan is committed; the restaurant transcript
+    // continues on its own showAt schedule while diners make their choices.
+    await ctx.scheduler.runAfter(TIMING.bubbleEndHoldMs, internal.parties.advance, { partyId, epoch });
   },
 });
 

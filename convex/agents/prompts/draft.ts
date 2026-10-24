@@ -8,10 +8,10 @@ import { PERSONALITY_TONE } from "../personalities";
 import type { SafeItem } from "../safety";
 
 export const draftSchema = z.object({
-  mains: z.array(z.object({ itemId: z.string(), reason: z.string() })).max(3),
+  // Claude structured outputs does not support JSON Schema maxItems; repairDraft enforces the cap.
+  mains: z.array(z.object({ itemId: z.string(), reason: z.string() })),
   drink: z.object({ itemId: z.string(), reason: z.string() }).nullable(),
-  sharedProposals: z.array(z.string()).max(2),
-  bubble: z.string(),
+  sharedProposals: z.array(z.string()),
 });
 
 const menuRow = (i: SafeItem) => ({
@@ -28,7 +28,7 @@ export function draftPrompt(args: {
     PERSONALITY_TONE[user.personality ?? "adventurous"],
     "Pick up to 3 ranked mains and 1 drink for your diner, and propose 0–2 dishes for the whole table to share.",
     "Prefer items without askServer. Give a one-line reason per pick (max 60 chars).",
-    "Write one opening bubble the restaurant screen will show.",
+    "The server writes the opening bubble from your selected dishes, so focus on ranking candidates and concise reasons.",
     COMMON_RULES,
   ].join("\n");
   const user_ = [
@@ -50,7 +50,7 @@ export function repairDraft(
   fallback: AgentDraft,
 ): AgentDraft {
   const mains: AgentDraft["mains"] = [];
-  for (const m of raw.mains) {
+  for (const m of raw.mains.slice(0, 3)) {
     if (allowed.mains.has(m.itemId) && !mains.some((x) => x.itemId === m.itemId)) {
       mains.push({ itemId: m.itemId, reason: clip(m.reason, 80) });
     }
@@ -62,14 +62,14 @@ export function repairDraft(
   const drink = raw.drink && allowed.drinks.has(raw.drink.itemId)
     ? { itemId: raw.drink.itemId, reason: clip(raw.drink.reason, 80) }
     : fallback.drink;
-  const shared = [...new Set(raw.sharedProposals.filter((id) => allowed.shared.has(id)))].slice(0, 2);
+  const shared = [...new Set(raw.sharedProposals.slice(0, 2).filter((id) => allowed.shared.has(id)))];
   const usedModel = mains.some((m) => allowed.mains.has(m.itemId) && raw.mains.some((r) => r.itemId === m.itemId));
   return {
     userId: fallback.userId,
     mains: mains.slice(0, 3),
     drink,
     sharedProposals: shared.length ? shared : fallback.sharedProposals,
-    bubble: raw.bubble ? clip(raw.bubble) : fallback.bubble,
+    bubble: fallback.bubble,
     fallback: !usedModel,
   };
 }
