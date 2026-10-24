@@ -25,14 +25,14 @@ struct TapInView: View {
                     .font(.system(size: 80)).foregroundStyle(Theme.accent)
                     .symbolEffect(.bounce, value: proximity.state == .tapped)
             }
-            Text(title).font(.title2.bold()).multilineTextAlignment(.center)
+            Text(title).font(AppTypography.style(.title2, weight: .bold)).multilineTextAlignment(.center)
             if !proximity.nearbyTables.isEmpty {
                 Text("\(proximity.nearbyTables.count) nearby table\(proximity.nearbyTables.count == 1 ? "" : "s") found")
-                    .font(.subheadline).foregroundStyle(.secondary)
+                    .font(AppTypography.subheadline).foregroundStyle(.secondary)
             }
             if proximity.hasCapacityOverflow {
                 Text("Too many tables to range at once. Choose the table shown on the restaurant phone.")
-                    .font(.footnote).multilineTextAlignment(.center)
+                    .font(AppTypography.footnote).multilineTextAlignment(.center)
                 ScrollView(.horizontal) {
                     HStack {
                         ForEach(proximity.nearbyTables) { table in
@@ -61,7 +61,7 @@ struct TapInView: View {
                 Button("Scan QR instead") { showScanner = true }
             }
             if let mock = app.mock {
-                Button("Simulate tap (mock)") { Task { await simulatedJoin(mock) } }.font(.footnote)
+                Button("Simulate tap (mock)") { Task { await simulatedJoin(mock) } }.font(AppTypography.footnote)
             }
         }
         .padding()

@@ -107,7 +107,7 @@ private struct StepScaffold<Content: View>: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text(title).font(.largeTitle.bold())
+            Text(title).font(AppTypography.style(.largeTitle, weight: .bold))
             if let subtitle { Text(subtitle).foregroundStyle(.secondary) }
             content.frame(maxHeight: .infinity, alignment: .top)
             Button(nextTitle, action: onNext).buttonStyle(BigButtonStyle()).disabled(!canContinue)
@@ -119,7 +119,7 @@ struct BasicsStep: View {
     @Bindable var model: OnboardingModel
     var body: some View {
         StepScaffold(title: "Hi! What's your name?", canContinue: !model.draft.name.trimmingCharacters(in: .whitespaces).isEmpty, onNext: model.next) {
-            TextField("First name", text: $model.draft.name).font(.title2).textFieldStyle(.roundedBorder).textContentType(.givenName)
+            TextField("First name", text: $model.draft.name).font(AppTypography.title2).textFieldStyle(.roundedBorder).textContentType(.givenName)
         }
     }
 }
@@ -130,9 +130,9 @@ struct AllergyDietStep: View {
         StepScaffold(title: "Allergies & diet", subtitle: "Hard rules: your agent will never break these.", onNext: model.next) {
             ScrollView {
                 VStack(alignment: .leading) {
-                    Text("Allergies").font(.headline)
+                    Text("Allergies").font(AppTypography.headline)
                     FlowChips(all: Allergen.allCases, label: \.label, selected: $model.draft.allergies)
-                    Text("Diet").font(.headline).padding(.top)
+                    Text("Diet").font(AppTypography.headline).padding(.top)
                     FlowChips(all: Diet.allCases, label: \.label, selected: $model.draft.diet)
                 }
             }
@@ -165,7 +165,7 @@ struct SpiceStep: View {
             VStack(spacing: 24) {
                 Text(String(repeating: "🌶️", count: Int(model.draft.spice) + 1)).font(.system(size: 44))
                 Slider(value: $model.draft.spice, in: 0...4, step: 1)
-                Text(["None", "Mild", "Medium", "Hot", "Bring it"][Int(model.draft.spice)]).font(.title3)
+                Text(["None", "Mild", "Medium", "Hot", "Bring it"][Int(model.draft.spice)]).font(AppTypography.title3)
             }.padding(.top, 40)
         }
     }
@@ -179,21 +179,21 @@ struct SwipeDeckStep: View {
     var body: some View {
         StepScaffold(title: "Swipe what you like", subtitle: "Right = yum, left = nope", nextTitle: cards.isEmpty ? "Next" : "Skip the rest", onNext: model.next) {
             ZStack {
-                if cards.isEmpty { Text("All done!").font(.title) }
+                if cards.isEmpty { Text("All done!").font(AppTypography.title) }
                 ForEach(cards.reversed()) { card in
                     let top = card == cards.first
                     VStack(spacing: 8) {
                         Text(card.emoji).font(.system(size: 90))
-                        Text(card.name).font(.title.bold())
+                        Text(card.name).font(AppTypography.style(.title, weight: .bold))
                         Text(card.tags.joined(separator: " · ")).foregroundStyle(.secondary)
                     }
                     .frame(maxWidth: .infinity, minHeight: 320)
                     .background(Theme.card, in: RoundedRectangle(cornerRadius: 24))
                     .overlay(alignment: .topLeading) {
-                        if top && offset.width > 40 { Text("YUM").font(.title.bold()).foregroundStyle(.green).padding() }
+                        if top && offset.width > 40 { Text("YUM").font(AppTypography.style(.title, weight: .bold)).foregroundStyle(.green).padding() }
                     }
                     .overlay(alignment: .topTrailing) {
-                        if top && offset.width < -40 { Text("NOPE").font(.title.bold()).foregroundStyle(.red).padding() }
+                        if top && offset.width < -40 { Text("NOPE").font(AppTypography.style(.title, weight: .bold)).foregroundStyle(.red).padding() }
                     }
                     .offset(top ? offset : .zero)
                     .rotationEffect(.degrees(top ? Double(offset.width / 20) : 0))
@@ -233,7 +233,7 @@ struct FollowUpStep: View {
             if loading { ProgressView("Thinking…") }
             ForEach(model.questions) { q in
                 VStack(alignment: .leading) {
-                    Text(q.question).font(.headline)
+                    Text(q.question).font(AppTypography.headline)
                     Picker(q.question, selection: Binding(get: { model.answers[q.id] ?? "" }, set: { model.answers[q.id] = $0 })) {
                         ForEach(q.options, id: \.self) { Text($0).tag($0) }
                     }.pickerStyle(.segmented)
@@ -283,7 +283,7 @@ struct ProfileSummaryStep: View {
                 AvatarView(avatarId: model.draft.avatarId, size: 110, highlighted: true)
                 if saving { ProgressView("Saving your profile…") }
                 if let s = model.summary {
-                    Text(s.personality.label).font(.caption.bold()).padding(6).background(Theme.accent.opacity(0.2), in: Capsule())
+                    Text(s.personality.label).font(AppTypography.style(.caption, weight: .bold)).padding(6).background(Theme.accent.opacity(0.2), in: Capsule())
                     Text(s.profileSummary).multilineTextAlignment(.center)
                 }
                 if let e = model.error { Text(e).foregroundStyle(.red) }

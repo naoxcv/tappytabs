@@ -1,10 +1,25 @@
 // Owner: Role 2. App entry: mode select → diner or restaurant flow. Handles tappytabs://join/<code>.
 import SwiftUI
+import UIKit
 
 @main
 struct TappyTabsApp: App {
+    @UIApplicationDelegateAdaptor(OrientationDelegate.self) private var orientationDelegate
+    @Environment(\.scenePhase) private var scenePhase
     @State private var app = AppModel()
     @State private var pendingJoinCode: String?
+
+    init() {
+        guard let titleFont = UIFont(name: "RalewayRoman-Regular", size: 17),
+              let largeTitleFont = UIFont(name: "RalewayRoman-Bold", size: 34) else { return }
+        let appearance = UINavigationBarAppearance()
+        appearance.configureWithDefaultBackground()
+        appearance.titleTextAttributes[.font] = titleFont
+        appearance.largeTitleTextAttributes[.font] = largeTitleFont
+        UINavigationBar.appearance().standardAppearance = appearance
+        UINavigationBar.appearance().scrollEdgeAppearance = appearance
+        UINavigationBar.appearance().compactAppearance = appearance
+    }
 
     var body: some Scene {
         WindowGroup {
@@ -12,6 +27,42 @@ struct TappyTabsApp: App {
                 .environment(app)
                 .onOpenURL { url in pendingJoinCode = JoinLink.joinCode(from: url) }
                 .tint(Theme.accent)
+                .onChange(of: app.mode, initial: true) { _, mode in
+                    OrientationDelegate.update(for: mode)
+                }
+                .onChange(of: scenePhase) { _, phase in
+                    if phase == .active { OrientationDelegate.update(for: app.mode) }
+                }
+        }
+    }
+}
+
+/// UI-only orientation policy; persisted restaurant mode also launches in landscape.
+final class OrientationDelegate: NSObject, UIApplicationDelegate {
+    static var supported: UIInterfaceOrientationMask = mask(
+        for: UserDefaults.standard.string(forKey: Keys.mode).flatMap(AppModel.Mode.init(rawValue:))
+    )
+
+    static func mask(for mode: AppModel.Mode?) -> UIInterfaceOrientationMask {
+        mode == .restaurant ? .landscape : .portrait
+    }
+
+    func application(_ application: UIApplication, supportedInterfaceOrientationsFor window: UIWindow?) -> UIInterfaceOrientationMask {
+        Self.supported
+    }
+
+    static func update(for mode: AppModel.Mode?) {
+        supported = mask(for: mode)
+        for scene in UIApplication.shared.connectedScenes.compactMap({ $0 as? UIWindowScene })
+            where scene.activationState == .foregroundActive {
+            for window in scene.windows {
+                var controller = window.rootViewController
+                while let current = controller {
+                    current.setNeedsUpdateOfSupportedInterfaceOrientations()
+                    controller = current.presentedViewController
+                }
+            }
+            scene.requestGeometryUpdate(.iOS(interfaceOrientations: supported))
         }
     }
 }
@@ -21,11 +72,14 @@ struct RootView: View {
     @Binding var pendingJoinCode: String?
 
     var body: some View {
-        switch app.mode {
-        case nil: ModeSelectView()
-        case .diner: DinerFlow(pendingJoinCode: $pendingJoinCode)
-        case .restaurant: RestaurantFlow()
+        Group {
+            switch app.mode {
+            case nil: ModeSelectView()
+            case .diner: DinerFlow(pendingJoinCode: $pendingJoinCode)
+            case .restaurant: RestaurantFlow()
+            }
         }
+        .font(AppTypography.body)
     }
 }
 
@@ -37,7 +91,7 @@ struct LogoHeader: View {
 
     var body: some View {
         HStack {
-            Text("TappyTabs").font(.title3.weight(.heavy)).foregroundStyle(Theme.accent)
+            Text("TappyTabs").font(AppTypography.style(.title3, weight: .black)).foregroundStyle(Theme.accent)
                 .onTapGesture(count: 3) { debugOverlay.toggle() }
                 .onLongPressGesture(minimumDuration: 2) { app.switchMode() }
             Spacer()

@@ -4,12 +4,16 @@
 import SwiftUI
 
 struct TableTalkView: View {
+    @Environment(\.verticalSizeClass) private var verticalSizeClass
     let store: PartyStore
 
     var body: some View {
         TimelineView(.periodic(from: .now, by: 0.25)) { ctx in
             let visible = store.visibleBubbles(at: ctx.date)
             let current = visible.last
+            if verticalSizeClass == .compact {
+                landscapeConversation(current: current, visible: visible)
+            } else {
             GeometryReader { geo in
                 ZStack {
                     // Restaurant agent
@@ -30,7 +34,7 @@ struct TableTalkView: View {
                                 SpeechBubble(text: current.text, speaker: .diner(avatarId: m.avatarId, name: m.name)).id(current.id)
                             }
                             AvatarView(avatarId: m.avatarId, size: 64, highlighted: current?.fromUserId == m.userId, state: store.lastError != nil ? .confused : store.party?.status == .negotiating ? .thinking : .idle)
-                            Text(m.name).font(.caption.bold())
+                            Text(m.name).font(AppTypography.style(.caption, weight: .bold))
                         }
                         .position(p)
                     }
@@ -45,7 +49,51 @@ struct TableTalkView: View {
                 }
                 .animation(.spring, value: store.party?.status)
             }
+            }
         }
+    }
+
+    /// Keep the active bubble and plan beside the table on a short landscape screen.
+    private func landscapeConversation(current: Bubble?, visible: [Bubble]) -> some View {
+        HStack(spacing: 24) {
+            VStack(spacing: 8) {
+                AvatarView(avatarId: AvatarCatalog.restaurant, size: 64,
+                           highlighted: current != nil && current?.fromUserId == nil, state: agentState)
+                Text("Restaurant").font(AppTypography.style(.caption, weight: .bold))
+                Spacer(minLength: 8)
+                LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 3), spacing: 8) {
+                    ForEach(store.party?.members ?? []) { member in
+                        VStack(spacing: 0) {
+                            AvatarView(avatarId: member.avatarId, size: 56,
+                                       highlighted: current?.fromUserId == member.userId, state: agentState)
+                            Text(member.name).font(AppTypography.style(.caption, weight: .bold)).lineLimit(1)
+                        }
+                    }
+                }
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            ScrollView {
+                VStack(alignment: .leading, spacing: 16) {
+                    if let current {
+                        let speaker: Speaker = current.fromUserId.map {
+                            .diner(avatarId: store.avatar(of: $0) ?? "avatar_1", name: store.name(of: $0))
+                        } ?? .restaurant
+                        SpeechBubble(text: current.text, speaker: speaker).id(current.id)
+                    } else {
+                        Text("Your agents are getting ready…").foregroundStyle(.secondary)
+                    }
+                    HistoryStrip(bubbles: Array(visible.dropLast().suffix(3)), store: store)
+                    if store.party?.status == .pick { PlanSummaryCard(store: store) }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .frame(maxWidth: .infinity)
+        }
+        .padding()
+    }
+
+    private var agentState: AgentAvatarState {
+        store.lastError != nil ? .confused : store.party?.status == .negotiating ? .thinking : .idle
     }
 
     /// Seat positions on a lower semicircle, 2–6 diners.
@@ -66,7 +114,7 @@ struct HistoryStrip: View {
         VStack(alignment: .leading, spacing: 4) {
             ForEach(bubbles) { b in
                 Text("\(b.fromUserId.map { store.name(of: $0) } ?? "Host"): \(b.text)")
-                    .font(.caption).lineLimit(1).foregroundStyle(.secondary)
+                    .font(AppTypography.caption).lineLimit(1).foregroundStyle(.secondary)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -79,7 +127,7 @@ struct PlanSummaryCard: View {
     let store: PartyStore
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("The plan").font(.headline)
+            Text("The plan").font(AppTypography.headline)
             ForEach(store.sharedLines) { line in
                 HStack {
                     Text("For the table: \(line.name)")
@@ -88,7 +136,7 @@ struct PlanSummaryCard: View {
                 }
             }
             if let p = store.party {
-                Text("\(p.members.filter(\.picked).count) of \(p.members.count) picked their main").font(.subheadline).foregroundStyle(.secondary)
+                Text("\(p.members.filter(\.picked).count) of \(p.members.count) picked their main").font(AppTypography.subheadline).foregroundStyle(.secondary)
             }
         }
         .padding()

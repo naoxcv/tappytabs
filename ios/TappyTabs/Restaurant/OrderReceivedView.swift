@@ -7,7 +7,7 @@ struct ProgressBoardView: View {
         VStack(spacing: 24) {
             Spacer()
             let members = store.party?.members ?? []
-            Text("\(members.filter(\.confirmed).count) of \(members.count) confirmed").font(.system(size: 40, weight: .bold))
+            Text("\(members.filter(\.confirmed).count) of \(members.count) confirmed").font(AppTypography.custom(40, weight: .bold))
             MemberTicks(members: members) { $0.confirmed }
             if let d = store.party?.confirmDeadline { Countdown(deadlineMs: d, offsetMs: store.serverOffsetMs) }
             Spacer()
@@ -22,7 +22,7 @@ struct OrderReceivedView: View {
     var body: some View {
         VStack(spacing: 0) {
             AvatarView(avatarId: AvatarCatalog.restaurant, size: 80, state: .happy)
-            Text("Order received").font(.largeTitle.bold()).padding()
+            Text("Order received").font(AppTypography.style(.largeTitle, weight: .bold)).padding()
             List {
                 Section("For the table") {
                     ForEach(store.sharedLines) { line in ticketRow(line) }

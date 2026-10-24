@@ -9,7 +9,7 @@ struct PickView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 14) {
-                Text("Your agent's picks").font(.largeTitle.bold())
+                Text("Your agent's picks").font(AppTypography.style(.largeTitle, weight: .bold))
                 if let deadline = store.party?.pickDeadline { Countdown(deadlineMs: deadline, offsetMs: store.serverOffsetMs) }
                 if store.mains.isEmpty { Text("Your agent couldn't find a safe main. Ask your server.").foregroundStyle(.secondary) }
                 ForEach(store.mains) { c in
@@ -19,12 +19,12 @@ struct PickView: View {
                 if let drink = store.drink {
                     HStack {
                         Image(systemName: "cup.and.saucer.fill")
-                        Text("Your agent added: \(drink.name)").font(.subheadline)
+                        Text("Your agent added: \(drink.name)").font(AppTypography.subheadline)
                         Spacer()
-                        PriceText(cents: drink.priceCents).font(.subheadline)
+                        PriceText(cents: drink.priceCents).font(AppTypography.subheadline)
                     }
                     .padding().background(Theme.card, in: RoundedRectangle(cornerRadius: 14))
-                    Text("You can remove it in the next step.").font(.caption).foregroundStyle(.secondary)
+                    Text("You can remove it in the next step.").font(AppTypography.caption).foregroundStyle(.secondary)
                 }
             }
             .padding()
@@ -51,13 +51,13 @@ struct CandidateCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack(alignment: .firstTextBaseline) {
-                if big { Text("TOP PICK").font(.caption2.bold()).foregroundStyle(Theme.accent) }
+                if big { Text("TOP PICK").font(AppTypography.style(.caption2, weight: .bold)).foregroundStyle(Theme.accent) }
                 Spacer()
-                PriceText(cents: candidate.priceCents).font(big ? .title3.bold() : .headline)
+                PriceText(cents: candidate.priceCents).font(big ? AppTypography.style(.title3, weight: .bold) : AppTypography.headline)
             }
-            Text(candidate.name).font(big ? .title.bold() : .title3.bold())
-            Text(candidate.reason).font(.subheadline).foregroundStyle(.secondary)
-            if big { Text(candidate.description).font(.footnote).foregroundStyle(.secondary) }
+            Text(candidate.name).font(big ? AppTypography.style(.title, weight: .bold) : AppTypography.style(.title3, weight: .bold))
+            Text(candidate.reason).font(AppTypography.subheadline).foregroundStyle(.secondary)
+            if big { Text(candidate.description).font(AppTypography.footnote).foregroundStyle(.secondary) }
             if candidate.askServer { AskServerBadge() }
         }
         .padding(big ? 20 : 14)
@@ -75,7 +75,7 @@ struct Countdown: View {
         TimelineView(.periodic(from: .now, by: 1)) { ctx in
             let left = max(0, Int((deadlineMs - (ctx.date.ms + offsetMs)) / 1000))
             Label("\(left)s left: then your agent decides", systemImage: "timer")
-                .font(.footnote).foregroundStyle(left < 10 ? .red : .secondary)
+                .font(AppTypography.footnote).foregroundStyle(left < 10 ? .red : .secondary)
         }
     }
 }
