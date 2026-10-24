@@ -79,7 +79,7 @@ Every layer uses one library per job, chosen so the hackathon team never writes 
 | Validation | Zod (or Convex `v` validators at the edges) | R3 | Every model reply parsed before use |
 | Claude | `@anthropic-ai/sdk`, current Sonnet model | R3 | Votes, onboarding follow-ups, profile summary; JSON via tool-use schema |
 | Bitdeer | `openai` npm with `baseURL` [`https://api-inference.bitdeer.ai/v1`](https://developers.bitdeer.ai/docs/guides/integrations/dify) | R3 | Bitdeer's inference API [follows the OpenAI REST standard](https://www.bitdeer.ai/en/docs/inference/model-api/); pick a fast model in Model Studio for drafting and tags |
-| Menu scrape | `apify-client` npm from a Convex action | R4 | `client.actor(id).call(input)`, then `dataset(id).listItems()` |
+| Optional menu scrape (should-have) | `apify-client` npm from a Convex action | R4 | A separate scraper Actor can populate a new restaurant profile; outside the MVP path |
 | Our Actor | `apify` SDK (Node, TypeScript), published to Apify Store | R4 | `Actor.getInput()`, `Actor.pushData()` |
 | Tests | Vitest + `convex-test` | R3, R4 | Safety suite must pass before every demo build |
 | Table display | Next.js + `convex/react` on Vercel | R2 (stretch) | Reads `messages:list` only |
@@ -137,7 +137,7 @@ Role 3 exports three internal actions from `agents/steps.ts`; Role 4's workflow 
 | `users:me` | query | `deviceId` | user or `null` | R1, R2 |
 | `users:followups` | action | draft profile | 0–3 `{id, question, options[]}` (Claude) | R2 onboarding |
 | `users:summarize` | action | `userId` | `{profileSummary, personality}`, also saved on the user | R2 onboarding |
-| `menu:ingest` | action | `restaurantId` | `{count, apifyRunId}`; upserts `menuItems` | R2 restaurant |
+| `menu:ingest` | action | `restaurantId`, raw `items` | `{count, apifyRunId}`; runs the project normalizer/tagger Actor and upserts `menuItems` | R2 restaurant / seed setup |
 | `menu:status` | query | `restaurantId` | `{name, fetchedAt, itemCount}` | R2 restaurant |
 | `parties:create` | mutation | `restaurantId`, `size`, `hostDeviceId` | `{partyId, joinCode}` | R2 restaurant |
 | `parties:join` | mutation | `partyId` or `joinCode`, `userId`, `via` | `{result: "joined" or "already", partyId}`; error `FULL` / `BAD_STATUS` | R2 proximity |
@@ -169,8 +169,9 @@ The top four messages are check-in, the middle six are the negotiation workflow,
 | iOS → Convex | `ConvexClient(deploymentUrl:)` in `Env.swift` | none (device id) | reconnect banner; state resumes from subscriptions |
 | Convex → Claude | `agents/claude.ts` | `ANTHROPIC_API_KEY` env var | 8 s timeout → fallback agent |
 | Convex → Bitdeer | `agents/bitdeer.ts`, OpenAI client with Bitdeer base URL | `BITDEER_API_KEY` | 8 s timeout → fallback agent and template bubbles |
-| Convex → Apify | `menu.ts`, `apify-client` | `APIFY_TOKEN` | 20 s cap → cached `menuItems` snapshot |
-| Apify Actor → Bitdeer | `apify/menu-normalizer/src/main.ts` | Actor secret env var | keyword-only tags, everything else `may_contain` |
+| Convex → Apify | `menu.ts`, `apify-client` | `APIFY_TOKEN` | 20 s cap → cached normalized menu snapshot |
+| Project Actor → Bitdeer | `apify/menu-normalizer/src/main.ts` | Actor secret env var | keyword tags plus Bitdeer enrichment; uncertain tags stay `may_contain` |
+| Optional scraper Actor → Convex (should-have) | owner restaurant setup | `APIFY_TOKEN` | scraper output is reviewed/edited, then passed through the project Actor |
 | Phone ↔ phone | Multipeer + Nearby Interaction | local only | QR join |
 
 ## Role 1 — iOS frontend
@@ -345,13 +346,15 @@ On receiving `hello`, the receiver unarchives the peer token and runs `NINearbyP
 
 ### Design: restaurant mode
 
-- **PartySetupView.** Size stepper 2–6; menu line from `menu:status` ("Menu from \<name> via Apify · fetched \<time>") with a "Fetch menu" button calling `menu:ingest` (spinner, never blocks starting); "Open table" → `parties:create` → `CheckInView` and `startHosting`.
+- **PartySetupView.** Size stepper 2–6; show the seeded restaurant and normalized mock-menu status from `menu:status`; "Open table" → `parties:create` → `CheckInView` and `startHosting`. Menu editing and Maps-based menu discovery are should-have setup features, not part of starting a demo party.
 - **CheckInView.** Large "2 of 4 checked in", avatar grid where each new member pops in with a haptic, small QR in a corner, "Start with fewer" enabled at 2 or more members → `parties:startWithFewer`.
 - **HungerWaitView.** Members with a tick once they choose hunger.
 - **TableTalkView.** Restaurant avatar top centre, diner avatars on a semicircle (positions precomputed for 2–6). Bubbles from `messages:list` appear above their speaker when `showAt` passes (same server-offset clock as Role 1); the previous bubble fades to a scrolling history strip at the bottom. When `status` becomes `pick`, `PlanSummaryCard` slides up: each diner's main, shared dishes with sharer avatars.
 - **ProgressView.** During `pick` and `confirm`: "3 of 4 locked in" / "3 of 4 confirmed" with avatar ticks.
 - **OrderReceivedView.** Ticket layout from `orders:lines`: shared dishes, then per diner, ask-server flags highlighted, table total. A "New table" button → `parties:reset`.
 - **Mode select.** First launch asks "Diner or Restaurant", saved in `UserDefaults` key `tt.mode`; long-press the logo for 2 s to switch or reset.
+
+**Should-have: self-service restaurant setup.** Add authenticated owner accounts and restaurant profile creation. The owner supplies a Google Maps location. A separate Apify scraper Actor uses that location to find menu data and prefill the profile; the owner reviews and edits it before saving. Pass the accepted menu through this project's `menu-normalizer` Actor. This is a convenience for fast setup, not a must-have dependency.
 
 ### Design: onboarding
 
@@ -369,7 +372,7 @@ Steps, under 90 s total, each a full screen with a progress bar:
 
 - One Apple developer team; register all 5 demo phones (4 diners + restaurant), each with Developer Mode on; one scheme builds the single app target.
 - Info.plist: `NSNearbyInteractionUsageDescription`, `NSLocalNetworkUsageDescription`, `NSBonjourServices` = `_tappytabs._tcp`, `_tappytabs._udp`, `NSCameraUsageDescription`, URL scheme `tappytabs`.
-- **Pre-demo checklist:** every permission prompt already accepted; same Wi-Fi or hotspot on all phones; Do Not Disturb on; brightness up; auto-lock off; app open in the right mode; demo deployment URL; seeded profiles on each diner phone; menu fetched.
+- **Pre-demo checklist:** every permission prompt already accepted; same Wi-Fi or hotspot on all phones; Do Not Disturb on; brightness up; auto-lock off; app open in the right mode; demo deployment URL; seeded profiles on each diner phone; normalized mock menu ready.
 - **Runbook:** phone-to-person assignment, the 2-minute script from the PRD with timings, who says what, and the fallback for each failure in the design doc's reliability table.
 - **README:** assemble the track sections each role writes, plus architecture diagram and setup steps.
 
@@ -402,7 +405,7 @@ Steps, under 90 s total, each a full screen with a progress bar:
 - [ ] QR generator and scanner; URL scheme handler
 - [ ] `ModeSelectView` and long-press reset
 - [ ] `TapInView` state machine; *needs* `parties:join`, `parties:current` (Role 4)
-- [ ] `PartySetupView` with menu status and fetch; *needs* `menu:status`, `menu:ingest`
+- [ ] `PartySetupView` with seeded restaurant/menu status; *needs* `menu:status`
 - [ ] `CheckInView` with live count, pop-in, start with fewer
 - [ ] `HungerWaitView` and `ProgressView`
 - [ ] `TableTalkView` semicircle layout, timed bubbles, history strip; *needs* `SpeechBubble`, `AvatarView` (Role 1)
@@ -450,7 +453,7 @@ dropBubbleText(item: MenuItem, failed: { user: User; safety: Safety }[]): string
 
 **Provides (internal actions, called by Role 4):** `draftStep`, `voteStep`, `settleStep` as in Shared contracts §2, plus `followupsFor(draft)` and `summarize(user)` used by `users:followups` and `users:summarize`. Every one returns within 8 s and never throws.
 
-**Consumes:** schema types and enums (Role 4); `ANTHROPIC_API_KEY`, `BITDEER_API_KEY`, `BITDEER_MODEL`, `CLAUDE_MODEL` from Convex env; the real menu in `menuItems` and the 4 seeded profiles for tuning.
+**Consumes:** schema types and enums (Role 4); `ANTHROPIC_API_KEY`, `BITDEER_API_KEY`, `BITDEER_MODEL`, `CLAUDE_MODEL` from Convex env; the seeded mock menu in `menuItems` and the 4 seeded profiles for tuning.
 
 ### Design: safety rules
 
@@ -505,7 +508,7 @@ Common rules for every prompt: profile and menu text go inside XML tags as data;
 
 - [ ] Zero allergen or diet violations across a 500-run randomized test of full negotiations with fixture users and menus
 - [ ] Every step returns a valid result within 8 s with the network disabled (fallbacks)
-- [ ] A full negotiation on the real menu takes under 20 s with live models
+- [ ] A full negotiation on the seeded mock menu takes under 20 s with live models
 - [ ] Bubbles name the right people and reasons, stay under 120 characters, and read naturally on the restaurant screen
 - [ ] Each personality produces visibly different tone and at least sometimes a different pick
 
@@ -526,7 +529,7 @@ Common rules for every prompt: profile and menu text go inside XML tags as data;
 - [ ] `dropBubbleText` (pure) for Role 4's pooling; `summaryBubble` prompt; complete `settleStep`
 - [ ] `followups` and `profileSummary` prompts; `followupsFor` and `summarize`
 - [ ] 500-run randomized safety test
-- [ ] Tune prompts on the real menu with the 4 seeded profiles; *needs* the real menu (Role 4)
+- [ ] Tune prompts on the seeded mock menu with the 4 seeded profiles
 - [ ] Rehearsal mode (temperature 0) check for repeatable bubbles
 - [ ] README sections: Claude usage and failure modes handled, Bitdeer usage
 
@@ -559,7 +562,7 @@ export default defineSchema({
     diet: v.array(dietV), spice: v.number(), likes: v.array(v.string()), dislikes: v.array(v.string()),
     cuisines: v.array(v.string()), personality: v.optional(personalityV), avatarId: v.string(),
     profileSummary: v.optional(v.string()) }).index("by_device", ["deviceId"]),
-  restaurants: defineTable({ name: v.string(), mapsUrl: v.string(),
+  restaurants: defineTable({ name: v.string(), ownerDeviceId: v.optional(v.string()), mapsUrl: v.optional(v.string()),
     apifyRunId: v.optional(v.string()), fetchedAt: v.optional(v.number()) }),
   menuItems: defineTable({ restaurantId: v.id("restaurants"), name: v.string(), category: v.string(),
     cuisine: v.optional(v.string()), tags: v.array(v.string()), description: v.string(),
@@ -640,14 +643,16 @@ export const negotiate = workflow.define({
 
 ### Design: menu pipeline
 
-1. **Restaurant row.** One `restaurants` row created by `seed.ts` with the chosen Maps URL.
-2. **`menu:ingest` (action).** With `apify-client`: `client.actor(SCRAPER_ID).call({ startUrls: [mapsUrl], ... })`, then `client.actor("<user>/menu-normalizer").call({ items })`, then `client.dataset(run.defaultDatasetId).listItems()`; stop waiting at 20 s and keep the existing items. Upsert `menuItems` by `(restaurantId, name)`; patch `apifyRunId`, `fetchedAt`.
-3. **Actor `menu-normalizer`.** Node + TypeScript on the `apify` SDK. Input: `{ items: [{ name, description?, price?, category? }] }`. For each item: parse price to cents; keyword pass (`keywords.ts`) sets allergens and diet; Bitdeer `tag` prompt in batches of 20 may add or raise allergens and add tags, cuisine, spice 0–4, `isDrink`, `shareable`; anything unreadable becomes `may_contain` for every allergen. Output per item via `Actor.pushData`: exactly the `menuItems` fields minus `restaurantId`. `.actor/actor.json` and an input schema with a README, published public on the Apify Store.
-4. **Seed fallback.** `seed.ts` writes a hand-checked snapshot of the same menu, so agents always have data.
+1. **Restaurant row.** `seed.ts` creates the single demo restaurant. Its raw hand-authored mock menu is the MVP source; a Maps URL or owner-managed profile is not required.
+2. **`menu:ingest` (action).** Accept `{ restaurantId, items }` where `items` comes from the seeded mock menu. With `apify-client`, call `client.actor("<user>/menu-normalizer").call({ items })`, then read the run dataset with `client.dataset(run.defaultDatasetId).listItems()`; stop waiting at 20 s and use the checked-in normalized snapshot if the Actor is unavailable. Upsert `menuItems` by `(restaurantId, name)` and record the project Actor run ID / `fetchedAt`.
+3. **Actor `menu-normalizer`.** Node + TypeScript on the `apify` SDK. Input: `{ items: [{ name, description?, ingredients?, price?, category? }] }`. For each item: parse price to cents; keyword pass (`keywords.ts`) sets allergens and diet; Bitdeer `tag` prompt in batches of 20 may add or raise allergens and add tags, cuisine, spice 0–4, `isDrink`, `shareable`; anything unreadable becomes `may_contain` for every allergen. Output per item via `Actor.pushData`: exactly the `menuItems` fields minus `restaurantId`. `.actor/actor.json` and an input schema with a README, published public on the Apify Store.
+4. **Seed fallback.** `seed.ts` includes the raw mock menu and a hand-checked normalized snapshot, so agents always have menu data. The MVP demo still runs the project Actor against the mock input to demonstrate the required Apify integration.
+
+5. **Should-have scraper path.** A separate Apify scraper Actor accepts a Google Maps location and finds candidate menu data for an authenticated restaurant owner profile. The owner reviews and edits the results; then `menu:ingest` sends the accepted items through the project normalizer/tagger above. Do not make this scraper a dependency of the demo.
 
 ### Design: seed and deployments
 
-- `scripts/seed.ts --scenario base` writes the restaurant, the menu snapshot and 4 teammate users (with fixed `deviceId`s matched to each demo phone). `--scenario negotiated` and `--scenario placed` add a party at those stages for Role 1 and Role 2 mocks against a real backend.
+- `scripts/seed.ts --scenario base` writes the demo restaurant, raw mock menu, checked normalized snapshot and 4 teammate users (with fixed `deviceId`s matched to each demo phone). `--scenario negotiated` and `--scenario placed` add a party at those stages for Role 1 and Role 2 mocks against a real backend.
 - Each person runs their own `npx convex dev`; only Role 4 deploys to the shared demo deployment. Env vars there: `ANTHROPIC_API_KEY`, `CLAUDE_MODEL`, `BITDEER_API_KEY`, `BITDEER_MODEL`, `APIFY_TOKEN`, `DEMO_SEED`.
 
 ### Edge cases
@@ -663,7 +668,7 @@ export const negotiate = workflow.define({
 - [ ] A script calling `parties:join` ×4, `setHunger` ×4, `pick` ×4 and `confirm` ×4 reaches `placed` with no client
 - [ ] `convex-test` covers join (full, already, concurrent), every status transition, timers firing after reset, and totals summing exactly
 - [ ] With models disabled, negotiation still commits within 30 s via fallbacks
-- [ ] `menu:ingest` loads the real restaurant's menu through both Actors, and our Actor is public on the Apify Store
+- [ ] `menu:ingest` runs the project Actor on the seeded mock menu and stores normalized records; our Actor is public on the Apify Store
 - [ ] Every mutation that writes an order line refuses an unsafe item
 
 ### Task log
@@ -681,10 +686,10 @@ export const negotiate = workflow.define({
 - [ ] `parties:setHunger` starting the workflow; 30 s rescue
 - [ ] `orders:candidates`, `pick`, `autoPick`, `lines` with totals, `addable`, `add`, `remove`, `confirm`, `autoConfirm` + tests; *needs* `isSafeFor`, `substituteFor`
 - [ ] `seed.ts --scenario negotiated` and `--scenario placed`
-- [ ] Choose the restaurant with Role 2; try candidate store scrapers; pick the one returning the full menu
+- [ ] Add raw mock menu fixture and checked normalized snapshot
 - [ ] Actor: input schema, price parsing, keyword pass, Bitdeer tagging, output; *needs* `keywords.ts` and `tag` prompt (Role 3)
 - [ ] Publish the Actor to the Apify Store with a README
-- [ ] `menu:ingest`, `menu:status`; refresh the seed snapshot from the real run
+- [ ] `menu:ingest`, `menu:status`; run project Actor on the mock fixture and refresh checked snapshot
 - [ ] `users:followups`, `users:summarize`; *needs* Role 3's `followupsFor`, `summarize`
 - [ ] Demo deployment with env vars and seed; end-to-end script test
 - [ ] README sections: Convex architecture, Apify Actor link
@@ -695,7 +700,7 @@ Four milestones mark when the seams between roles go live; each is reached when 
 
 1. **Contracts frozen.** `schema.ts`, `shared/enums.ts`, `shared/types.ts` merged; dev deployment URL shared; Role 3's `steps.ts` returns fallbacks; Role 2 shows live UWB distance between two phones. Unblocks everyone working against real types.
 2. **Data flows.** Seeded deployment live; Role 1's screens read real subscriptions; Role 2's tap and QR call `parties:join`; Role 4's workflow runs end to end on Role 3's fallback agents.
-3. **Real brains and real menu.** Apify ingest fills `menuItems` with the real restaurant; Role 3's model steps replace fallbacks; bubbles play on the restaurant screen in step with diner phones.
+3. **Real brains and normalized mock menu.** During demo setup, `scripts/seed.ts` sends the raw mock fixture through `menu:ingest`, which runs the project Apify Actor and fills `menuItems`; Role 3's model steps replace fallbacks; bubbles play on the restaurant screen in step with diner phones. The separate menu scraper remains a should-have.
 4. **Happy path.** Full flow on all 5 phones from tap to `placed`, twice in a row, with zero safety-test failures. After this: should-haves, polish and rehearsal only.
 
 **Mocks so nobody waits.**
@@ -707,7 +712,7 @@ Four milestones mark when the seams between roles go live; each is reached when 
 | Role 2 | Tap hardware | Debug button "Simulate tap" calling `parties:join` |
 | Role 2 | Amy's avatars | Placeholder avatars with the same asset names |
 | Role 4 | Agent steps | Role 3's fallback agents (no model calls) |
-| Role 3 | Real menu | Hand-made fixture menu with shellfish, nut and gluten traps |
+| Role 3 | Final menu | Hand-made mock fixture with shellfish, nut and gluten traps |
 
 **Conventions.**
 
