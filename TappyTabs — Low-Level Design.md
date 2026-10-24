@@ -682,19 +682,21 @@ export const negotiate = workflow.define({
 - [x] Base seed writes the hand-checked snapshot, then best-effort runs `menu:ingest` on the raw mock menu
 - [x] `users:upsert`, `users:me`, `users:followups`, `users:summarize` + fallback and persistence tests
 - [x] `parties:create`, `join`, `current`, `startWithFewer`, `reset` + tests (including concurrent last-seat joins and stale timers after reset)
-- [ ] `messages:list`, `insertPaced` with dedupe
-- [ ] `agentLogs:insert` for Role 3
+- [x] `messages:list`, `insertPaced` with dedupe
+- [x] `agentLogs:insert` for Role 3
 - [x] `negotiate` workflow wired to Role 3's fallback steps; `poolAndPost`, `postVotes`, `commit`, `advance`; Role 3's `steps.ts` and `dropBubbleText` are available
 - [x] `parties:setHunger` starting the workflow; 30 s rescue (fallback workflow and rescue coverage added)
 - [x] `orders:candidates`, `pick`, `autoPick`, `lines` with totals, `addable`, `add`, `remove`, `confirm`, `autoConfirm` + tests; Role 3's `isSafeFor` and `substituteFor` are available
-- [ ] `seed.ts --scenario negotiated` and `--scenario placed`
+- [x] `seed.ts --scenario negotiated` and `--scenario placed`
 - [x] Raw mock menu and checked normalized snapshot in `convex/fixtures/raw-menu.json` and `convex/fixtures/normalized-menu.json`
 - [x] Actor input schema, price parsing, ingredient-aware keyword pass, Bitdeer tagging, and normalized output; Role 3 keyword rules and tag prompt are available
 - [ ] Publish the Actor to the Apify Store (Actor README is in `apify/menu-normalizer/README.md`)
 - [x] `menu:ingest`, `menu:status`; base seed invokes ingest and keeps the checked snapshot as fallback
 - [x] Add `npm run menu:snapshot` to export a successful live ingest into the checked fallback fixture
 - [x] Run the project Actor on the mock fixture; verify all 28 rows are tagged and refresh the checked snapshot
-- [ ] Demo deployment with env vars and seed; end-to-end script test
+- [x] Backend E2E script passed on the isolated Convex `dev/e2e` deployment; original development deployment data was left untouched
+- [ ] Demo deployment with env vars and tagged 28-item menu seed
+- [ ] Full iOS happy path on five demo phones, twice; record run results
 - [x] README section: Convex architecture and setup, with a link to the repository Actor docs
 - [ ] Add the public Apify Store link to the README after Actor publication
 
