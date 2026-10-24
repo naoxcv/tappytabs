@@ -31,6 +31,12 @@ final class LiveBackend: Backend {
     func addable(_ partyId: String, userId: String, shared: Bool) -> AnyPublisher<[AddableItem], TTError> {
         sub(API.ordersAddable, ["partyId": partyId, "userId": userId, "shared": shared])
     }
+    func pendingTaps(partyId: String, hostDeviceId: String) -> AnyPublisher<[TapRequest], TTError> {
+        sub(API.tapPending, ["partyId": partyId, "hostDeviceId": hostDeviceId])
+    }
+    func tapSession(partyId: String, userId: String, deviceId: String) -> AnyPublisher<TapSession?, TTError> {
+        sub(API.tapSession, ["partyId": partyId, "userId": userId, "deviceId": deviceId])
+    }
 
     /// convex-swift has no one-shot query; take the first value of a subscription.
     private func once<T: Decodable>(_ name: String, _ args: [String: ConvexEncodable?]) async throws -> T {
@@ -103,6 +109,18 @@ final class LiveBackend: Backend {
     func reset(partyId: String, hostDeviceId: String) async throws {
         try await mutate(API.partiesReset, ["partyId": partyId, "hostDeviceId": hostDeviceId])
     }
+    func announceTap(partyId: String, userId: String, deviceId: String, attemptId: String, token: String) async throws {
+        try await mutate(API.tapAnnounce, ["partyId": partyId, "userId": userId, "deviceId": deviceId,
+                                          "attemptId": attemptId, "dinerToken": token])
+    }
+    func respondTap(partyId: String, userId: String, hostDeviceId: String, attemptId: String, token: String) async throws {
+        try await mutate(API.tapRespond, ["partyId": partyId, "userId": userId, "hostDeviceId": hostDeviceId,
+                                         "attemptId": attemptId, "hostToken": token])
+    }
+    func rejectTap(partyId: String, userId: String, hostDeviceId: String, attemptId: String, reason: String) async throws {
+        try await mutate(API.tapReject, ["partyId": partyId, "userId": userId, "hostDeviceId": hostDeviceId,
+                                        "attemptId": attemptId, "reason": reason])
+    }
 
     func join(partyId: String?, joinCode: String?, userId: String, via: JoinVia,
               hostDeviceId: String?, deviceId: String?) async throws -> JoinResult {
@@ -112,6 +130,10 @@ final class LiveBackend: Backend {
         if let hostDeviceId { args["hostDeviceId"] = hostDeviceId }
         if let deviceId { args["deviceId"] = deviceId }
         return try await mutate(API.partiesJoin, args)
+    }
+
+    func leave(partyId: String, userId: String, deviceId: String) async throws {
+        try await mutate(API.partiesLeave, ["partyId": partyId, "userId": userId, "deviceId": deviceId])
     }
 
     func setHunger(partyId: String, userId: String, deviceId: String, hunger: Hunger) async throws {

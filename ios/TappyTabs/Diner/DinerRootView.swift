@@ -57,7 +57,7 @@ struct WaitingView: View {
     var body: some View {
         VStack(spacing: 20) {
             Spacer()
-            Text(title).font(.largeTitle.bold())
+            Text(title).font(AppTypography.style(.largeTitle, weight: .bold))
             Text(subtitle).foregroundStyle(.secondary)
             MemberTicks(members: store.party?.members ?? [], done: done)
             Spacer()

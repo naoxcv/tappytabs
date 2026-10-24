@@ -7,7 +7,7 @@ struct HungerView: View {
 
     var body: some View {
         VStack(spacing: 18) {
-            Text("How hungry are you?").font(.largeTitle.bold()).padding(.top, 32)
+            Text("How hungry are you?").font(AppTypography.style(.largeTitle, weight: .bold)).padding(.top, 32)
             Text("Your agent uses this to size the order.").foregroundStyle(.secondary)
             Spacer()
             ForEach(Hunger.allCases) { h in
@@ -17,7 +17,7 @@ struct HungerView: View {
                 } label: {
                     HStack {
                         Text(h.emoji).font(.system(size: 40))
-                        Text(h.label).font(.title2.bold())
+                        Text(h.label).font(AppTypography.style(.title2, weight: .bold))
                         Spacer()
                         if sending == h { ProgressView() }
                         if store.me?.hunger == h { Image(systemName: "checkmark.circle.fill") }

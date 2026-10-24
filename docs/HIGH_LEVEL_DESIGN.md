@@ -23,7 +23,7 @@ flowchart LR
     D[Diner phones ×4]
     R[Restaurant phone]
   end
-  D <-. "UWB tap (Nearby Interaction)<br/>token swap over Multipeer" .-> R
+  D <-. "Nearby table discovery + UWB ranging<br/>(no Multipeer session)" .-> R
   D & R <-->|"convex-swift: queries, mutations,<br/>live subscriptions"| C
   subgraph C["Convex backend (TypeScript)"]
     F[Functions + state machine]
@@ -40,7 +40,7 @@ flowchart LR
 | Component | Responsibility | Owner |
 |---|---|---|
 | iOS diner screens and the Convex Swift layer | Hunger, negotiating, pick, group order, placed; `PartyStore`; shared UI kit | Role 1 |
-| iOS proximity, restaurant mode, onboarding, demo | UWB/Multipeer/QR, all restaurant screens, onboarding, installs, runbook | Role 2 |
+| iOS proximity, restaurant mode, onboarding, demo | UWB/Convex token exchange/QR, all restaurant screens, onboarding, installs, runbook | Role 2 |
 | Agent brain (`convex/agents`) | Safety rules, ranking, negotiation rules, prompts, model clients, step actions | Role 3 |
 | Backend and data (`convex/*`, `apify/`) | Schema, public API, state machine, workflow wiring, pacing, menu pipeline, seed | Role 4 |
 
@@ -87,16 +87,23 @@ sequenceDiagram
   participant D as Diner phone
   participant R as Restaurant phone
   participant C as Convex
+  R->>C: choose diner count → parties:create
   R->>R: advertise "tappytabs" {partyId}
-  D->>R: browse → invite (auto-accept)
-  D->>R: hello{userId, NI token}
-  R->>D: hello{NI token}
-  Note over D,R: UWB ranging; tap = <15 cm for 3 readings
-  D->>D: haptic + animation (no network wait)
+  R-->>D: Multipeer advertises this nearby party ID
+  Note over D,R: Diner discovers every nearby table and prepares each in parallel
+  D->>C: tap:announce(userId, partyId, attemptId, NI token) per table
+  C-->>R: tap:pending subscription for this table
+  R->>C: tap:respond(attemptId, NI token)
+  C-->>D: tap:session subscription for this table
+  Note over D,R: UWB ranges prepared tables while diner approaches
+  D->>D: first qualifying tap gives haptic + animation
   R->>C: parties:join(partyId, userId, "uwb", hostDeviceId)
+  Note over C: Atomic first-table claim prevents a competing UWB join
   C-->>D: subscription: I'm a member → hand off to party screens
   C-->>R: subscription: "3 of 4 checked in"
 ```
+
+Choosing the diner count opens the table and starts a Multipeer advertisement containing its party ID. The diner browses nearby advertisements continuously, maintains a candidate per table, and starts a separate Convex token exchange and Nearby Interaction session for each. Multipeer never establishes a peer session; it only proves local discoverability and supplies a party ID. Convex relays tokens over the existing backend connection. Each new attempt replaces only that table's prior token, stale replies are ignored, and an unanswered exchange retries after 8 seconds. A table lost from Multipeer remains for an 8 second grace period, and an active UWB distance keeps it eligible. If iOS refuses more active ranging sessions, the diner sees the nearby table list and chooses one to focus; QR remains available. The first qualifying UWB tap wins an atomic backend claim, so two hosts cannot admit the same diner to different tables. Both phones need the same reachable Convex deployment and must keep the app foregrounded for UWB ranging.
 
 ### Negotiation (inside the workflow)
 
@@ -115,6 +122,7 @@ sequenceDiagram
 | `menuItems` | Normalized item: price in cents, category, tags, allergen levels, diet tags, spice, drink/shareable flags, `tagStatus` |
 | `parties` | Host device, size, status, join code, epoch, deadlines |
 | `members` | Party × user: how they joined, hunger, picked item, confirmed time |
+| `tapClaims` | Short-lived first-table UWB join claim per diner; blocks a competing nearby host from admitting the same diner |
 | `candidates` | Per diner: 3 ranked mains + 1 drink, with reason and ask-server flag |
 | `messages` | Speech bubbles with `showAt`; no `fromUserId` means the restaurant agent |
 | `orderLines` | Item, qty, kind (`main`/`drink`/`shared`/`extra`), `sharedBy`, `addedBy` |

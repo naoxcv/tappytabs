@@ -91,6 +91,15 @@ final class MockBackend: Backend {
     func addable(_ partyId: String, userId: String, shared: Bool) -> AnyPublisher<[AddableItem], TTError> {
         onMain(Just(shared ? addableShared : addablePersonal).setFailureType(to: TTError.self))
     }
+    func pendingTaps(partyId: String, hostDeviceId: String) -> AnyPublisher<[TapRequest], TTError> {
+        onMain(Just([]).setFailureType(to: TTError.self))
+    }
+    func tapSession(partyId: String, userId: String, deviceId: String) -> AnyPublisher<TapSession?, TTError> {
+        onMain(Just(nil).setFailureType(to: TTError.self))
+    }
+    func announceTap(partyId: String, userId: String, deviceId: String, attemptId: String, token: String) async throws {}
+    func respondTap(partyId: String, userId: String, hostDeviceId: String, attemptId: String, token: String) async throws {}
+    func rejectTap(partyId: String, userId: String, hostDeviceId: String, attemptId: String, reason: String) async throws {}
 
     private func onMain<P: Publisher>(_ p: P) -> AnyPublisher<P.Output, TTError> where P.Failure == TTError {
         p.receive(on: DispatchQueue.main).eraseToAnyPublisher()
@@ -139,6 +148,12 @@ final class MockBackend: Backend {
               hostDeviceId: String?, deviceId: String?) async throws -> JoinResult {
         if partySubject.value == nil { _ = try await createParty(restaurantId: Self.restaurantId, size: 4, hostDeviceId: ids.hostDeviceId) }
         return try joinSync(userId: userId)
+    }
+
+    func leave(partyId: String, userId: String, deviceId: String) async throws {
+        guard let party = partySubject.value, party.id == partyId else { throw TTError(code: .NOT_FOUND, message: "Table not found") }
+        guard party.status == .checkin else { throw TTError(code: .BAD_STATUS, message: "Table is no longer checking in") }
+        setParty(party.with(members: party.members.filter { $0.userId != userId }))
     }
 
     private func joinSync(userId: String) throws -> JoinResult {

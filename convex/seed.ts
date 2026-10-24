@@ -13,7 +13,7 @@ import { buildPlan, poolForParty, sharedTarget, tally } from "./agents/rules";
 import { dropBubbleText, summaryTemplate, topUpBubble } from "./agents/bubbles";
 import { menuOf, usersOf, membersOf } from "./lib/guards";
 
-const TABLES = ["agentLogs", "messages", "candidates", "orderLines", "members", "parties", "menuItems", "restaurants", "users"] as const;
+const TABLES = ["agentLogs", "messages", "candidates", "orderLines", "tapSessions", "tapHosts", "tapClaims", "tapExits", "members", "parties", "menuItems", "restaurants", "users"] as const;
 
 async function wipe(ctx: MutationCtx) {
   for (const t of TABLES) for (const row of await ctx.db.query(t).collect()) await ctx.db.delete(row._id);

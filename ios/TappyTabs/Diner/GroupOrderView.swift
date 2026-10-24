@@ -31,7 +31,7 @@ struct GroupOrderView: View {
                 ForEach(store.party?.members.filter { $0.userId != store.userId } ?? []) { m in
                     HStack {
                         AvatarView(avatarId: m.avatarId, size: 28)
-                        Text(store.myLines(m.userId).map(\.name).joined(separator: ", ")).font(.subheadline)
+                        Text(store.myLines(m.userId).map(\.name).joined(separator: ", ")).font(AppTypography.subheadline)
                         Spacer()
                         if m.confirmed { Image(systemName: "checkmark.circle.fill").foregroundStyle(.green) }
                     }
@@ -91,9 +91,9 @@ struct SubstituteSheet: View {
     @Environment(\.dismiss) private var dismiss
     var body: some View {
         VStack(spacing: 16) {
-            Text("Swap for \(sub.name)?").font(.title2.bold())
+            Text("Swap for \(sub.name)?").font(AppTypography.style(.title2, weight: .bold))
             Text(sub.reason).foregroundStyle(.secondary)
-            PriceText(cents: sub.priceCents).font(.title3)
+            PriceText(cents: sub.priceCents).font(AppTypography.title3)
             if sub.askServer { AskServerBadge() }
             Button("Swap") { Task { await store.add(sub.itemId, shared: false); dismiss() } }.buttonStyle(BigButtonStyle())
             Button("No thanks") { dismiss() }
@@ -120,7 +120,7 @@ struct AddSheet: View {
                         HStack {
                             VStack(alignment: .leading) {
                                 Text(item.name)
-                                Text(item.category.capitalized).font(.caption).foregroundStyle(.secondary)
+                                Text(item.category.capitalized).font(AppTypography.caption).foregroundStyle(.secondary)
                                 if item.askServer { AskServerBadge() }
                             }
                             Spacer()

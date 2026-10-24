@@ -22,6 +22,8 @@ targets:
     platform: iOS
     sources:
       - path: TappyTabs
+    resources:
+      - path: TappyTabs/Resources/Fonts/Raleway-Variable.ttf
     dependencies:
       - package: ConvexMobile
     configFiles:
@@ -37,7 +39,8 @@ targets:
       properties:
         CFBundleDisplayName: TappyTabs
         UILaunchScreen: {}
-        UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
+        UIAppFonts: [Raleway-Variable.ttf]
+        UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait, UIInterfaceOrientationLandscapeLeft, UIInterfaceOrientationLandscapeRight]
         UIApplicationSupportsIndirectInputEvents: true
         NSNearbyInteractionUsageDescription: TappyTabs measures the distance to the restaurant phone so you can tap to join a table.
         NSLocalNetworkUsageDescription: TappyTabs finds the restaurant phone nearby to check you in.

@@ -4,23 +4,37 @@ import SwiftUI
 
 struct ProximityDebugOverlay: View {
     @State private var proximity = Proximity.shared
+    @State private var thresholdBeforeEditing: Float?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text("UWB debug · \(stateText)").font(.caption.bold())
+            Text("UWB debug · \(stateText)").font(AppTypography.style(.caption, weight: .bold))
             ForEach(Array(proximity.debugHistory.enumerated()), id: \.offset) { entry in
-                Text(entry.element).font(.caption2.monospaced()).fixedSize(horizontal: false, vertical: true)
+                Text(entry.element).font(AppTypography.caption2).fixedSize(horizontal: false, vertical: true)
             }
-            if !proximity.supportsTap { Text("No precise distance on this phone: QR only").font(.caption2).foregroundStyle(.red) }
+            if !proximity.supportsTap { Text("No precise distance on this phone: QR only").font(AppTypography.caption2).foregroundStyle(.red) }
+            ForEach(proximity.nearbyTables) { table in
+                Text("table \(table.partyId.suffix(6)): \(table.phase.rawValue)")
+                    .font(AppTypography.caption2)
+            }
             ForEach(proximity.debugDistances.keys.sorted(), id: \.self) { key in
                 let d = proximity.debugDistances[key]
                 Text("\(key.suffix(8)): \(d.map { String(format: "%.2f m", $0) } ?? "–") · \(proximity.debugTapCounts[key] ?? 0)/\(proximity.config.consecutive)")
-                    .font(.caption2.monospaced())
+                    .font(AppTypography.caption2)
             }
             HStack {
-                Text(String(format: "threshold %.2f m", proximity.config.thresholdMetres)).font(.caption2)
+                Text(String(format: "threshold %.2f m", proximity.config.thresholdMetres)).font(AppTypography.caption2)
                 Slider(value: Binding(get: { Double(proximity.config.thresholdMetres) },
-                                      set: { proximity.config.thresholdMetres = Float($0) }), in: 0.05...0.5)
+                                      set: { proximity.setThreshold(Float($0)) }), in: 0.05...0.5) { isEditing in
+                    if isEditing {
+                        thresholdBeforeEditing = proximity.config.thresholdMetres
+                    } else {
+                        if let previous = thresholdBeforeEditing, previous != proximity.config.thresholdMetres {
+                            proximity.restartConnection()
+                        }
+                        thresholdBeforeEditing = nil
+                    }
+                }
             }
         }
         .padding(10)
@@ -31,7 +45,7 @@ struct ProximityDebugOverlay: View {
 
     private var stateText: String {
         switch proximity.state {
-        case .idle: "idle"; case .searching: "searching"; case .connected: "connected"; case .tapped: "tapped"
+        case .idle: "idle"; case .searching: "searching"; case .preparing: "preparing"; case .connected: "connected"; case .tapped: "tapped"
         case .rejected(let r): "rejected: \(r)"
         }
     }

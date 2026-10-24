@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		C280CA1045E74AA2960FA34E /* Raleway-Variable.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 9008DD017F774446A2D27687 /* Raleway-Variable.ttf */; };
 		14901C06AF6445A6C03BDCBE /* messages.json in Resources */ = {isa = PBXBuildFile; fileRef = D3DC698F30EFC43DA0663DDF /* messages.json */; };
 		168764815A98619FD290D2BE /* party_confirm.json in Resources */ = {isa = PBXBuildFile; fileRef = 0743084581CF6E250736C989 /* party_confirm.json */; };
 		189441F51475D159471DF4F6 /* DinerRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AF9C4C3AFDEC2068A83FA59 /* DinerRootView.swift */; };
@@ -68,6 +69,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		9008DD017F774446A2D27687 /* Raleway-Variable.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Raleway-Variable.ttf"; sourceTree = "<group>"; };
 		01C1F4CF26D4683E1B47FFBF /* ModeSelectView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModeSelectView.swift; sourceTree = "<group>"; };
 		039C2B1D20CE333F61A98D39 /* MockBackend.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockBackend.swift; sourceTree = "<group>"; };
 		039EAAF1EDAEC3ACA06C0653 /* candidates.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = candidates.json; sourceTree = "<group>"; };
@@ -242,10 +244,19 @@
 		B05BE67BF6D7C701265B7397 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
+				F4B19BEFC40A4C29B8BDAE5A /* Fonts */,
 				8468ECF797AE164A8D0ADA0A /* Assets.xcassets */,
 				4368875093D5F18A901C158D /* Info.plist */,
 			);
 			path = Resources;
+			sourceTree = "<group>";
+		};
+		F4B19BEFC40A4C29B8BDAE5A /* Fonts */ = {
+			isa = PBXGroup;
+			children = (
+				9008DD017F774446A2D27687 /* Raleway-Variable.ttf */,
+			);
+			path = Fonts;
 			sourceTree = "<group>";
 		};
 		B3767FFC4EC71F561627FD19 /* Restaurant */ = {
@@ -389,6 +400,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C280CA1045E74AA2960FA34E /* Raleway-Variable.ttf in Resources */,
 				9F811EE89CED9A596A3E7845 /* Assets.xcassets in Resources */,
 				F9A6C02124D51CA97ADD4C0C /* OnboardingCards.json in Resources */,
 				8908B073D4C186D5C280AC3E /* addable_personal.json in Resources */,

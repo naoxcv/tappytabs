@@ -5,20 +5,57 @@ struct ModeSelectView: View {
     @Environment(AppModel.self) private var app
 
     var body: some View {
-        VStack(spacing: 24) {
-            Spacer()
-            Text("TappyTabs").font(.system(size: 44, weight: .heavy)).foregroundStyle(Theme.accent)
-            Text("Tap in. Let your agents order.").foregroundStyle(.secondary)
-            Spacer()
-            Button { app.mode = .diner } label: { Label("I'm a diner", systemImage: "person.fill") }
-                .buttonStyle(BigButtonStyle())
-            Button { app.mode = .restaurant } label: { Label("This is the restaurant phone", systemImage: "fork.knife") }
-                .buttonStyle(BigButtonStyle(tint: .indigo))
-            Text(app.backendKind == .mock ? "Using mock data (Debug menu → Live)" : "Live: \(app.convexURL)")
-                .font(.caption).foregroundStyle(.secondary)
+        GeometryReader { geometry in
+            VStack(spacing: 0) {
+                Spacer(minLength: 24)
+                VStack(spacing: 0) {
+                    Image("agent_cat")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 200, height: 200)
+                        .accessibilityHidden(true)
+                    Text("TappyTabs")
+                        .font(AppTypography.custom(36, weight: .black))
+                        .tracking(-1.2)
+                        .foregroundStyle(Theme.accent)
+                        .offset(y: -28)
+                }
+                Spacer(minLength: 40)
+                VStack(spacing: 10) {
+                    Button { app.mode = .diner } label: {
+                        Text("I am a diner")
+                            .font(AppTypography.custom(22, weight: .regular))
+                            .foregroundStyle(.black)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 56)
+                            .background(Theme.accent, in: RoundedRectangle(cornerRadius: 15))
+                    }
+                    .buttonStyle(.plain)
+
+                    Button { app.mode = .restaurant } label: {
+                        Text("This is a restaurant device.")
+                            .font(AppTypography.custom(18, weight: .regular))
+                            .underline()
+                            .foregroundStyle(Theme.accent)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 38)
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                }
+                .padding(.horizontal, 32)
+                .padding(.bottom, max(geometry.safeAreaInsets.bottom == 0 ? 24 : 12, 12))
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(Color.black.ignoresSafeArea())
         }
-        .padding()
     }
+}
+
+#Preview("Mode Selection") {
+    let defaults = UserDefaults(suiteName: "TappyTabs.ModeSelectPreview")!
+    ModeSelectView()
+        .environment(AppModel(defaults: defaults))
 }
 
 /// Keeps one PartyStore alive per party and resubscribes when the app returns to the foreground.

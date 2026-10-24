@@ -1,7 +1,7 @@
 [
-  { "name": "Thai", "emoji": "🍛", "cuisine": "Thai" },
-  { "name": "Italian", "emoji": "🍝", "cuisine": "Italian" },
-  { "name": "Japanese", "emoji": "🍣", "cuisine": "Japanese" },
-  { "name": "Mexican", "emoji": "🌮", "cuisine": "Mexican" },
-  { "name": "Mediterranean", "emoji": "🥙", "cuisine": "Mediterranean" }
+  { "name": "Thai", "emoji": "🍛", "category": "cuisine", "cuisine": "Thai", "tags": [] },
+  { "name": "Italian", "emoji": "🍝", "category": "cuisine", "cuisine": "Italian", "tags": [] },
+  { "name": "Japanese", "emoji": "🍣", "category": "cuisine", "cuisine": "Japanese", "tags": [] },
+  { "name": "Mexican", "emoji": "🌮", "category": "cuisine", "cuisine": "Mexican", "tags": [] },
+  { "name": "Mediterranean", "emoji": "🥙", "category": "cuisine", "cuisine": "Mediterranean", "tags": [] }
 ]

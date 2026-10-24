@@ -76,6 +76,40 @@ export default defineSchema({
     .index("by_party", ["partyId"])
     .index("by_party_user", ["partyId", "userId"]),
 
+  // Ephemeral Nearby Interaction token exchange. Each attempt replaces the previous one.
+  tapSessions: defineTable({
+    partyId: v.id("parties"),
+    userId: v.id("users"),
+    attemptId: v.string(),
+    dinerToken: v.string(),
+    hostToken: v.optional(v.string()),
+    rejection: v.optional(v.string()),
+    expiresAt: v.number(),
+  })
+    .index("by_party", ["partyId"])
+    .index("by_party_user", ["partyId", "userId"]),
+
+  // Legacy host announcements are retained for existing rows. New builds discover nearby tables through Multipeer.
+  tapHosts: defineTable({
+    partyId: v.id("parties"),
+    hostDeviceId: v.string(),
+    expiresAt: v.number(),
+  }).index("by_party", ["partyId"]),
+
+  // Only the first verified UWB tap may claim a diner during a short race window.
+  tapClaims: defineTable({
+    userId: v.id("users"),
+    partyId: v.id("parties"),
+    expiresAt: v.number(),
+  }).index("by_user", ["userId"]).index("by_party", ["partyId"]),
+
+  // Prevent an in-flight host ranging callback from undoing an intentional leave.
+  tapExits: defineTable({
+    partyId: v.id("parties"),
+    userId: v.id("users"),
+    expiresAt: v.number(),
+  }).index("by_party_user", ["partyId", "userId"]).index("by_party", ["partyId"]),
+
   // Written by negotiation.commit: each diner's 3 mains + 1 drink.
   candidates: defineTable({
     partyId: v.id("parties"),

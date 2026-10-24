@@ -9,11 +9,23 @@ final class AppModel {
 
     var mode: Mode? { didSet { defaults.set(mode?.rawValue, forKey: Keys.mode) } }
     /// Stable per install. Debug menu can set "demo-diner-1…4" / "demo-restaurant" to use seeded profiles.
-    var deviceId: String { didSet { defaults.set(deviceId, forKey: Keys.deviceId) } }
+    var deviceId: String {
+        didSet {
+            defaults.set(deviceId, forKey: Keys.deviceId)
+            if deviceId != oldValue {
+                userId = nil
+                partyId = nil
+                tapAttemptID = UUID()
+            }
+        }
+    }
     /// Set by onboarding (Role 2) → read by the diner screens (Role 1).
     var userId: String? { didSet { defaults.set(userId, forKey: Keys.userId) } }
     /// Diner: the party joined by tap-in. Restaurant: the party this phone hosts.
     var partyId: String? { didSet { defaults.set(partyId, forKey: Keys.partyId) } }
+    /// Changes when the debug menu restarts an in-progress diner tap-in.
+    var tapAttemptID = UUID()
+    var tapSearchPaused = false
     var backendKind: BackendKind { didSet { defaults.set(backendKind.rawValue, forKey: Keys.backend); rebuild() } }
     var convexURL: String { didSet { defaults.set(convexURL, forKey: Keys.convexURL); rebuild() } }
 
@@ -41,10 +53,31 @@ final class AppModel {
 
     private func rebuild() {
         backend = Self.makeBackend(backendKind, convexURL)
+        userId = nil
         partyId = nil
+        tapAttemptID = UUID()
     }
 
     var mock: MockBackend? { backend as? MockBackend }
+
+    func leaveTable() {
+        tapSearchPaused = false
+        partyId = nil
+        tapAttemptID = UUID()
+    }
+
+    func leaveJoinedTable() async throws {
+        guard let partyId, let userId else { leaveTable(); return }
+        try await backend.leave(partyId: partyId, userId: userId, deviceId: deviceId)
+        tapSearchPaused = true
+        self.partyId = nil
+        tapAttemptID = UUID()
+    }
+
+    func resumeTapSearch() {
+        tapSearchPaused = false
+        tapAttemptID = UUID()
+    }
 
     /// Long-press the logo: back to mode select, keeping the profile.
     func switchMode() { mode = nil; partyId = nil }
