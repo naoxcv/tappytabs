@@ -1,4 +1,4 @@
-// Owner: Role 3. Bitdeer tagging prompt (batches of 20). Output is merged with "add or raise only" rules.
+// Owner: Role 3. Bitdeer tagging prompt (default batches of 8). Output is merged with "add or raise only" rules.
 import type { RawItem } from "./normalize.js";
 import { ALLERGENS } from "./keywords.js";
 
