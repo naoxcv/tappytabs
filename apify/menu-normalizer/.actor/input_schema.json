@@ -12,10 +12,10 @@
         "type": "object",
         "properties": {
           "name": { "title": "Name", "type": "string", "description": "Menu item name." },
-          "description": { "title": "Description", "type": "string" },
-          "ingredients": { "title": "Ingredients", "type": "array", "items": { "type": "string" } },
-          "price": { "title": "Price", "type": ["string", "number"] },
-          "category": { "title": "Category", "type": "string" }
+          "description": { "title": "Description", "type": "string", "description": "Short description shown on the menu." },
+          "ingredients": { "title": "Ingredients", "type": "array", "description": "Ingredient names when available.", "items": { "type": "string" } },
+          "price": { "title": "Price", "type": ["string", "number"], "description": "Menu price as text or a number." },
+          "category": { "title": "Category", "type": "string", "description": "Menu category, such as Mains or Drinks." }
         },
         "required": ["name"]
       },
