@@ -1,0 +1,1804 @@
+[
+  {
+    "name": "Seafood Paella",
+    "category": "shareables",
+    "cuisine": "Spanish",
+    "tags": [
+      "seafood",
+      "rice",
+      "saffron",
+      "savory"
+    ],
+    "description": "Saffron rice, prawns, mussels, squid",
+    "priceCents": 2800,
+    "allergens": [
+      {
+        "allergen": "milk",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "egg",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "fish",
+        "level": "may_contain"
+      },
+      {
+        "allergen": "shellfish",
+        "level": "contains"
+      },
+      {
+        "allergen": "tree_nut",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "peanut",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "wheat",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "soy",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "sesame",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "gluten",
+        "level": "not_detected"
+      }
+    ],
+    "diet": [
+      "no_pork"
+    ],
+    "spice": 1,
+    "isDrink": false,
+    "shareable": true,
+    "menuOrder": 0,
+    "tagStatus": "tagged"
+  },
+  {
+    "name": "Garlic Butter Shrimp",
+    "category": "shareables",
+    "cuisine": "Spanish",
+    "tags": [
+      "shrimp",
+      "garlic",
+      "butter",
+      "spicy"
+    ],
+    "description": "Sizzling shrimp, garlic, chili, butter",
+    "priceCents": 1600,
+    "allergens": [
+      {
+        "allergen": "milk",
+        "level": "contains"
+      },
+      {
+        "allergen": "egg",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "fish",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "shellfish",
+        "level": "contains"
+      },
+      {
+        "allergen": "tree_nut",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "peanut",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "wheat",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "soy",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "sesame",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "gluten",
+        "level": "not_detected"
+      }
+    ],
+    "diet": [
+      "no_pork"
+    ],
+    "spice": 2,
+    "isDrink": false,
+    "shareable": true,
+    "menuOrder": 1,
+    "tagStatus": "tagged"
+  },
+  {
+    "name": "Chicken Satay",
+    "category": "shareables",
+    "cuisine": "Indonesian",
+    "tags": [
+      "chicken",
+      "grilled",
+      "peanut",
+      "skewers"
+    ],
+    "description": "Grilled chicken skewers, peanut sauce",
+    "priceCents": 1400,
+    "allergens": [
+      {
+        "allergen": "milk",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "egg",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "fish",
+        "level": "may_contain"
+      },
+      {
+        "allergen": "shellfish",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "tree_nut",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "peanut",
+        "level": "contains"
+      },
+      {
+        "allergen": "wheat",
+        "level": "may_contain"
+      },
+      {
+        "allergen": "soy",
+        "level": "may_contain"
+      },
+      {
+        "allergen": "sesame",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "gluten",
+        "level": "may_contain"
+      }
+    ],
+    "diet": [
+      "no_pork"
+    ],
+    "spice": 1,
+    "isDrink": false,
+    "shareable": true,
+    "menuOrder": 2,
+    "tagStatus": "tagged"
+  },
+  {
+    "name": "Margherita Flatbread",
+    "category": "shareables",
+    "cuisine": "Italian",
+    "tags": [
+      "flatbread",
+      "cheesy",
+      "tomato",
+      "basil"
+    ],
+    "description": "Tomato, mozzarella, basil",
+    "priceCents": 1500,
+    "allergens": [
+      {
+        "allergen": "milk",
+        "level": "contains"
+      },
+      {
+        "allergen": "egg",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "fish",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "shellfish",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "tree_nut",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "peanut",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "wheat",
+        "level": "contains"
+      },
+      {
+        "allergen": "soy",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "sesame",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "gluten",
+        "level": "contains"
+      }
+    ],
+    "diet": [
+      "vegetarian",
+      "no_pork"
+    ],
+    "spice": 0,
+    "isDrink": false,
+    "shareable": true,
+    "menuOrder": 3,
+    "tagStatus": "tagged"
+  },
+  {
+    "name": "Hummus & Warm Pita",
+    "category": "shareables",
+    "cuisine": "Middle Eastern",
+    "tags": [
+      "hummus",
+      "pita",
+      "chickpea",
+      "dip"
+    ],
+    "description": "Chickpea hummus, olive oil, pita",
+    "priceCents": 1100,
+    "allergens": [
+      {
+        "allergen": "milk",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "egg",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "fish",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "shellfish",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "tree_nut",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "peanut",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "wheat",
+        "level": "contains"
+      },
+      {
+        "allergen": "soy",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "sesame",
+        "level": "contains"
+      },
+      {
+        "allergen": "gluten",
+        "level": "contains"
+      }
+    ],
+    "diet": [
+      "vegetarian",
+      "vegan",
+      "no_pork",
+      "halal"
+    ],
+    "spice": 0,
+    "isDrink": false,
+    "shareable": true,
+    "menuOrder": 4,
+    "tagStatus": "tagged"
+  },
+  {
+    "name": "Salted Edamame",
+    "category": "shareables",
+    "cuisine": "Japanese",
+    "tags": [
+      "edamame",
+      "soy",
+      "steamed",
+      "salty"
+    ],
+    "description": "Steamed soybeans, sea salt",
+    "priceCents": 700,
+    "allergens": [
+      {
+        "allergen": "milk",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "egg",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "fish",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "shellfish",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "tree_nut",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "peanut",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "wheat",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "soy",
+        "level": "contains"
+      },
+      {
+        "allergen": "sesame",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "gluten",
+        "level": "not_detected"
+      }
+    ],
+    "diet": [
+      "vegetarian",
+      "vegan",
+      "no_pork",
+      "halal"
+    ],
+    "spice": 0,
+    "isDrink": false,
+    "shareable": true,
+    "menuOrder": 5,
+    "tagStatus": "tagged"
+  },
+  {
+    "name": "Crispy Brussels Sprouts",
+    "category": "shareables",
+    "cuisine": "American",
+    "tags": [
+      "sprouts",
+      "fried",
+      "crispy",
+      "balsamic"
+    ],
+    "description": "Fried sprouts, balsamic glaze",
+    "priceCents": 1000,
+    "allergens": [
+      {
+        "allergen": "milk",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "egg",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "fish",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "shellfish",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "tree_nut",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "peanut",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "wheat",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "soy",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "sesame",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "gluten",
+        "level": "not_detected"
+      }
+    ],
+    "diet": [
+      "vegetarian",
+      "vegan",
+      "no_pork",
+      "halal"
+    ],
+    "spice": 0,
+    "isDrink": false,
+    "shareable": true,
+    "menuOrder": 6,
+    "tagStatus": "tagged"
+  },
+  {
+    "name": "Korean Fried Chicken",
+    "category": "shareables",
+    "cuisine": "Korean",
+    "tags": [
+      "fried",
+      "chicken",
+      "spicy",
+      "korean",
+      "crispy"
+    ],
+    "description": "Double-fried wings, gochujang glaze",
+    "priceCents": 1700,
+    "allergens": [
+      {
+        "allergen": "milk",
+        "level": "may_contain"
+      },
+      {
+        "allergen": "egg",
+        "level": "may_contain"
+      },
+      {
+        "allergen": "fish",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "shellfish",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "tree_nut",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "peanut",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "wheat",
+        "level": "contains"
+      },
+      {
+        "allergen": "soy",
+        "level": "contains"
+      },
+      {
+        "allergen": "sesame",
+        "level": "may_contain"
+      },
+      {
+        "allergen": "gluten",
+        "level": "contains"
+      }
+    ],
+    "diet": [
+      "no_pork"
+    ],
+    "spice": 3,
+    "isDrink": false,
+    "shareable": true,
+    "menuOrder": 7,
+    "tagStatus": "tagged"
+  },
+  {
+    "name": "Truffle Fries",
+    "category": "shareables",
+    "cuisine": "American",
+    "tags": [
+      "fries",
+      "truffle",
+      "fried",
+      "salty"
+    ],
+    "description": "Shoestring fries, truffle salt",
+    "priceCents": 900,
+    "allergens": [
+      {
+        "allergen": "milk",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "egg",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "fish",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "shellfish",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "tree_nut",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "peanut",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "wheat",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "soy",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "sesame",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "gluten",
+        "level": "not_detected"
+      }
+    ],
+    "diet": [
+      "vegetarian",
+      "vegan",
+      "no_pork",
+      "halal"
+    ],
+    "spice": 0,
+    "isDrink": false,
+    "shareable": true,
+    "menuOrder": 8,
+    "tagStatus": "tagged"
+  },
+  {
+    "name": "Pad Thai",
+    "category": "mains",
+    "cuisine": "Thai",
+    "tags": [
+      "noodles",
+      "peanut",
+      "egg",
+      "stir-fry",
+      "thai"
+    ],
+    "description": "Rice noodles, tamarind, egg, crushed peanuts",
+    "priceCents": 1800,
+    "allergens": [
+      {
+        "allergen": "milk",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "egg",
+        "level": "contains"
+      },
+      {
+        "allergen": "fish",
+        "level": "may_contain"
+      },
+      {
+        "allergen": "shellfish",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "tree_nut",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "peanut",
+        "level": "contains"
+      },
+      {
+        "allergen": "wheat",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "soy",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "sesame",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "gluten",
+        "level": "not_detected"
+      }
+    ],
+    "diet": [
+      "no_pork"
+    ],
+    "spice": 1,
+    "isDrink": false,
+    "shareable": false,
+    "menuOrder": 9,
+    "tagStatus": "tagged"
+  },
+  {
+    "name": "Tofu Green Curry",
+    "category": "mains",
+    "cuisine": "Thai",
+    "tags": [
+      "curry",
+      "tofu",
+      "coconut",
+      "rice",
+      "spicy"
+    ],
+    "description": "Coconut green curry, tofu, jasmine rice",
+    "priceCents": 1700,
+    "allergens": [
+      {
+        "allergen": "milk",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "egg",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "fish",
+        "level": "may_contain"
+      },
+      {
+        "allergen": "shellfish",
+        "level": "may_contain"
+      },
+      {
+        "allergen": "tree_nut",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "peanut",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "wheat",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "soy",
+        "level": "contains"
+      },
+      {
+        "allergen": "sesame",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "gluten",
+        "level": "not_detected"
+      }
+    ],
+    "diet": [
+      "no_pork"
+    ],
+    "spice": 2,
+    "isDrink": false,
+    "shareable": false,
+    "menuOrder": 10,
+    "tagStatus": "tagged"
+  },
+  {
+    "name": "Pesto Pasta",
+    "category": "mains",
+    "cuisine": "Italian",
+    "tags": [
+      "pasta",
+      "pesto",
+      "cheesy",
+      "basil"
+    ],
+    "description": "Basil pine-nut pesto, parmesan, linguine",
+    "priceCents": 1900,
+    "allergens": [
+      {
+        "allergen": "milk",
+        "level": "contains"
+      },
+      {
+        "allergen": "egg",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "fish",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "shellfish",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "tree_nut",
+        "level": "contains"
+      },
+      {
+        "allergen": "peanut",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "wheat",
+        "level": "contains"
+      },
+      {
+        "allergen": "soy",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "sesame",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "gluten",
+        "level": "contains"
+      }
+    ],
+    "diet": [
+      "no_pork"
+    ],
+    "spice": 0,
+    "isDrink": false,
+    "shareable": false,
+    "menuOrder": 11,
+    "tagStatus": "tagged"
+  },
+  {
+    "name": "Grilled Salmon Bowl",
+    "category": "mains",
+    "cuisine": "Japanese",
+    "tags": [
+      "salmon",
+      "rice",
+      "sesame",
+      "grilled",
+      "bowl"
+    ],
+    "description": "Miso salmon, rice, cucumber, sesame",
+    "priceCents": 2300,
+    "allergens": [
+      {
+        "allergen": "milk",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "egg",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "fish",
+        "level": "contains"
+      },
+      {
+        "allergen": "shellfish",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "tree_nut",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "peanut",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "wheat",
+        "level": "may_contain"
+      },
+      {
+        "allergen": "soy",
+        "level": "contains"
+      },
+      {
+        "allergen": "sesame",
+        "level": "contains"
+      },
+      {
+        "allergen": "gluten",
+        "level": "may_contain"
+      }
+    ],
+    "diet": [
+      "no_pork"
+    ],
+    "spice": 0,
+    "isDrink": false,
+    "shareable": false,
+    "menuOrder": 12,
+    "tagStatus": "tagged"
+  },
+  {
+    "name": "Chicken Shawarma Plate",
+    "category": "mains",
+    "cuisine": "Middle Eastern",
+    "tags": [
+      "chicken",
+      "shawarma",
+      "rice",
+      "yogurt",
+      "grilled"
+    ],
+    "description": "Spiced chicken, rice, garlic yogurt, pita",
+    "priceCents": 2000,
+    "allergens": [
+      {
+        "allergen": "milk",
+        "level": "contains"
+      },
+      {
+        "allergen": "egg",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "fish",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "shellfish",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "tree_nut",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "peanut",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "wheat",
+        "level": "contains"
+      },
+      {
+        "allergen": "soy",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "sesame",
+        "level": "may_contain"
+      },
+      {
+        "allergen": "gluten",
+        "level": "contains"
+      }
+    ],
+    "diet": [
+      "no_pork"
+    ],
+    "spice": 2,
+    "isDrink": false,
+    "shareable": false,
+    "menuOrder": 13,
+    "tagStatus": "tagged"
+  },
+  {
+    "name": "Pork Belly Bao",
+    "category": "mains",
+    "cuisine": "Taiwanese",
+    "tags": [
+      "pork",
+      "bao",
+      "steamed",
+      "braised"
+    ],
+    "description": "Braised pork belly, pickles, steamed buns",
+    "priceCents": 1800,
+    "allergens": [
+      {
+        "allergen": "milk",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "egg",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "fish",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "shellfish",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "tree_nut",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "peanut",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "wheat",
+        "level": "contains"
+      },
+      {
+        "allergen": "soy",
+        "level": "may_contain"
+      },
+      {
+        "allergen": "sesame",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "gluten",
+        "level": "contains"
+      }
+    ],
+    "diet": [],
+    "spice": 0,
+    "isDrink": false,
+    "shareable": false,
+    "menuOrder": 14,
+    "tagStatus": "tagged"
+  },
+  {
+    "name": "Beef Pho",
+    "category": "mains",
+    "cuisine": "Vietnamese",
+    "tags": [
+      "noodles",
+      "beef",
+      "broth",
+      "rice",
+      "herbs"
+    ],
+    "description": "Rice noodles, brisket, herb broth",
+    "priceCents": 1900,
+    "allergens": [
+      {
+        "allergen": "milk",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "egg",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "fish",
+        "level": "contains"
+      },
+      {
+        "allergen": "shellfish",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "tree_nut",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "peanut",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "wheat",
+        "level": "may_contain"
+      },
+      {
+        "allergen": "soy",
+        "level": "may_contain"
+      },
+      {
+        "allergen": "sesame",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "gluten",
+        "level": "may_contain"
+      }
+    ],
+    "diet": [
+      "no_pork"
+    ],
+    "spice": 1,
+    "isDrink": false,
+    "shareable": false,
+    "menuOrder": 15,
+    "tagStatus": "tagged"
+  },
+  {
+    "name": "Falafel Wrap",
+    "category": "mains",
+    "cuisine": "Middle Eastern",
+    "tags": [
+      "falafel",
+      "wrap",
+      "tahini",
+      "fried"
+    ],
+    "description": "Falafel, tahini, pickles, lavash",
+    "priceCents": 1500,
+    "allergens": [
+      {
+        "allergen": "milk",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "egg",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "fish",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "shellfish",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "tree_nut",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "peanut",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "wheat",
+        "level": "contains"
+      },
+      {
+        "allergen": "soy",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "sesame",
+        "level": "contains"
+      },
+      {
+        "allergen": "gluten",
+        "level": "contains"
+      }
+    ],
+    "diet": [
+      "vegetarian",
+      "vegan",
+      "no_pork",
+      "halal"
+    ],
+    "spice": 1,
+    "isDrink": false,
+    "shareable": false,
+    "menuOrder": 16,
+    "tagStatus": "tagged"
+  },
+  {
+    "name": "Mushroom Risotto",
+    "category": "mains",
+    "cuisine": "Italian",
+    "tags": [
+      "risotto",
+      "mushroom",
+      "rice",
+      "cheesy"
+    ],
+    "description": "Arborio rice, wild mushrooms, parmesan",
+    "priceCents": 2100,
+    "allergens": [
+      {
+        "allergen": "milk",
+        "level": "contains"
+      },
+      {
+        "allergen": "egg",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "fish",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "shellfish",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "tree_nut",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "peanut",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "wheat",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "soy",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "sesame",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "gluten",
+        "level": "not_detected"
+      }
+    ],
+    "diet": [
+      "no_pork"
+    ],
+    "spice": 0,
+    "isDrink": false,
+    "shareable": false,
+    "menuOrder": 17,
+    "tagStatus": "tagged"
+  },
+  {
+    "name": "Spicy Bibimbap",
+    "category": "mains",
+    "cuisine": "Korean",
+    "tags": [
+      "rice",
+      "spicy",
+      "beef",
+      "egg",
+      "korean"
+    ],
+    "description": "Rice, vegetables, beef, fried egg, gochujang",
+    "priceCents": 1900,
+    "allergens": [
+      {
+        "allergen": "milk",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "egg",
+        "level": "contains"
+      },
+      {
+        "allergen": "fish",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "shellfish",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "tree_nut",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "peanut",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "wheat",
+        "level": "may_contain"
+      },
+      {
+        "allergen": "soy",
+        "level": "contains"
+      },
+      {
+        "allergen": "sesame",
+        "level": "may_contain"
+      },
+      {
+        "allergen": "gluten",
+        "level": "may_contain"
+      }
+    ],
+    "diet": [
+      "no_pork"
+    ],
+    "spice": 3,
+    "isDrink": false,
+    "shareable": false,
+    "menuOrder": 18,
+    "tagStatus": "tagged"
+  },
+  {
+    "name": "Garden Salad",
+    "category": "sides",
+    "cuisine": "American",
+    "tags": [
+      "salad",
+      "fresh",
+      "lemon",
+      "greens"
+    ],
+    "description": "Greens, cucumber, lemon vinaigrette",
+    "priceCents": 900,
+    "allergens": [
+      {
+        "allergen": "milk",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "egg",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "fish",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "shellfish",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "tree_nut",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "peanut",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "wheat",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "soy",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "sesame",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "gluten",
+        "level": "not_detected"
+      }
+    ],
+    "diet": [
+      "vegetarian",
+      "vegan",
+      "no_pork",
+      "halal"
+    ],
+    "spice": 0,
+    "isDrink": false,
+    "shareable": false,
+    "menuOrder": 19,
+    "tagStatus": "tagged"
+  },
+  {
+    "name": "Thai Iced Tea",
+    "category": "drinks",
+    "cuisine": "Thai",
+    "tags": [
+      "sweet",
+      "creamy",
+      "iced",
+      "tea"
+    ],
+    "description": "Black tea, condensed milk",
+    "priceCents": 600,
+    "allergens": [
+      {
+        "allergen": "milk",
+        "level": "contains"
+      },
+      {
+        "allergen": "egg",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "fish",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "shellfish",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "tree_nut",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "peanut",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "wheat",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "soy",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "sesame",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "gluten",
+        "level": "not_detected"
+      }
+    ],
+    "diet": [
+      "vegetarian",
+      "no_pork"
+    ],
+    "spice": 0,
+    "isDrink": true,
+    "shareable": false,
+    "menuOrder": 20,
+    "tagStatus": "tagged"
+  },
+  {
+    "name": "Mango Lassi",
+    "category": "drinks",
+    "cuisine": "Indian",
+    "tags": [
+      "mango",
+      "creamy",
+      "yogurt",
+      "sweet",
+      "iced"
+    ],
+    "description": "Mango, yogurt, cardamom",
+    "priceCents": 650,
+    "allergens": [
+      {
+        "allergen": "milk",
+        "level": "contains"
+      },
+      {
+        "allergen": "egg",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "fish",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "shellfish",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "tree_nut",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "peanut",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "wheat",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "soy",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "sesame",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "gluten",
+        "level": "not_detected"
+      }
+    ],
+    "diet": [
+      "vegetarian",
+      "no_pork"
+    ],
+    "spice": 0,
+    "isDrink": true,
+    "shareable": false,
+    "menuOrder": 21,
+    "tagStatus": "tagged"
+  },
+  {
+    "name": "Fresh Lemonade",
+    "category": "drinks",
+    "cuisine": "American",
+    "tags": [
+      "lemon",
+      "sweet",
+      "tart",
+      "refreshing",
+      "mint"
+    ],
+    "description": "Lemon, cane sugar, mint",
+    "priceCents": 500,
+    "allergens": [
+      {
+        "allergen": "milk",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "egg",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "fish",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "shellfish",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "tree_nut",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "peanut",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "wheat",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "soy",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "sesame",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "gluten",
+        "level": "not_detected"
+      }
+    ],
+    "diet": [
+      "vegetarian",
+      "vegan",
+      "no_pork"
+    ],
+    "spice": 0,
+    "isDrink": true,
+    "shareable": false,
+    "menuOrder": 22,
+    "tagStatus": "tagged"
+  },
+  {
+    "name": "Almond Horchata",
+    "category": "drinks",
+    "cuisine": "Mexican",
+    "tags": [
+      "cinnamon",
+      "creamy",
+      "rice",
+      "sweet",
+      "iced"
+    ],
+    "description": "Rice and almond milk, cinnamon",
+    "priceCents": 600,
+    "allergens": [
+      {
+        "allergen": "milk",
+        "level": "contains"
+      },
+      {
+        "allergen": "egg",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "fish",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "shellfish",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "tree_nut",
+        "level": "contains"
+      },
+      {
+        "allergen": "peanut",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "wheat",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "soy",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "sesame",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "gluten",
+        "level": "not_detected"
+      }
+    ],
+    "diet": [
+      "vegetarian",
+      "no_pork"
+    ],
+    "spice": 0,
+    "isDrink": true,
+    "shareable": false,
+    "menuOrder": 23,
+    "tagStatus": "tagged"
+  },
+  {
+    "name": "Iced Oat Matcha",
+    "category": "drinks",
+    "cuisine": "Japanese",
+    "tags": [
+      "matcha",
+      "iced",
+      "creamy",
+      "earthy"
+    ],
+    "description": "Matcha, oat milk",
+    "priceCents": 650,
+    "allergens": [
+      {
+        "allergen": "milk",
+        "level": "contains"
+      },
+      {
+        "allergen": "egg",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "fish",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "shellfish",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "tree_nut",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "peanut",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "wheat",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "soy",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "sesame",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "gluten",
+        "level": "may_contain"
+      }
+    ],
+    "diet": [
+      "vegetarian",
+      "no_pork"
+    ],
+    "spice": 0,
+    "isDrink": true,
+    "shareable": false,
+    "menuOrder": 24,
+    "tagStatus": "tagged"
+  },
+  {
+    "name": "Sparkling Water",
+    "category": "drinks",
+    "cuisine": "American",
+    "tags": [
+      "sparkling",
+      "water",
+      "refreshing",
+      "crisp"
+    ],
+    "description": "Chilled sparkling water",
+    "priceCents": 400,
+    "allergens": [
+      {
+        "allergen": "milk",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "egg",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "fish",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "shellfish",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "tree_nut",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "peanut",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "wheat",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "soy",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "sesame",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "gluten",
+        "level": "not_detected"
+      }
+    ],
+    "diet": [
+      "vegetarian",
+      "vegan",
+      "no_pork"
+    ],
+    "spice": 0,
+    "isDrink": true,
+    "shareable": false,
+    "menuOrder": 25,
+    "tagStatus": "tagged"
+  },
+  {
+    "name": "Mochi Ice Cream",
+    "category": "desserts",
+    "cuisine": "Japanese",
+    "tags": [
+      "mochi",
+      "ice cream",
+      "sweet",
+      "chewy",
+      "frozen"
+    ],
+    "description": "Three mochi, assorted flavors",
+    "priceCents": 800,
+    "allergens": [
+      {
+        "allergen": "milk",
+        "level": "contains"
+      },
+      {
+        "allergen": "egg",
+        "level": "may_contain"
+      },
+      {
+        "allergen": "fish",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "shellfish",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "tree_nut",
+        "level": "may_contain"
+      },
+      {
+        "allergen": "peanut",
+        "level": "may_contain"
+      },
+      {
+        "allergen": "wheat",
+        "level": "may_contain"
+      },
+      {
+        "allergen": "soy",
+        "level": "may_contain"
+      },
+      {
+        "allergen": "sesame",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "gluten",
+        "level": "may_contain"
+      }
+    ],
+    "diet": [
+      "vegetarian",
+      "no_pork"
+    ],
+    "spice": 0,
+    "isDrink": false,
+    "shareable": true,
+    "menuOrder": 26,
+    "tagStatus": "tagged"
+  },
+  {
+    "name": "Baklava",
+    "category": "desserts",
+    "cuisine": "Turkish",
+    "tags": [
+      "sweet",
+      "nutty",
+      "flaky",
+      "honey"
+    ],
+    "description": "Filo, pistachio, honey",
+    "priceCents": 900,
+    "allergens": [
+      {
+        "allergen": "milk",
+        "level": "may_contain"
+      },
+      {
+        "allergen": "egg",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "fish",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "shellfish",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "tree_nut",
+        "level": "contains"
+      },
+      {
+        "allergen": "peanut",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "wheat",
+        "level": "contains"
+      },
+      {
+        "allergen": "soy",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "sesame",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "gluten",
+        "level": "contains"
+      }
+    ],
+    "diet": [
+      "vegetarian",
+      "no_pork"
+    ],
+    "spice": 0,
+    "isDrink": false,
+    "shareable": true,
+    "menuOrder": 27,
+    "tagStatus": "tagged"
+  }
+]

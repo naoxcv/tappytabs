@@ -1,0 +1,170 @@
+[
+  {
+    "name": "Seafood Paella",
+    "description": "Saffron rice, prawns, mussels, squid",
+    "price": "$28.00",
+    "category": "shareables"
+  },
+  {
+    "name": "Garlic Butter Shrimp",
+    "description": "Sizzling shrimp, garlic, chili, butter",
+    "price": "$16.00",
+    "category": "shareables"
+  },
+  {
+    "name": "Chicken Satay",
+    "description": "Grilled chicken skewers, peanut sauce",
+    "price": "$14.00",
+    "category": "shareables"
+  },
+  {
+    "name": "Margherita Flatbread",
+    "description": "Tomato, mozzarella, basil",
+    "price": "$15.00",
+    "category": "shareables"
+  },
+  {
+    "name": "Hummus & Warm Pita",
+    "description": "Chickpea hummus, olive oil, pita",
+    "price": "$11.00",
+    "category": "shareables"
+  },
+  {
+    "name": "Salted Edamame",
+    "description": "Steamed soybeans, sea salt",
+    "price": "$7.00",
+    "category": "shareables"
+  },
+  {
+    "name": "Crispy Brussels Sprouts",
+    "description": "Fried sprouts, balsamic glaze",
+    "price": "$10.00",
+    "category": "shareables"
+  },
+  {
+    "name": "Korean Fried Chicken",
+    "description": "Double-fried wings, gochujang glaze",
+    "price": "$17.00",
+    "category": "shareables"
+  },
+  {
+    "name": "Truffle Fries",
+    "description": "Shoestring fries, truffle salt",
+    "price": "$9.00",
+    "category": "shareables"
+  },
+  {
+    "name": "Pad Thai",
+    "description": "Rice noodles, tamarind, egg, crushed peanuts",
+    "price": "$18.00",
+    "category": "mains"
+  },
+  {
+    "name": "Tofu Green Curry",
+    "description": "Coconut green curry, tofu, jasmine rice",
+    "price": "$17.00",
+    "category": "mains"
+  },
+  {
+    "name": "Pesto Pasta",
+    "description": "Basil pine-nut pesto, parmesan, linguine",
+    "price": "$19.00",
+    "category": "mains"
+  },
+  {
+    "name": "Grilled Salmon Bowl",
+    "description": "Miso salmon, rice, cucumber, sesame",
+    "price": "$23.00",
+    "category": "mains"
+  },
+  {
+    "name": "Chicken Shawarma Plate",
+    "description": "Spiced chicken, rice, garlic yogurt, pita",
+    "price": "$20.00",
+    "category": "mains"
+  },
+  {
+    "name": "Pork Belly Bao",
+    "description": "Braised pork belly, pickles, steamed buns",
+    "price": "$18.00",
+    "category": "mains"
+  },
+  {
+    "name": "Beef Pho",
+    "description": "Rice noodles, brisket, herb broth",
+    "price": "$19.00",
+    "category": "mains"
+  },
+  {
+    "name": "Falafel Wrap",
+    "description": "Falafel, tahini, pickles, lavash",
+    "price": "$15.00",
+    "category": "mains"
+  },
+  {
+    "name": "Mushroom Risotto",
+    "description": "Arborio rice, wild mushrooms, parmesan",
+    "price": "$21.00",
+    "category": "mains"
+  },
+  {
+    "name": "Spicy Bibimbap",
+    "description": "Rice, vegetables, beef, fried egg, gochujang",
+    "price": "$19.00",
+    "category": "mains"
+  },
+  {
+    "name": "Garden Salad",
+    "description": "Greens, cucumber, lemon vinaigrette",
+    "price": "$9.00",
+    "category": "sides"
+  },
+  {
+    "name": "Thai Iced Tea",
+    "description": "Black tea, condensed milk",
+    "price": "$6.00",
+    "category": "drinks"
+  },
+  {
+    "name": "Mango Lassi",
+    "description": "Mango, yogurt, cardamom",
+    "price": "$6.50",
+    "category": "drinks"
+  },
+  {
+    "name": "Fresh Lemonade",
+    "description": "Lemon, cane sugar, mint",
+    "price": "$5.00",
+    "category": "drinks"
+  },
+  {
+    "name": "Almond Horchata",
+    "description": "Rice and almond milk, cinnamon",
+    "price": "$6.00",
+    "category": "drinks"
+  },
+  {
+    "name": "Iced Oat Matcha",
+    "description": "Matcha, oat milk",
+    "price": "$6.50",
+    "category": "drinks"
+  },
+  {
+    "name": "Sparkling Water",
+    "description": "Chilled sparkling water",
+    "price": "$4.00",
+    "category": "drinks"
+  },
+  {
+    "name": "Mochi Ice Cream",
+    "description": "Three mochi, assorted flavors",
+    "price": "$8.00",
+    "category": "desserts"
+  },
+  {
+    "name": "Baklava",
+    "description": "Filo, pistachio, honey",
+    "price": "$9.00",
+    "category": "desserts"
+  }
+]

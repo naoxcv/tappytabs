@@ -10,6 +10,7 @@
     "seed": "convex run seedActions:baseAndIngest",
     "seed:negotiated": "convex run seed:scenario '{\"scenario\":\"negotiated\"}'",
     "seed:placed": "convex run seed:scenario '{\"scenario\":\"placed\"}'",
+    "menu:snapshot": "node scripts/refresh-menu-snapshot.mjs",
     "e2e": "convex run e2e:happyPath",
     "typecheck": "tsc --noEmit -p convex",
     "test": "vitest run",
