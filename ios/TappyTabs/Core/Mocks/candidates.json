@@ -1,0 +1,42 @@
+[
+  {
+    "askServer": false,
+    "description": "Coconut green curry, tofu, jasmine rice",
+    "isDrink": false,
+    "itemId": "jh793w2qhhhe4gsdwf89379h2n8gx007",
+    "name": "Tofu Green Curry",
+    "priceCents": 1700,
+    "rank": 1,
+    "reason": "Matches Maya's love of spicy"
+  },
+  {
+    "askServer": false,
+    "description": "Rice noodles, tamarind, egg, crushed peanuts",
+    "isDrink": false,
+    "itemId": "jh72zpsm0c6s94vx37egfj0g1n8gw5bh",
+    "name": "Pad Thai",
+    "priceCents": 1800,
+    "rank": 2,
+    "reason": "Matches Maya's love of noodles"
+  },
+  {
+    "askServer": false,
+    "description": "Rice, vegetables, beef, fried egg, gochujang",
+    "isDrink": false,
+    "itemId": "jh74q43z6gct1ymny6z7kjy3td8gx80n",
+    "name": "Spicy Bibimbap",
+    "priceCents": 1900,
+    "rank": 3,
+    "reason": "Matches Maya's love of spicy"
+  },
+  {
+    "askServer": false,
+    "description": "Black tea, condensed milk",
+    "isDrink": true,
+    "itemId": "jh7a03xvtza6p8kz58yw6mjmhs8gxg61",
+    "name": "Thai Iced Tea",
+    "priceCents": 600,
+    "rank": 0,
+    "reason": "Maya enjoys Thai food"
+  }
+]

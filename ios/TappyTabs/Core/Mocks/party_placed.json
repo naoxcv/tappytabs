@@ -1,0 +1,43 @@
+{
+  "confirmDeadline": null,
+  "id": "jx76mxhgqf26mrrywb9zxx3n3s8gxy4a",
+  "joinCode": "DEMO42",
+  "members": [
+    {
+      "avatarId": "avatar_1",
+      "confirmed": true,
+      "hunger": "normal",
+      "name": "Maya",
+      "picked": true,
+      "userId": "k1712qj1ysp5t6kqjn1kn07tpn8gx1pe"
+    },
+    {
+      "avatarId": "avatar_2",
+      "confirmed": true,
+      "hunger": "normal",
+      "name": "Leo",
+      "picked": true,
+      "userId": "k171j7kbew7pw6a0p3qv79nhy58gxkkx"
+    },
+    {
+      "avatarId": "avatar_3",
+      "confirmed": true,
+      "hunger": "normal",
+      "name": "Priya",
+      "picked": true,
+      "userId": "k17aqpzvw3xsg4gzzh4yx525z58gwvwt"
+    },
+    {
+      "avatarId": "avatar_4",
+      "confirmed": true,
+      "hunger": "normal",
+      "name": "Sam",
+      "picked": true,
+      "userId": "k17784kbpns34gr263ya40ztch8gw0v8"
+    }
+  ],
+  "pickDeadline": 1792837072972,
+  "restaurantName": "Tappy Kitchen (demo)",
+  "size": 4,
+  "status": "placed"
+}

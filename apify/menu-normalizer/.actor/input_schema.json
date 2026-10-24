@@ -1,0 +1,16 @@
+{
+  "title": "Menu normalizer input",
+  "type": "object",
+  "schemaVersion": 1,
+  "properties": {
+    "items": {
+      "title": "Menu items",
+      "type": "array",
+      "description": "Raw items: [{ name, description?, price?, category? }]. Price may be a string like \"$12.50\" or a number.",
+      "editor": "json",
+      "prefill": [{ "name": "Pad Thai", "description": "Rice noodles, egg, crushed peanuts", "price": "$18.00", "category": "Mains" }]
+    },
+    "batchSize": { "title": "LLM batch size", "type": "integer", "description": "Items per tagging call.", "default": 20, "minimum": 1, "maximum": 50 }
+  },
+  "required": ["items"]
+}

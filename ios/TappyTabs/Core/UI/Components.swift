@@ -1,0 +1,194 @@
+// Owner: Role 1. Shared views. Role 2's restaurant and onboarding screens reuse these; change signatures only with a heads-up.
+import SwiftUI
+import UIKit
+
+enum Theme {
+    static let accent = Color(red: 0.98, green: 0.42, blue: 0.24)
+    static let card = Color(.secondarySystemBackground)
+    static let restaurantBubble = Color(.tertiarySystemFill)
+}
+
+/// Avatar ids → accent color + placeholder emoji. Amy's illustrations go in Assets as "avatar_<n>".
+enum AvatarCatalog {
+    static let ids = (1...8).map { "avatar_\($0)" }
+    private static let colors: [Color] = [.pink, .orange, .teal, .indigo, .green, .purple, .yellow, .blue]
+    private static let emoji = ["🦊", "🐼", "🐸", "🐙", "🐯", "🐨", "🐵", "🐳"]
+    private static func index(_ id: String) -> Int {
+        let n = Int(id.split(separator: "_").last.map(String.init) ?? "") ?? 1
+        return ((n - 1) % 8 + 8) % 8
+    }
+    static func color(_ id: String) -> Color { colors[index(id)] }
+    static func placeholder(_ id: String) -> String { emoji[index(id)] }
+    static let restaurant = "restaurant"
+}
+
+struct AvatarView: View {
+    let avatarId: String
+    var size: CGFloat = 56
+    var highlighted = false
+
+    var body: some View {
+        ZStack {
+            Circle().fill(AvatarCatalog.color(avatarId).opacity(0.25))
+            if let img = UIImage(named: avatarId) {
+                Image(uiImage: img).resizable().scaledToFit().clipShape(Circle())
+            } else if avatarId == AvatarCatalog.restaurant {
+                Text("🧑‍🍳").font(.system(size: size * 0.55))
+            } else {
+                Text(AvatarCatalog.placeholder(avatarId)).font(.system(size: size * 0.55))
+            }
+        }
+        .frame(width: size, height: size)
+        .overlay(Circle().stroke(highlighted ? Theme.accent : .clear, lineWidth: 3))
+        .scaleEffect(highlighted ? 1.08 : 1)
+        .animation(.spring(duration: 0.3), value: highlighted)
+    }
+}
+
+enum Speaker: Equatable {
+    case diner(avatarId: String, name: String)
+    case restaurant
+}
+
+/// Rounded bubble, max 260 pt. Shows typing dots for 0.6 s on first appearance, then springs the text in.
+struct SpeechBubble: View {
+    let text: String
+    let speaker: Speaker
+    var tail: Edge = .bottom
+    @State private var revealed = false
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            if case .diner(_, let name) = speaker {
+                Text(name).font(.caption.bold()).foregroundStyle(.secondary)
+            }
+            if revealed {
+                Text(text).font(.system(size: 15)).transition(.scale(scale: 0.8).combined(with: .opacity))
+            } else {
+                TypingDots()
+            }
+        }
+        .padding(.horizontal, 14).padding(.vertical, 10)
+        .frame(maxWidth: 260, alignment: .leading)
+        .background(fill, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .task {
+            try? await Task.sleep(for: .milliseconds(600))
+            withAnimation(.spring(duration: 0.35)) { revealed = true }
+        }
+    }
+
+    private var fill: Color {
+        switch speaker {
+        case .restaurant: Theme.restaurantBubble
+        case .diner(let avatarId, _): AvatarCatalog.color(avatarId).opacity(0.22)
+        }
+    }
+}
+
+struct TypingDots: View {
+    @State private var phase = 0.0
+    var body: some View {
+        HStack(spacing: 4) {
+            ForEach(0..<3) { i in
+                Circle().frame(width: 6, height: 6).opacity(0.3 + 0.7 * abs(sin(phase + Double(i) * 0.6)))
+            }
+        }
+        .foregroundStyle(.secondary)
+        .frame(height: 18)
+        .onAppear { withAnimation(.linear(duration: 0.9).repeatForever(autoreverses: false)) { phase = .pi } }
+    }
+}
+
+enum Money {
+    private static let formatter: NumberFormatter = {
+        let f = NumberFormatter()
+        f.numberStyle = .currency
+        f.currencyCode = "USD"
+        return f
+    }()
+    static func format(cents: Double) -> String { formatter.string(from: NSNumber(value: cents / 100)) ?? "$\(cents / 100)" }
+}
+
+struct PriceText: View {
+    let cents: Double
+    var body: some View { Text(Money.format(cents: cents)).monospacedDigit() }
+}
+
+struct AskServerBadge: View {
+    var body: some View {
+        Label("Ask your server", systemImage: "exclamationmark.bubble")
+            .font(.caption2.bold())
+            .padding(.horizontal, 6).padding(.vertical, 3)
+            .background(Color.yellow.opacity(0.3), in: Capsule())
+    }
+}
+
+struct ToastView: View {
+    let text: String
+    var body: some View {
+        Text(text)
+            .font(.subheadline.weight(.medium))
+            .padding(.horizontal, 16).padding(.vertical, 10)
+            .background(.ultraThinMaterial, in: Capsule())
+            .shadow(radius: 4)
+    }
+}
+
+/// Shows `store.lastError` as a toast for 3 s, and a "Reconnecting…" banner while subscriptions are down.
+struct StoreFeedback: ViewModifier {
+    @Bindable var store: PartyStore
+    func body(content: Content) -> some View {
+        content
+            .overlay(alignment: .top) {
+                if store.reconnecting {
+                    Text("Reconnecting…").font(.caption.bold()).padding(6).frame(maxWidth: .infinity).background(.yellow.opacity(0.85))
+                }
+            }
+            .overlay(alignment: .bottom) {
+                if let e = store.lastError {
+                    ToastView(text: e.userMessage)
+                        .padding(.bottom, 24)
+                        .transition(.move(edge: .bottom).combined(with: .opacity))
+                        .task(id: e.message) {
+                            try? await Task.sleep(for: .seconds(3))
+                            withAnimation { store.lastError = nil }
+                        }
+                }
+            }
+            .animation(.spring, value: store.lastError)
+    }
+}
+
+extension View {
+    func storeFeedback(_ store: PartyStore) -> some View { modifier(StoreFeedback(store: store)) }
+}
+
+struct BigButtonStyle: ButtonStyle {
+    var tint: Color = Theme.accent
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .font(.headline)
+            .frame(maxWidth: .infinity, minHeight: 54)
+            .background(tint.opacity(configuration.isPressed ? 0.7 : 1), in: RoundedRectangle(cornerRadius: 16))
+            .foregroundStyle(.white)
+    }
+}
+
+/// "Waiting for the table" style row of member avatars with ticks.
+struct MemberTicks: View {
+    let members: [Member]
+    let done: (Member) -> Bool
+    var body: some View {
+        HStack(spacing: 14) {
+            ForEach(members) { m in
+                VStack(spacing: 4) {
+                    AvatarView(avatarId: m.avatarId, size: 44)
+                        .overlay(alignment: .bottomTrailing) {
+                            if done(m) { Image(systemName: "checkmark.circle.fill").foregroundStyle(.green).background(Circle().fill(.background)) }
+                        }
+                    Text(m.name).font(.caption)
+                }
+            }
+        }
+    }
+}

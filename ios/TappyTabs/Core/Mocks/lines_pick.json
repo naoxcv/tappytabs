@@ -1,0 +1,45 @@
+{
+  "lines": [
+    {
+      "addedBy": "agent",
+      "askServer": false,
+      "itemId": "jh71bnssp8m1w0qqgj11xc5xkd8gx0yv",
+      "kind": "shared",
+      "lineId": "js7fy69hkdc3s99k7a5drkzpr58gwedk",
+      "name": "Salted Edamame",
+      "priceCents": 700,
+      "qty": 1,
+      "sharedBy": [
+        "k1743dv6grdcbrtc3xcydqcbj98gx3zg",
+        "k17bxbx1wpbre701hrxzv0mmrn8gw524",
+        "k170t0731f4ep8z7qznxc6mrbs8gx3dj",
+        "k17abfef5t0vqk79ps4e7chs158gwtja"
+      ]
+    },
+    {
+      "addedBy": "agent",
+      "askServer": false,
+      "itemId": "jh74a3d3rmp1j0ccjde1xkv8md8gxd61",
+      "kind": "shared",
+      "lineId": "js73jj9vh8e07da68zy9xm25098gx73g",
+      "name": "Truffle Fries",
+      "priceCents": 900,
+      "qty": 1,
+      "sharedBy": [
+        "k1743dv6grdcbrtc3xcydqcbj98gx3zg",
+        "k17bxbx1wpbre701hrxzv0mmrn8gw524",
+        "k170t0731f4ep8z7qznxc6mrbs8gx3dj",
+        "k17abfef5t0vqk79ps4e7chs158gwtja"
+      ]
+    }
+  ],
+  "totals": {
+    "perUser": {
+      "k170t0731f4ep8z7qznxc6mrbs8gx3dj": 400,
+      "k1743dv6grdcbrtc3xcydqcbj98gx3zg": 400,
+      "k17abfef5t0vqk79ps4e7chs158gwtja": 400,
+      "k17bxbx1wpbre701hrxzv0mmrn8gw524": 400
+    },
+    "total": 1600
+  }
+}

@@ -1,0 +1,210 @@
+[
+  {
+    "askServer": false,
+    "category": "shareables",
+    "isDrink": false,
+    "itemId": "jh7erzngvrv34ncrvfczasdvyx8gwkqn",
+    "name": "Chicken Satay",
+    "priceCents": 1400
+  },
+  {
+    "askServer": false,
+    "category": "shareables",
+    "isDrink": false,
+    "itemId": "jh73p3nw8wm467753vg89v1ns58gwsc4",
+    "name": "Margherita Flatbread",
+    "priceCents": 1500
+  },
+  {
+    "askServer": false,
+    "category": "shareables",
+    "isDrink": false,
+    "itemId": "jh78f0dchkfknnmf8kyndr5tys8gw9jq",
+    "name": "Hummus & Warm Pita",
+    "priceCents": 1100
+  },
+  {
+    "askServer": false,
+    "category": "shareables",
+    "isDrink": false,
+    "itemId": "jh71bnssp8m1w0qqgj11xc5xkd8gx0yv",
+    "name": "Salted Edamame",
+    "priceCents": 700
+  },
+  {
+    "askServer": false,
+    "category": "shareables",
+    "isDrink": false,
+    "itemId": "jh73b14xbtqxyfy4g8e73zvsmh8gxc8p",
+    "name": "Crispy Brussels Sprouts",
+    "priceCents": 1000
+  },
+  {
+    "askServer": false,
+    "category": "shareables",
+    "isDrink": false,
+    "itemId": "jh70v3zfqf9nwx91xakv390tkd8gxt95",
+    "name": "Korean Fried Chicken",
+    "priceCents": 1700
+  },
+  {
+    "askServer": false,
+    "category": "shareables",
+    "isDrink": false,
+    "itemId": "jh74a3d3rmp1j0ccjde1xkv8md8gxd61",
+    "name": "Truffle Fries",
+    "priceCents": 900
+  },
+  {
+    "askServer": false,
+    "category": "mains",
+    "isDrink": false,
+    "itemId": "jh72zpsm0c6s94vx37egfj0g1n8gw5bh",
+    "name": "Pad Thai",
+    "priceCents": 1800
+  },
+  {
+    "askServer": false,
+    "category": "mains",
+    "isDrink": false,
+    "itemId": "jh793w2qhhhe4gsdwf89379h2n8gx007",
+    "name": "Tofu Green Curry",
+    "priceCents": 1700
+  },
+  {
+    "askServer": false,
+    "category": "mains",
+    "isDrink": false,
+    "itemId": "jh70vtt8c3v3eagbgd67cvs11x8gw9v3",
+    "name": "Pesto Pasta",
+    "priceCents": 1900
+  },
+  {
+    "askServer": false,
+    "category": "mains",
+    "isDrink": false,
+    "itemId": "jh7e55am1vqm2729h3faknd6qn8gxxjq",
+    "name": "Grilled Salmon Bowl",
+    "priceCents": 2300
+  },
+  {
+    "askServer": false,
+    "category": "mains",
+    "isDrink": false,
+    "itemId": "jh792fnv5xfvrf5fn6309fdvj58gwf7p",
+    "name": "Chicken Shawarma Plate",
+    "priceCents": 2000
+  },
+  {
+    "askServer": false,
+    "category": "mains",
+    "isDrink": false,
+    "itemId": "jh74xmby280pa3bx0tx1vjdahd8gxex7",
+    "name": "Pork Belly Bao",
+    "priceCents": 1800
+  },
+  {
+    "askServer": false,
+    "category": "mains",
+    "isDrink": false,
+    "itemId": "jh77ts1evasz9aea7268jtkkdn8gxprb",
+    "name": "Beef Pho",
+    "priceCents": 1900
+  },
+  {
+    "askServer": false,
+    "category": "mains",
+    "isDrink": false,
+    "itemId": "jh7a2w4z2mrga4y7j48cr4wp998gwxhy",
+    "name": "Falafel Wrap",
+    "priceCents": 1500
+  },
+  {
+    "askServer": false,
+    "category": "mains",
+    "isDrink": false,
+    "itemId": "jh75x146rpmp4rtm21bdjwxks18gwqby",
+    "name": "Mushroom Risotto",
+    "priceCents": 2100
+  },
+  {
+    "askServer": false,
+    "category": "mains",
+    "isDrink": false,
+    "itemId": "jh74q43z6gct1ymny6z7kjy3td8gx80n",
+    "name": "Spicy Bibimbap",
+    "priceCents": 1900
+  },
+  {
+    "askServer": false,
+    "category": "sides",
+    "isDrink": false,
+    "itemId": "jh7dhqajg9z63j6039wn4ab1nn8gwken",
+    "name": "Garden Salad",
+    "priceCents": 900
+  },
+  {
+    "askServer": false,
+    "category": "drinks",
+    "isDrink": true,
+    "itemId": "jh7a03xvtza6p8kz58yw6mjmhs8gxg61",
+    "name": "Thai Iced Tea",
+    "priceCents": 600
+  },
+  {
+    "askServer": false,
+    "category": "drinks",
+    "isDrink": true,
+    "itemId": "jh7f0a96xxmhyys8w2ddn0z23d8gwvgn",
+    "name": "Mango Lassi",
+    "priceCents": 650
+  },
+  {
+    "askServer": false,
+    "category": "drinks",
+    "isDrink": true,
+    "itemId": "jh721whwqw58fyxgcvhbamwdvh8gwgxn",
+    "name": "Fresh Lemonade",
+    "priceCents": 500
+  },
+  {
+    "askServer": false,
+    "category": "drinks",
+    "isDrink": true,
+    "itemId": "jh7esqd2ayeb5kk1zjaddakp798gwg3k",
+    "name": "Almond Horchata",
+    "priceCents": 600
+  },
+  {
+    "askServer": false,
+    "category": "drinks",
+    "isDrink": true,
+    "itemId": "jh78kkyxe86e6nnmsp8bmkakax8gxvty",
+    "name": "Iced Oat Matcha",
+    "priceCents": 650
+  },
+  {
+    "askServer": false,
+    "category": "drinks",
+    "isDrink": true,
+    "itemId": "jh79amnjqx38fzs9bzdp6c7rt98gw9ew",
+    "name": "Sparkling Water",
+    "priceCents": 400
+  },
+  {
+    "askServer": false,
+    "category": "desserts",
+    "isDrink": false,
+    "itemId": "jh74qgzwc4kd39phvgbh0eczth8gxjd6",
+    "name": "Mochi Ice Cream",
+    "priceCents": 800
+  },
+  {
+    "askServer": false,
+    "category": "desserts",
+    "isDrink": false,
+    "itemId": "jh78f5rwh4qz5y2y987a9qr6tn8gwc90",
+    "name": "Baklava",
+    "priceCents": 900
+  }
+]

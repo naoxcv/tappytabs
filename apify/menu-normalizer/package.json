@@ -1,0 +1,21 @@
+{
+  "name": "tappytabs-menu-normalizer",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Apify Actor: normalizes a scraped restaurant menu into prices in cents plus allergen/diet/taste tags (TappyTabs).",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/main.js",
+    "local": "tsc && APIFY_LOCAL_STORAGE_DIR=./storage node dist/main.js",
+    "test": "tsc && node --test dist/normalize.test.js"
+  },
+  "dependencies": {
+    "apify": "^3.7.2",
+    "openai": "^7.43.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "typescript": "^5.9.3"
+  }
+}

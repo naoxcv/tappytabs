@@ -1,0 +1,34 @@
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { keywordPass, mergeLlm, parsePriceCents } from "./normalize.js";
+
+const level = (item: ReturnType<typeof keywordPass>, a: string) => item.allergens.find((x) => x.allergen === a)!.level;
+
+test("prices", () => {
+  assert.equal(parsePriceCents("$12.50"), 1250);
+  assert.equal(parsePriceCents("12,5 €"), 1250);
+  assert.equal(parsePriceCents(6.5), 650);
+  assert.equal(parsePriceCents(1800), 1800);
+  assert.equal(parsePriceCents(undefined), 0);
+});
+
+test("keyword pass finds allergens and fails diets closed", () => {
+  const paella = keywordPass({ name: "Seafood Paella", description: "prawns, mussels" }, 0);
+  assert.equal(level(paella, "shellfish"), "contains");
+  assert.ok(!paella.diet.includes("vegetarian"));
+  const padThai = keywordPass({ name: "Pad Thai", description: "Rice noodles, egg, crushed peanuts" }, 1);
+  assert.equal(level(padThai, "peanut"), "contains");
+  assert.equal(level(padThai, "wheat"), "not_detected"); // rice noodles
+});
+
+test("LLM may only raise; no LLM → untagged, may_contain everywhere else", () => {
+  const base = keywordPass({ name: "Pad Thai", description: "Rice noodles, egg, crushed peanuts" }, 0);
+  const merged = mergeLlm(base, { allergens: { peanut: "not_detected", fish: "contains" }, tags: ["Noodles"] });
+  assert.equal(level(merged, "peanut"), "contains");
+  assert.equal(level(merged, "fish"), "contains");
+  assert.equal(merged.tagStatus, "tagged");
+  const unread = mergeLlm(base, null);
+  assert.equal(unread.tagStatus, "untagged");
+  assert.equal(level(unread, "milk"), "may_contain");
+  assert.equal(level(unread, "peanut"), "contains");
+});

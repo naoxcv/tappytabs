@@ -1,0 +1,149 @@
+{
+  "lines": [
+    {
+      "addedBy": "agent",
+      "askServer": false,
+      "itemId": "jh7dsawjpdzq5q2wkd5p5n52sx8gxgrp",
+      "kind": "shared",
+      "lineId": "js7dx851qas9wq051yyt8fp9a18gx54p",
+      "name": "Salted Edamame",
+      "priceCents": 700,
+      "qty": 1,
+      "sharedBy": [
+        "k1712qj1ysp5t6kqjn1kn07tpn8gx1pe",
+        "k171j7kbew7pw6a0p3qv79nhy58gxkkx",
+        "k17aqpzvw3xsg4gzzh4yx525z58gwvwt",
+        "k17784kbpns34gr263ya40ztch8gw0v8"
+      ]
+    },
+    {
+      "addedBy": "agent",
+      "askServer": false,
+      "itemId": "jh7egcrrjjdrnrf2zv6v7x4fvx8gxm6z",
+      "kind": "shared",
+      "lineId": "js74sxn0rpsr7bbav5qrjnej8h8gwwwt",
+      "name": "Truffle Fries",
+      "priceCents": 900,
+      "qty": 1,
+      "sharedBy": [
+        "k1712qj1ysp5t6kqjn1kn07tpn8gx1pe",
+        "k171j7kbew7pw6a0p3qv79nhy58gxkkx",
+        "k17aqpzvw3xsg4gzzh4yx525z58gwvwt",
+        "k17784kbpns34gr263ya40ztch8gw0v8"
+      ]
+    },
+    {
+      "addedBy": "agent",
+      "askServer": false,
+      "itemId": "jh75mpv88bcfshsbs9gb4hfhxx8gwsw8",
+      "kind": "main",
+      "lineId": "js770yy0tszdh2v14rxghg8bks8gxpec",
+      "name": "Tofu Green Curry",
+      "priceCents": 1700,
+      "qty": 1,
+      "sharedBy": [
+        "k1712qj1ysp5t6kqjn1kn07tpn8gx1pe"
+      ]
+    },
+    {
+      "addedBy": "agent",
+      "askServer": false,
+      "itemId": "jh71qdgahqnzscge91j6hwr08s8gx7cw",
+      "kind": "drink",
+      "lineId": "js79j820b2p5vsmesem7dp21td8gxsj4",
+      "name": "Thai Iced Tea",
+      "priceCents": 600,
+      "qty": 1,
+      "sharedBy": [
+        "k1712qj1ysp5t6kqjn1kn07tpn8gx1pe"
+      ]
+    },
+    {
+      "addedBy": "agent",
+      "askServer": false,
+      "itemId": "jh7fwbfdt68nbmdvd94jaywm2d8gx5n9",
+      "kind": "main",
+      "lineId": "js79jyerqmttzdkgj18y6ytzd98gxz5h",
+      "name": "Falafel Wrap",
+      "priceCents": 1500,
+      "qty": 1,
+      "sharedBy": [
+        "k171j7kbew7pw6a0p3qv79nhy58gxkkx"
+      ]
+    },
+    {
+      "addedBy": "agent",
+      "askServer": false,
+      "itemId": "jh7f97db3j880gc49zq0ksycv18gwftr",
+      "kind": "drink",
+      "lineId": "js70mn0hq00gbq5y9hga276d2n8gwnca",
+      "name": "Sparkling Water",
+      "priceCents": 400,
+      "qty": 1,
+      "sharedBy": [
+        "k171j7kbew7pw6a0p3qv79nhy58gxkkx"
+      ]
+    },
+    {
+      "addedBy": "agent",
+      "askServer": false,
+      "itemId": "jh7dhtz22ykt3942h4rz9w7jxd8gxsjv",
+      "kind": "main",
+      "lineId": "js7bkx30xnthvd9gzaayzw5avh8gxa3n",
+      "name": "Pesto Pasta",
+      "priceCents": 1900,
+      "qty": 1,
+      "sharedBy": [
+        "k17aqpzvw3xsg4gzzh4yx525z58gwvwt"
+      ]
+    },
+    {
+      "addedBy": "agent",
+      "askServer": false,
+      "itemId": "jh7f97db3j880gc49zq0ksycv18gwftr",
+      "kind": "drink",
+      "lineId": "js74vnk5ey8sqnqa1wpw37s4y98gxr0t",
+      "name": "Sparkling Water",
+      "priceCents": 400,
+      "qty": 1,
+      "sharedBy": [
+        "k17aqpzvw3xsg4gzzh4yx525z58gwvwt"
+      ]
+    },
+    {
+      "addedBy": "agent",
+      "askServer": false,
+      "itemId": "jh7ey5w048vebbp7awd24btcxs8gwxcj",
+      "kind": "main",
+      "lineId": "js70a4jdvf3snrwv5h738m6bx58gw4wh",
+      "name": "Grilled Salmon Bowl",
+      "priceCents": 2300,
+      "qty": 1,
+      "sharedBy": [
+        "k17784kbpns34gr263ya40ztch8gw0v8"
+      ]
+    },
+    {
+      "addedBy": "agent",
+      "askServer": false,
+      "itemId": "jh7f97db3j880gc49zq0ksycv18gwftr",
+      "kind": "drink",
+      "lineId": "js7etg5m3k38mztvpvc5215anx8gx9q4",
+      "name": "Sparkling Water",
+      "priceCents": 400,
+      "qty": 1,
+      "sharedBy": [
+        "k17784kbpns34gr263ya40ztch8gw0v8"
+      ]
+    }
+  ],
+  "totals": {
+    "perUser": {
+      "k1712qj1ysp5t6kqjn1kn07tpn8gx1pe": 2700,
+      "k171j7kbew7pw6a0p3qv79nhy58gxkkx": 2300,
+      "k17784kbpns34gr263ya40ztch8gw0v8": 3100,
+      "k17aqpzvw3xsg4gzzh4yx525z58gwvwt": 2700
+    },
+    "total": 10800
+  }
+}

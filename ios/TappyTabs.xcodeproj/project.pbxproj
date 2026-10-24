@@ -1,0 +1,700 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		14901C06AF6445A6C03BDCBE /* messages.json in Resources */ = {isa = PBXBuildFile; fileRef = D3DC698F30EFC43DA0663DDF /* messages.json */; };
+		168764815A98619FD290D2BE /* party_confirm.json in Resources */ = {isa = PBXBuildFile; fileRef = 0743084581CF6E250736C989 /* party_confirm.json */; };
+		189441F51475D159471DF4F6 /* DinerRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AF9C4C3AFDEC2068A83FA59 /* DinerRootView.swift */; };
+		1AECEF8A6EB1D1CF22FF5F31 /* ProximityDebugOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = A6E86F4ED0A1B933678772FD /* ProximityDebugOverlay.swift */; };
+		25D49B64EA0219949C204C6D /* Backend.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D677E3548E8A7EFA74A066E /* Backend.swift */; };
+		2602A4CDCB1F97B6F23C651B /* AppModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 97AC9926C975AEB944A8E216 /* AppModel.swift */; };
+		27360CFC65C6D5F6958BB570 /* Proximity.swift in Sources */ = {isa = PBXBuildFile; fileRef = F852CF4D7AE939099C2ED335 /* Proximity.swift */; };
+		3796626A18362E8B588DAC10 /* restaurants.json in Resources */ = {isa = PBXBuildFile; fileRef = 05B35DFE12987B740C96E1DB /* restaurants.json */; };
+		397D3E572B3609DC5F03DA43 /* ConvexMobile in Frameworks */ = {isa = PBXBuildFile; productRef = 2A00E310F2041334551AAF20 /* ConvexMobile */; };
+		39A457898D1AA803FEE02C9D /* remove_result.json in Resources */ = {isa = PBXBuildFile; fileRef = 92E1913001A81FD2709E4953 /* remove_result.json */; };
+		39A8C2AC12537F669CDABED9 /* LiveBackend.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1DDCD86E6CC908CEDACD0D95 /* LiveBackend.swift */; };
+		456853B4614E695450383E88 /* HungerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36A29FF568E57F47CF8675A4 /* HungerView.swift */; };
+		480E85DB7C5609572C8DCF5D /* TappyTabsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EBFEF3B5A98EF72B4B57CEFF /* TappyTabsTests.swift */; };
+		48EC76A4CB5FCA40CDEE3B33 /* TapDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37610BF3D13D5BCD3CBEBEC2 /* TapDetector.swift */; };
+		4931B04149144DCF8AD60F51 /* addable_shared.json in Resources */ = {isa = PBXBuildFile; fileRef = 2A87A71BE3445FD89ED71B16 /* addable_shared.json */; };
+		4C1578C12E0A56FCBD97637E /* PartySetupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B539221DD302FB4EE39DA8E /* PartySetupView.swift */; };
+		522390763AF70753BAC46676 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4B2FF440BE7B2C50E7A7C2E /* Models.swift */; };
+		545D10E3333B6F9C1C99D732 /* ids.json in Resources */ = {isa = PBXBuildFile; fileRef = 8E7D812828B60A585E89AEC4 /* ids.json */; };
+		60F563865BC2255A52D96E67 /* NegotiatingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8AB5E427FC15EF2C1013A04 /* NegotiatingView.swift */; };
+		6EC915153BDB6030AA2FE69D /* PickView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 537CEF4E533A1882FCB1C2C4 /* PickView.swift */; };
+		6FB294FAF1914ADC557C68DC /* TableTalkView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58B29E865741B0EDC0BA805E /* TableTalkView.swift */; };
+		7604E5FAD28DA6E9EFD5AA1F /* party_placed.json in Resources */ = {isa = PBXBuildFile; fileRef = DFF3A0CD77F3FB64AD23B9C6 /* party_placed.json */; };
+		7743F5A850FB48A8E20AE911 /* QRCode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 65D96B0366DA4E0C1805AFB4 /* QRCode.swift */; };
+		7A3BA93F93E842A2B7A0973F /* menu_status.json in Resources */ = {isa = PBXBuildFile; fileRef = 27A5DD6ECE127A95A9B4A4ED /* menu_status.json */; };
+		7CFCED39F9A9FC0A4042DA52 /* API.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6ACD7894DA5BF4789E4529E0 /* API.swift */; };
+		84B240BE40429A3C08FA59A9 /* Env.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12E552E477519E633B05AC47 /* Env.swift */; };
+		8908B073D4C186D5C280AC3E /* addable_personal.json in Resources */ = {isa = PBXBuildFile; fileRef = D90E8A9C87A0679A9F96306D /* addable_personal.json */; };
+		8AA51226A6F4656C93B0A0DC /* lines_placed.json in Resources */ = {isa = PBXBuildFile; fileRef = 0E901A3F41C0F85EC9DBCEAF /* lines_placed.json */; };
+		8DF6B6A80378466C4E886422 /* MockBackend.swift in Sources */ = {isa = PBXBuildFile; fileRef = 039C2B1D20CE333F61A98D39 /* MockBackend.swift */; };
+		97D0C47946AE2ABBFDF01318 /* OnboardingFlow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B0813B0D1DA34777647EE9C /* OnboardingFlow.swift */; };
+		9CE8FE5AFCFE09E9FD0ACF3E /* TappyTabsApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = F035B87AF4CB25C8AEF2FB92 /* TappyTabsApp.swift */; };
+		9EE232F995361EE870712CB2 /* TapInView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD44F0FA209F27A88E79C902 /* TapInView.swift */; };
+		9F811EE89CED9A596A3E7845 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 8468ECF797AE164A8D0ADA0A /* Assets.xcassets */; };
+		A27B9592DB110D5DD2BECC1C /* ModeSelectView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01C1F4CF26D4683E1B47FFBF /* ModeSelectView.swift */; };
+		A3CF453886A48CD6E7AE7E50 /* lines_confirm.json in Resources */ = {isa = PBXBuildFile; fileRef = 23AD0E5918800CC9DDFFEDDA /* lines_confirm.json */; };
+		BA7BE5629278A39405CE96CF /* party_pick.json in Resources */ = {isa = PBXBuildFile; fileRef = BE3B0A2974E205429510BFB4 /* party_pick.json */; };
+		BC2BC9D71DAF49B595F5C6B0 /* PartyStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34331FD12121DCB867EECBBA /* PartyStore.swift */; };
+		CA83B7AF4B0CA7B949927DC4 /* OrderReceivedView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8FF1F8E7F3E713F3573D4106 /* OrderReceivedView.swift */; };
+		DEF305EF2322D535CDB3DD0A /* OrderPlacedView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63AE4B2FC8EF52651F4435DE /* OrderPlacedView.swift */; };
+		E300BC49B76B34E2C65374FC /* candidates.json in Resources */ = {isa = PBXBuildFile; fileRef = 039EAAF1EDAEC3ACA06C0653 /* candidates.json */; };
+		E664059815A34F03DDB8C551 /* Components.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D34315A745D984D0513B97B /* Components.swift */; };
+		EA92FFBF7AD214E6F9D162C3 /* CheckInView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 888D60115954865E6C827B00 /* CheckInView.swift */; };
+		ECA3B6EAFC1B7E6000B6935F /* RestaurantRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 25C27447F99AB0D4D8A2301A /* RestaurantRootView.swift */; };
+		F2E0A5F20762A16F359E3E4B /* GroupOrderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B11B31391A866AC99A9FDF6 /* GroupOrderView.swift */; };
+		F68FCB886CBFD1650FCAA6F1 /* lines_pick.json in Resources */ = {isa = PBXBuildFile; fileRef = 3327A4F654584C5B9E2A0685 /* lines_pick.json */; };
+		F9A6C02124D51CA97ADD4C0C /* OnboardingCards.json in Resources */ = {isa = PBXBuildFile; fileRef = 69CCE72BEF95424F0B4C1F40 /* OnboardingCards.json */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		C15CA8AB5B41B69249A66650 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 6464A47002542FA6D13F8FB1 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 17CDC0576A885FC1C3DCA4C9;
+			remoteInfo = TappyTabs;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		01C1F4CF26D4683E1B47FFBF /* ModeSelectView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModeSelectView.swift; sourceTree = "<group>"; };
+		039C2B1D20CE333F61A98D39 /* MockBackend.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockBackend.swift; sourceTree = "<group>"; };
+		039EAAF1EDAEC3ACA06C0653 /* candidates.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = candidates.json; sourceTree = "<group>"; };
+		05B35DFE12987B740C96E1DB /* restaurants.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = restaurants.json; sourceTree = "<group>"; };
+		0743084581CF6E250736C989 /* party_confirm.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = party_confirm.json; sourceTree = "<group>"; };
+		0B539221DD302FB4EE39DA8E /* PartySetupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PartySetupView.swift; sourceTree = "<group>"; };
+		0E901A3F41C0F85EC9DBCEAF /* lines_placed.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = lines_placed.json; sourceTree = "<group>"; };
+		12E552E477519E633B05AC47 /* Env.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Env.swift; sourceTree = "<group>"; };
+		1DDCD86E6CC908CEDACD0D95 /* LiveBackend.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveBackend.swift; sourceTree = "<group>"; };
+		23AD0E5918800CC9DDFFEDDA /* lines_confirm.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = lines_confirm.json; sourceTree = "<group>"; };
+		25C27447F99AB0D4D8A2301A /* RestaurantRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RestaurantRootView.swift; sourceTree = "<group>"; };
+		27A5DD6ECE127A95A9B4A4ED /* menu_status.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = menu_status.json; sourceTree = "<group>"; };
+		2A87A71BE3445FD89ED71B16 /* addable_shared.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = addable_shared.json; sourceTree = "<group>"; };
+		3327A4F654584C5B9E2A0685 /* lines_pick.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = lines_pick.json; sourceTree = "<group>"; };
+		34331FD12121DCB867EECBBA /* PartyStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PartyStore.swift; sourceTree = "<group>"; };
+		36A29FF568E57F47CF8675A4 /* HungerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HungerView.swift; sourceTree = "<group>"; };
+		37610BF3D13D5BCD3CBEBEC2 /* TapDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TapDetector.swift; sourceTree = "<group>"; };
+		3AF9C4C3AFDEC2068A83FA59 /* DinerRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DinerRootView.swift; sourceTree = "<group>"; };
+		3B0813B0D1DA34777647EE9C /* OnboardingFlow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingFlow.swift; sourceTree = "<group>"; };
+		3D34315A745D984D0513B97B /* Components.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Components.swift; sourceTree = "<group>"; };
+		4368875093D5F18A901C158D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		537CEF4E533A1882FCB1C2C4 /* PickView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PickView.swift; sourceTree = "<group>"; };
+		58B29E865741B0EDC0BA805E /* TableTalkView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TableTalkView.swift; sourceTree = "<group>"; };
+		5D677E3548E8A7EFA74A066E /* Backend.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Backend.swift; sourceTree = "<group>"; };
+		63AE4B2FC8EF52651F4435DE /* OrderPlacedView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrderPlacedView.swift; sourceTree = "<group>"; };
+		65D96B0366DA4E0C1805AFB4 /* QRCode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QRCode.swift; sourceTree = "<group>"; };
+		69CCE72BEF95424F0B4C1F40 /* OnboardingCards.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = OnboardingCards.json; sourceTree = "<group>"; };
+		6ACD7894DA5BF4789E4529E0 /* API.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = API.swift; sourceTree = "<group>"; };
+		8468ECF797AE164A8D0ADA0A /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		888D60115954865E6C827B00 /* CheckInView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CheckInView.swift; sourceTree = "<group>"; };
+		8B11B31391A866AC99A9FDF6 /* GroupOrderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupOrderView.swift; sourceTree = "<group>"; };
+		8E7D812828B60A585E89AEC4 /* ids.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = ids.json; sourceTree = "<group>"; };
+		8FC70C4ECFF627DB9BFE809C /* TappyTabsTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = TappyTabsTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		8FF1F8E7F3E713F3573D4106 /* OrderReceivedView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrderReceivedView.swift; sourceTree = "<group>"; };
+		92E1913001A81FD2709E4953 /* remove_result.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = remove_result.json; sourceTree = "<group>"; };
+		97AC9926C975AEB944A8E216 /* AppModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppModel.swift; sourceTree = "<group>"; };
+		A6E86F4ED0A1B933678772FD /* ProximityDebugOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProximityDebugOverlay.swift; sourceTree = "<group>"; };
+		ACF7EC6D8FE8C5BC12DDA62D /* TappyTabs.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = TappyTabs.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		AD44F0FA209F27A88E79C902 /* TapInView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TapInView.swift; sourceTree = "<group>"; };
+		B4B2FF440BE7B2C50E7A7C2E /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
+		BE3B0A2974E205429510BFB4 /* party_pick.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = party_pick.json; sourceTree = "<group>"; };
+		D3DC698F30EFC43DA0663DDF /* messages.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = messages.json; sourceTree = "<group>"; };
+		D90E8A9C87A0679A9F96306D /* addable_personal.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = addable_personal.json; sourceTree = "<group>"; };
+		DFF3A0CD77F3FB64AD23B9C6 /* party_placed.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = party_placed.json; sourceTree = "<group>"; };
+		E8AB5E427FC15EF2C1013A04 /* NegotiatingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NegotiatingView.swift; sourceTree = "<group>"; };
+		EBFEF3B5A98EF72B4B57CEFF /* TappyTabsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TappyTabsTests.swift; sourceTree = "<group>"; };
+		F035B87AF4CB25C8AEF2FB92 /* TappyTabsApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TappyTabsApp.swift; sourceTree = "<group>"; };
+		F852CF4D7AE939099C2ED335 /* Proximity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Proximity.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		5149531546A7B95DEF6BB597 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				397D3E572B3609DC5F03DA43 /* ConvexMobile in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		08D710C1F36B878C24FE8E99 /* Proximity */ = {
+			isa = PBXGroup;
+			children = (
+				F852CF4D7AE939099C2ED335 /* Proximity.swift */,
+				A6E86F4ED0A1B933678772FD /* ProximityDebugOverlay.swift */,
+				65D96B0366DA4E0C1805AFB4 /* QRCode.swift */,
+				37610BF3D13D5BCD3CBEBEC2 /* TapDetector.swift */,
+			);
+			path = Proximity;
+			sourceTree = "<group>";
+		};
+		4289CDD9882B872913C850CE /* Convex */ = {
+			isa = PBXGroup;
+			children = (
+				6ACD7894DA5BF4789E4529E0 /* API.swift */,
+				5D677E3548E8A7EFA74A066E /* Backend.swift */,
+				1DDCD86E6CC908CEDACD0D95 /* LiveBackend.swift */,
+				039C2B1D20CE333F61A98D39 /* MockBackend.swift */,
+				B4B2FF440BE7B2C50E7A7C2E /* Models.swift */,
+				34331FD12121DCB867EECBBA /* PartyStore.swift */,
+			);
+			path = Convex;
+			sourceTree = "<group>";
+		};
+		4D3C680C0F5A906603844B42 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				97AC9926C975AEB944A8E216 /* AppModel.swift */,
+				12E552E477519E633B05AC47 /* Env.swift */,
+				01C1F4CF26D4683E1B47FFBF /* ModeSelectView.swift */,
+				F035B87AF4CB25C8AEF2FB92 /* TappyTabsApp.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		4E08FF9E049BD42010226346 = {
+			isa = PBXGroup;
+			children = (
+				8F0809B63D418881A3AB26D5 /* TappyTabs */,
+				8E9CABE36E33A00BEC5528E0 /* TappyTabsTests */,
+				6FCB7864207591BA768E4A62 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		4E70006837EE3E26415C1D05 /* UI */ = {
+			isa = PBXGroup;
+			children = (
+				3D34315A745D984D0513B97B /* Components.swift */,
+			);
+			path = UI;
+			sourceTree = "<group>";
+		};
+		6FCB7864207591BA768E4A62 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				ACF7EC6D8FE8C5BC12DDA62D /* TappyTabs.app */,
+				8FC70C4ECFF627DB9BFE809C /* TappyTabsTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		85D866A5D68A51DC38C5286E /* Mocks */ = {
+			isa = PBXGroup;
+			children = (
+				D90E8A9C87A0679A9F96306D /* addable_personal.json */,
+				2A87A71BE3445FD89ED71B16 /* addable_shared.json */,
+				039EAAF1EDAEC3ACA06C0653 /* candidates.json */,
+				8E7D812828B60A585E89AEC4 /* ids.json */,
+				23AD0E5918800CC9DDFFEDDA /* lines_confirm.json */,
+				3327A4F654584C5B9E2A0685 /* lines_pick.json */,
+				0E901A3F41C0F85EC9DBCEAF /* lines_placed.json */,
+				27A5DD6ECE127A95A9B4A4ED /* menu_status.json */,
+				D3DC698F30EFC43DA0663DDF /* messages.json */,
+				0743084581CF6E250736C989 /* party_confirm.json */,
+				BE3B0A2974E205429510BFB4 /* party_pick.json */,
+				DFF3A0CD77F3FB64AD23B9C6 /* party_placed.json */,
+				92E1913001A81FD2709E4953 /* remove_result.json */,
+				05B35DFE12987B740C96E1DB /* restaurants.json */,
+			);
+			path = Mocks;
+			sourceTree = "<group>";
+		};
+		8E9CABE36E33A00BEC5528E0 /* TappyTabsTests */ = {
+			isa = PBXGroup;
+			children = (
+				EBFEF3B5A98EF72B4B57CEFF /* TappyTabsTests.swift */,
+			);
+			path = TappyTabsTests;
+			sourceTree = "<group>";
+		};
+		8F0809B63D418881A3AB26D5 /* TappyTabs */ = {
+			isa = PBXGroup;
+			children = (
+				4D3C680C0F5A906603844B42 /* App */,
+				E4D75BC62A434072A60A7ADF /* Core */,
+				EF8594F6B36EDCE73A19D7BB /* Diner */,
+				D6340F49914F3C5FA3DF659E /* Onboarding */,
+				B05BE67BF6D7C701265B7397 /* Resources */,
+				B3767FFC4EC71F561627FD19 /* Restaurant */,
+			);
+			path = TappyTabs;
+			sourceTree = "<group>";
+		};
+		B05BE67BF6D7C701265B7397 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				8468ECF797AE164A8D0ADA0A /* Assets.xcassets */,
+				4368875093D5F18A901C158D /* Info.plist */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		B3767FFC4EC71F561627FD19 /* Restaurant */ = {
+			isa = PBXGroup;
+			children = (
+				888D60115954865E6C827B00 /* CheckInView.swift */,
+				8FF1F8E7F3E713F3573D4106 /* OrderReceivedView.swift */,
+				0B539221DD302FB4EE39DA8E /* PartySetupView.swift */,
+				25C27447F99AB0D4D8A2301A /* RestaurantRootView.swift */,
+				58B29E865741B0EDC0BA805E /* TableTalkView.swift */,
+			);
+			path = Restaurant;
+			sourceTree = "<group>";
+		};
+		D6340F49914F3C5FA3DF659E /* Onboarding */ = {
+			isa = PBXGroup;
+			children = (
+				69CCE72BEF95424F0B4C1F40 /* OnboardingCards.json */,
+				3B0813B0D1DA34777647EE9C /* OnboardingFlow.swift */,
+			);
+			path = Onboarding;
+			sourceTree = "<group>";
+		};
+		E4D75BC62A434072A60A7ADF /* Core */ = {
+			isa = PBXGroup;
+			children = (
+				4289CDD9882B872913C850CE /* Convex */,
+				85D866A5D68A51DC38C5286E /* Mocks */,
+				08D710C1F36B878C24FE8E99 /* Proximity */,
+				4E70006837EE3E26415C1D05 /* UI */,
+			);
+			path = Core;
+			sourceTree = "<group>";
+		};
+		EF8594F6B36EDCE73A19D7BB /* Diner */ = {
+			isa = PBXGroup;
+			children = (
+				3AF9C4C3AFDEC2068A83FA59 /* DinerRootView.swift */,
+				8B11B31391A866AC99A9FDF6 /* GroupOrderView.swift */,
+				36A29FF568E57F47CF8675A4 /* HungerView.swift */,
+				E8AB5E427FC15EF2C1013A04 /* NegotiatingView.swift */,
+				63AE4B2FC8EF52651F4435DE /* OrderPlacedView.swift */,
+				537CEF4E533A1882FCB1C2C4 /* PickView.swift */,
+				AD44F0FA209F27A88E79C902 /* TapInView.swift */,
+			);
+			path = Diner;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		17CDC0576A885FC1C3DCA4C9 /* TappyTabs */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 901A27915D1A5EBF096DAB5C /* Build configuration list for PBXNativeTarget "TappyTabs" */;
+			buildPhases = (
+				583BC39CAFFD8091D83154E9 /* Sources */,
+				D2E5709AD7811A333792F4C1 /* Resources */,
+				5149531546A7B95DEF6BB597 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = TappyTabs;
+			packageProductDependencies = (
+				2A00E310F2041334551AAF20 /* ConvexMobile */,
+			);
+			productName = TappyTabs;
+			productReference = ACF7EC6D8FE8C5BC12DDA62D /* TappyTabs.app */;
+			productType = "com.apple.product-type.application";
+		};
+		F65FAB64E6D413A47A826529 /* TappyTabsTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 022FF6198E1AE297F38FBB3E /* Build configuration list for PBXNativeTarget "TappyTabsTests" */;
+			buildPhases = (
+				14B550D146186403EC1F3AA6 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				075B55F5347CB31C5F0BCE3E /* PBXTargetDependency */,
+			);
+			name = TappyTabsTests;
+			packageProductDependencies = (
+			);
+			productName = TappyTabsTests;
+			productReference = 8FC70C4ECFF627DB9BFE809C /* TappyTabsTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		6464A47002542FA6D13F8FB1 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					17CDC0576A885FC1C3DCA4C9 = {
+						DevelopmentTeam = "";
+						ProvisioningStyle = Automatic;
+					};
+					F65FAB64E6D413A47A826529 = {
+						DevelopmentTeam = "";
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = 3979F13FC844EC762236CEF9 /* Build configuration list for PBXProject "TappyTabs" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 4E08FF9E049BD42010226346;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				7CBD444B6211D4B941AA43F9 /* XCRemoteSwiftPackageReference "convex-swift" */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 6FCB7864207591BA768E4A62 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				17CDC0576A885FC1C3DCA4C9 /* TappyTabs */,
+				F65FAB64E6D413A47A826529 /* TappyTabsTests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		D2E5709AD7811A333792F4C1 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				9F811EE89CED9A596A3E7845 /* Assets.xcassets in Resources */,
+				F9A6C02124D51CA97ADD4C0C /* OnboardingCards.json in Resources */,
+				8908B073D4C186D5C280AC3E /* addable_personal.json in Resources */,
+				4931B04149144DCF8AD60F51 /* addable_shared.json in Resources */,
+				E300BC49B76B34E2C65374FC /* candidates.json in Resources */,
+				545D10E3333B6F9C1C99D732 /* ids.json in Resources */,
+				A3CF453886A48CD6E7AE7E50 /* lines_confirm.json in Resources */,
+				F68FCB886CBFD1650FCAA6F1 /* lines_pick.json in Resources */,
+				8AA51226A6F4656C93B0A0DC /* lines_placed.json in Resources */,
+				7A3BA93F93E842A2B7A0973F /* menu_status.json in Resources */,
+				14901C06AF6445A6C03BDCBE /* messages.json in Resources */,
+				168764815A98619FD290D2BE /* party_confirm.json in Resources */,
+				BA7BE5629278A39405CE96CF /* party_pick.json in Resources */,
+				7604E5FAD28DA6E9EFD5AA1F /* party_placed.json in Resources */,
+				39A457898D1AA803FEE02C9D /* remove_result.json in Resources */,
+				3796626A18362E8B588DAC10 /* restaurants.json in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		14B550D146186403EC1F3AA6 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				480E85DB7C5609572C8DCF5D /* TappyTabsTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		583BC39CAFFD8091D83154E9 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				7CFCED39F9A9FC0A4042DA52 /* API.swift in Sources */,
+				2602A4CDCB1F97B6F23C651B /* AppModel.swift in Sources */,
+				25D49B64EA0219949C204C6D /* Backend.swift in Sources */,
+				EA92FFBF7AD214E6F9D162C3 /* CheckInView.swift in Sources */,
+				E664059815A34F03DDB8C551 /* Components.swift in Sources */,
+				189441F51475D159471DF4F6 /* DinerRootView.swift in Sources */,
+				84B240BE40429A3C08FA59A9 /* Env.swift in Sources */,
+				F2E0A5F20762A16F359E3E4B /* GroupOrderView.swift in Sources */,
+				456853B4614E695450383E88 /* HungerView.swift in Sources */,
+				39A8C2AC12537F669CDABED9 /* LiveBackend.swift in Sources */,
+				8DF6B6A80378466C4E886422 /* MockBackend.swift in Sources */,
+				A27B9592DB110D5DD2BECC1C /* ModeSelectView.swift in Sources */,
+				522390763AF70753BAC46676 /* Models.swift in Sources */,
+				60F563865BC2255A52D96E67 /* NegotiatingView.swift in Sources */,
+				97D0C47946AE2ABBFDF01318 /* OnboardingFlow.swift in Sources */,
+				DEF305EF2322D535CDB3DD0A /* OrderPlacedView.swift in Sources */,
+				CA83B7AF4B0CA7B949927DC4 /* OrderReceivedView.swift in Sources */,
+				4C1578C12E0A56FCBD97637E /* PartySetupView.swift in Sources */,
+				BC2BC9D71DAF49B595F5C6B0 /* PartyStore.swift in Sources */,
+				6EC915153BDB6030AA2FE69D /* PickView.swift in Sources */,
+				27360CFC65C6D5F6958BB570 /* Proximity.swift in Sources */,
+				1AECEF8A6EB1D1CF22FF5F31 /* ProximityDebugOverlay.swift in Sources */,
+				7743F5A850FB48A8E20AE911 /* QRCode.swift in Sources */,
+				ECA3B6EAFC1B7E6000B6935F /* RestaurantRootView.swift in Sources */,
+				6FB294FAF1914ADC557C68DC /* TableTalkView.swift in Sources */,
+				48EC76A4CB5FCA40CDEE3B33 /* TapDetector.swift in Sources */,
+				9EE232F995361EE870712CB2 /* TapInView.swift in Sources */,
+				9CE8FE5AFCFE09E9FD0ACF3E /* TappyTabsApp.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		075B55F5347CB31C5F0BCE3E /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 17CDC0576A885FC1C3DCA4C9 /* TappyTabs */;
+			targetProxy = C15CA8AB5B41B69249A66650 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		224A899466317FBCE93B3B1B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.tappytabs.TappyTabsTests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/TappyTabs.app/TappyTabs";
+			};
+			name = Debug;
+		};
+		478E6287DFAA2860E34B02F1 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 0.1.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		8129CCE72B70BAFE30F10393 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.tappytabs.TappyTabsTests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/TappyTabs.app/TappyTabs";
+			};
+			name = Release;
+		};
+		925566F8F3ED8749C1346E16 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = TappyTabs/Resources/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.tappytabs.app;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		9F7A918095C136A2A09B4CC3 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = TappyTabs/Resources/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.tappytabs.app;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+		E31A8DE0AEE723DE6BCDBFBE /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = "";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 0.1.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		022FF6198E1AE297F38FBB3E /* Build configuration list for PBXNativeTarget "TappyTabsTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				224A899466317FBCE93B3B1B /* Debug */,
+				8129CCE72B70BAFE30F10393 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		3979F13FC844EC762236CEF9 /* Build configuration list for PBXProject "TappyTabs" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				478E6287DFAA2860E34B02F1 /* Debug */,
+				E31A8DE0AEE723DE6BCDBFBE /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		901A27915D1A5EBF096DAB5C /* Build configuration list for PBXNativeTarget "TappyTabs" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				925566F8F3ED8749C1346E16 /* Debug */,
+				9F7A918095C136A2A09B4CC3 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		7CBD444B6211D4B941AA43F9 /* XCRemoteSwiftPackageReference "convex-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/get-convex/convex-swift";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.8.1;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		2A00E310F2041334551AAF20 /* ConvexMobile */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 7CBD444B6211D4B941AA43F9 /* XCRemoteSwiftPackageReference "convex-swift" */;
+			productName = ConvexMobile;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 6464A47002542FA6D13F8FB1 /* Project object */;
+}

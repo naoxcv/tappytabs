@@ -1,0 +1,24 @@
+// Owner: Role 1. Final summary + "Sent to the restaurant", with a success haptic.
+import SwiftUI
+
+struct OrderPlacedView: View {
+    @Environment(AppModel.self) private var app
+    let store: PartyStore
+
+    var body: some View {
+        VStack(spacing: 16) {
+            Image(systemName: "checkmark.seal.fill").font(.system(size: 72)).foregroundStyle(.green).padding(.top, 40)
+            Text("Sent to the restaurant").font(.largeTitle.bold())
+            List {
+                Section("For the table") { ForEach(store.sharedLines) { LineRow(line: $0, avatars: $0.sharedBy.compactMap { store.avatar(of: $0) }) } }
+                Section("Yours") { ForEach(store.myLines()) { LineRow(line: $0, avatars: []) } }
+                Section {
+                    HStack { Text("Your share").bold(); Spacer(); PriceText(cents: store.myShareCents).bold() }
+                    HStack { Text("Table total"); Spacer(); PriceText(cents: store.lines.totals.total) }
+                }
+            }
+            Button("Done") { app.partyId = nil }.padding(.bottom)
+        }
+        .onAppear { UINotificationFeedbackGenerator().notificationOccurred(.success) }
+    }
+}

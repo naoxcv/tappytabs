@@ -1,0 +1,33 @@
+{
+  "name": "tappytabs",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "TappyTabs: tap to join a table, let AI agents negotiate the group order. Convex backend + iOS app.",
+  "scripts": {
+    "dev": "convex dev",
+    "dev:local": "CONVEX_AGENT_MODE=anonymous convex dev",
+    "seed": "convex run seed:base",
+    "seed:negotiated": "convex run seed:scenario '{\"scenario\":\"negotiated\"}'",
+    "seed:placed": "convex run seed:scenario '{\"scenario\":\"placed\"}'",
+    "e2e": "convex run e2e:happyPath",
+    "typecheck": "tsc --noEmit -p convex",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^1.3.0",
+    "@convex-dev/workflow": "^0.4.10",
+    "apify-client": "^2.25.0",
+    "convex": "^1.48.0",
+    "openai": "^7.43.0",
+    "zod": "^4.1.0"
+  },
+  "devDependencies": {
+    "@edge-runtime/vm": "^5.0.0",
+    "@types/node": "^22.10.0",
+    "convex-test": "^0.0.65",
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.4"
+  }
+}

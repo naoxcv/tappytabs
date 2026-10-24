@@ -1,0 +1,42 @@
+[
+  {
+    "askServer": false,
+    "category": "shareables",
+    "isDrink": false,
+    "itemId": "jh71bnssp8m1w0qqgj11xc5xkd8gx0yv",
+    "name": "Salted Edamame",
+    "priceCents": 700
+  },
+  {
+    "askServer": false,
+    "category": "shareables",
+    "isDrink": false,
+    "itemId": "jh74a3d3rmp1j0ccjde1xkv8md8gxd61",
+    "name": "Truffle Fries",
+    "priceCents": 900
+  },
+  {
+    "askServer": false,
+    "category": "mains",
+    "isDrink": false,
+    "itemId": "jh75x146rpmp4rtm21bdjwxks18gwqby",
+    "name": "Mushroom Risotto",
+    "priceCents": 2100
+  },
+  {
+    "askServer": false,
+    "category": "sides",
+    "isDrink": false,
+    "itemId": "jh7dhqajg9z63j6039wn4ab1nn8gwken",
+    "name": "Garden Salad",
+    "priceCents": 900
+  },
+  {
+    "askServer": false,
+    "category": "desserts",
+    "isDrink": false,
+    "itemId": "jh74qgzwc4kd39phvgbh0eczth8gxjd6",
+    "name": "Mochi Ice Cream",
+    "priceCents": 800
+  }
+]
