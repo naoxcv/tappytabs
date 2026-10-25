@@ -107,17 +107,17 @@ struct RestaurantOnboardingView: View {
                 Text("Find it automatically").tag(Acquisition.search)
             }
             .pickerStyle(.segmented)
-            TextField(acquisition == .url ? "Restaurant or menu URL" : "Restaurant name", text: acquisition == .url ? $sourceURL : $name).appFieldStyle()
-            TextField(acquisition == .url ? "City or location (optional)" : "City or location", text: $address).appFieldStyle()
+            TextField(acquisition == .url ? "Restaurant or menu URL" : "Restaurant name", text: acquisition == .url ? $sourceURL : $name).textFieldStyle(.roundedBorder)
+            TextField(acquisition == .url ? "City or location (optional)" : "City or location", text: $address).textFieldStyle(.roundedBorder)
             if acquisition == .search { Text("This may take several minutes. You’ll choose a result before reviewing its menu.").font(AppTypography.footnote).foregroundStyle(Theme.accent) }
             Button(acquisition == .url ? "Import menu" : "Find it automatically") { Task { await submitDetails() } }
-                .buttonStyle(BigButtonStyle()).disabled((acquisition == .url ? sourceURL : name).trimmed.isEmpty || (acquisition == .search && address.trimmed.isEmpty) || saving)
+                .buttonStyle(.borderedProminent).disabled((acquisition == .url ? sourceURL : name).trimmed.isEmpty || (acquisition == .search && address.trimmed.isEmpty) || saving)
             VStack(alignment: .leading, spacing: 8) {
                 Text("Just want to demo the ordering flow?")
                     .font(AppTypography.footnote)
                     .foregroundStyle(Theme.accent)
                 Button(skipping ? "Preparing demo menu…" : "Skip setup — use demo menu") { Task { await skipToDemo() } }
-                    .buttonStyle(SecondaryButtonStyle())
+                    .buttonStyle(.bordered)
                     .disabled(saving || skipping)
             }
         } else if let onboarding, ["awaiting_source", "created", "details_submitted", "scraping_url", "scraping_search", "finding_restaurant"].contains(onboarding.status) {
@@ -139,10 +139,9 @@ struct RestaurantOnboardingView: View {
                 .buttonStyle(.plain)
             }
             Button("I’ll enter a URL manually") { resetToSourceEntry() }
-                .buttonStyle(SecondaryButtonStyle())
-        } else if let onboarding, ["scrape_failed", "manual_review", "match_failed", "normalization_failed"].contains(onboarding.status) {
+        } else if let onboarding, ["scrape_failed", "manual_review", "match_failed"].contains(onboarding.status) {
             Text(onboarding.errorMessage ?? "We couldn’t import a usable menu.").foregroundStyle(Theme.accent)
-            Button("Try another URL") { resetToSourceEntry() }.buttonStyle(BigButtonStyle())
+            Button("Try another URL") { resetToSourceEntry() }.buttonStyle(.borderedProminent)
         } else if let draft {
             MenuDraftEditor(draft: draft, saving: saving) { items in Task { await update(items) } } publish: { items in Task { await publish(items) } }
         } else {
@@ -262,26 +261,24 @@ private struct MenuDraftEditor: View {
             Text("Scraped details require your review.").font(AppTypography.footnote).foregroundStyle(Theme.accent)
             ForEach($items) { $item in
                 VStack(alignment: .leading, spacing: 8) {
-                    TextField("Item name", text: $item.name).appFieldStyle()
-                    TextField("Description", text: $item.description).appFieldStyle()
+                    TextField("Item name", text: $item.name).textFieldStyle(.roundedBorder)
+                    TextField("Description", text: $item.description).textFieldStyle(.roundedBorder)
                     HStack {
-                        TextField(item.priceVerified == false ? "Estimated price in cents" : "Price cents", value: $item.priceCents, format: .number)
-                            .appFieldStyle()
-                            .onChange(of: item.priceCents) { _, newPrice in
-                                if newPrice > 0 { item.priceVerified = true }
-                            }
+                        TextField(item.priceVerified == false ? "Price unavailable — enter cents" : "Price cents", value: $item.priceCents, format: .number).textFieldStyle(.roundedBorder)
                         Text(item.category).foregroundStyle(Theme.accent)
-                    }
-                    if item.priceVerified == false && item.priceCents > 0 {
-                        Text("Estimated price — edit if needed before publishing.")
-                            .font(AppTypography.footnote).foregroundStyle(Theme.accent)
                     }
                 }
                 .padding(.vertical, 4)
             }
             HStack {
-                Button("Save edits") { onSave(items) }.buttonStyle(SecondaryButtonStyle())
-                Button("Publish menu") { publish(items) }.buttonStyle(BigButtonStyle()).disabled(items.isEmpty || saving)
+                Button("Save edits") { onSave(items) }.buttonStyle(.bordered)
+                Button { publish(items) } label: {
+                    Text("Publish menu")
+                        .foregroundStyle(Theme.accentForeground)
+                }
+                    .buttonStyle(.borderedProminent)
+                    .tint(Theme.accent)
+                    .disabled(items.isEmpty || saving)
             }
         }
     }
@@ -294,10 +291,12 @@ private extension String {
 struct RestaurantRootView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     let store: PartyStore
+    @State private var displayedStatus: PartyStatus?
+    @State private var statusTransition: Task<Void, Never>?
 
     var body: some View {
         Group {
-            switch store.party?.status {
+            switch displayedStatus {
             case nil: ProgressView()
             case .checkin: CheckInView(store: store)
             case .hunger: HungerWaitView(store: store)
@@ -306,8 +305,23 @@ struct RestaurantRootView: View {
             case .placed: OrderReceivedView(store: store)
             }
         }
-        .id(store.party?.status.rawValue ?? "loading")
+        .id(displayedStatus?.rawValue ?? "loading")
         .transition(AppPageTransition.transition(reduceMotion: reduceMotion))
-        .animation(AppPageTransition.animation(reduceMotion: reduceMotion), value: store.party?.status)
+        .animation(AppPageTransition.animation(reduceMotion: reduceMotion), value: displayedStatus)
+        .onChange(of: store.party?.status, initial: true) { _, newStatus in
+            guard let newStatus else { displayedStatus = nil; return }
+            if displayedStatus == .checkin && newStatus != .checkin {
+                statusTransition?.cancel()
+                statusTransition = Task {
+                    try? await Task.sleep(for: .seconds(AvatarFlight.duration))
+                    guard !Task.isCancelled else { return }
+                    displayedStatus = store.party?.status
+                }
+            } else {
+                statusTransition?.cancel()
+                displayedStatus = newStatus
+            }
+        }
+        .onDisappear { statusTransition?.cancel() }
     }
 }

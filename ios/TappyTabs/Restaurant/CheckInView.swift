@@ -8,74 +8,81 @@ struct CheckInView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     let store: PartyStore
     @State private var proximity = Proximity.shared
-    @State private var agentFrames: [String: CGRect] = [:]
+    @State private var arrivals: [IncomingAvatarFlight] = []
+    @State private var hasMemberBaseline = false
 
     private var members: [Member] { store.party?.members ?? [] }
 
     var body: some View {
-        GeometryReader { screen in
-            ZStack {
-                ScrollView {
-                    let layout = verticalSizeClass == .compact
-                        ? AnyLayout(HStackLayout(alignment: .top, spacing: 24))
-                        : AnyLayout(VStackLayout(spacing: 20))
-                    layout {
-                        VStack(spacing: 12) {
-                            Text("\(members.count) of \(Int(store.party?.size ?? 0)) checked in")
-                                .font(AppTypography.custom(32, relativeTo: .largeTitle, weight: .bold)).contentTransition(.numericText())
-                            Text("Hold your phone to this one").foregroundStyle(Theme.accent)
-                            let columnCount = verticalSizeClass == .compact ? 4 : 2
-                            let slotHeight: CGFloat = verticalSizeClass == .compact ? 82 : 112
-                            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 6), count: columnCount), spacing: 8) {
-                                ForEach(members) { m in
-                                    Color.clear
-                                        .frame(maxWidth: .infinity)
-                                        .frame(height: slotHeight)
-                                        .background {
-                                            GeometryReader { slot in
-                                                Color.clear.preference(
-                                                    key: CheckInAgentFramesKey.self,
-                                                    value: [m.id: slot.frame(in: .named("checkinScreen"))]
-                                                )
-                                            }
-                                        }
-                                    .transition(reduceMotion ? .opacity : .scale.combined(with: .opacity))
-                                }
+        ScrollView {
+            let layout = verticalSizeClass == .compact
+                ? AnyLayout(HStackLayout(alignment: .top, spacing: 24))
+                : AnyLayout(VStackLayout(spacing: 20))
+            layout {
+                VStack(spacing: 12) {
+                    Text("\(members.count) of \(Int(store.party?.size ?? 0)) checked in")
+                        .font(AppTypography.custom(32, relativeTo: .largeTitle, weight: .bold)).contentTransition(.numericText())
+                    Text("Hold your phone to this one").foregroundStyle(Theme.accent)
+                    LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 3), spacing: 8) {
+                        ForEach(members) { m in
+                            VStack(spacing: 0) {
+                                Text(m.name).font(AppTypography.style(.body, weight: .semibold))
+                                AvatarView(avatarId: m.avatarId, size: 104, state: store.lastError == nil ? .celebrating : .confused,
+                                           interactive: true)
+                                    .anchorPreference(key: MemberAvatarBoundsKey.self, value: .bounds) { [m.userId: $0] }
+                                    .opacity(arrivals.contains(where: { $0.userId == m.userId }) ? 0 : 1)
                             }
-                            .animation(reduceMotion ? .easeOut(duration: 0.15) : .spring(duration: 0.4, bounce: 0.5), value: members.count)
-                        }
-                        .frame(maxWidth: .infinity)
-                        VStack(spacing: 8) {
-                            if let code = store.party?.joinCode {
-                                QRImage(joinCode: code).frame(width: 110, height: 110)
-                                Text(code).font(AppTypography.caption)
-                            }
-                            if let mock = app.mock { Button("Simulate tap") { mock.simulateTap() }.font(AppTypography.footnote) }
-                            Button("Start with fewer") { Task { await store.startWithFewer() } }
-                                .buttonStyle(CompactPrimaryButtonStyle()).disabled(members.count < 2)
+                            .transition(reduceMotion ? .opacity : .scale.combined(with: .opacity))
                         }
                     }
-                    .padding()
+                    .animation(reduceMotion ? .easeOut(duration: 0.15) : .spring(duration: 0.4, bounce: 0.5), value: members.count)
                 }
-                ForEach(members) { member in
-                    if let frame = agentFrames[member.id] {
-                        AgentPlayground(
-                            avatarId: member.avatarId,
-                            initialPosition: CGPoint(x: frame.midX, y: frame.midY),
-                            state: store.lastError == nil ? .celebrating : .confused,
-                            displayName: member.name,
-                            characterScale: characterScale(for: frame, in: screen.size)
-                        )
-                        .frame(width: screen.size.width, height: screen.size.height)
+                .frame(maxWidth: .infinity)
+                VStack(spacing: 8) {
+                    if let code = store.party?.joinCode {
+                        QRImage(joinCode: code).frame(width: 110, height: 110)
+                        Text(code).font(AppTypography.caption)
                     }
+                    if let mock = app.mock { Button("Simulate tap") { mock.simulateTap() }.font(AppTypography.footnote) }
+                    Button("Start with fewer") { Task { await store.startWithFewer() } }
+                        .buttonStyle(.borderedProminent).foregroundStyle(Theme.accentForeground).disabled(members.count < 2)
                 }
             }
-            .coordinateSpace(name: "checkinScreen")
-            .onPreferenceChange(CheckInAgentFramesKey.self) { agentFrames = $0 }
+            .padding()
         }
         .onChange(of: members.count) { old, new in if new > old { UINotificationFeedbackGenerator().notificationOccurred(.success) } }
         .onChange(of: members.map(\.userId)) { old, new in
             for userId in Set(old).subtracting(new) { proximity.forgetDiner(userId) }
+            guard hasMemberBaseline else {
+                hasMemberBaseline = true
+                return
+            }
+            let added = Set(new).subtracting(old)
+            for member in members where added.contains(member.userId) {
+                arrivals.append(IncomingAvatarFlight(userId: member.userId, avatarId: member.avatarId))
+            }
+        }
+        .onAppear { if store.party != nil { hasMemberBaseline = true } }
+        .overlayPreferenceValue(MemberAvatarBoundsKey.self) { anchors in
+            GeometryReader { proxy in
+                ZStack {
+                    ForEach(arrivals) { flight in
+                        if let anchor = anchors[flight.userId] {
+                            let target = proxy[anchor]
+                            AvatarFlight(
+                                avatarId: flight.avatarId,
+                                from: arrivalStart(target: target),
+                                to: CGPoint(x: target.midX, y: target.midY)
+                            ) {
+                                arrivals.removeAll { $0.userId == flight.userId }
+                            }
+                            .id(flight.userId)
+                        }
+                    }
+                }
+                .frame(width: proxy.size.width, height: proxy.size.height)
+            }
+            .allowsHitTesting(false)
         }
         .task(id: store.partyId) {
             proximity.startHosting(partyId: store.partyId, hostDeviceId: app.deviceId, backend: app.backend) { userId in
@@ -89,18 +96,15 @@ struct CheckInView: View {
         .onDisappear { proximity.stop() }
     }
 
-    private func characterScale(for slot: CGRect, in screen: CGSize) -> CGFloat {
-        let baseSize = min(360, min(screen.width, screen.height) * 0.88)
-        guard baseSize > 0 else { return 1 }
-        return min(2.0 / 3.0, slot.width * 1.25 / baseSize)
+    private func arrivalStart(target: CGRect) -> CGPoint {
+        CGPoint(x: -52, y: target.midY)
     }
 }
 
-private struct CheckInAgentFramesKey: PreferenceKey {
-    static let defaultValue: [String: CGRect] = [:]
-    static func reduce(value: inout [String: CGRect], nextValue: () -> [String: CGRect]) {
-        value.merge(nextValue(), uniquingKeysWith: { _, latest in latest })
-    }
+private struct IncomingAvatarFlight: Identifiable {
+    let userId: String
+    let avatarId: String
+    var id: String { userId }
 }
 
 struct HungerWaitView: View {
