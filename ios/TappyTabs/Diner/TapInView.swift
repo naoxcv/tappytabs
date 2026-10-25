@@ -163,14 +163,21 @@ struct TapInView: View {
     private func beginDeparture(to partyId: String) {
         guard !departing, departurePartyId != partyId else { return }
         departurePartyId = partyId
+        app.tapAnimationInProgress = true
         departing = true
     }
 
     private func finishDeparture() {
-        guard let partyId = departurePartyId, app.mode == .diner, app.partyId == nil else { return }
-        proximity.stop()
-        app.partyId = partyId
-        app.tapSearchPaused = false
+        guard let partyId = departurePartyId, app.mode == .diner, app.partyId == nil,
+              let userId = app.userId else { return }
+        Task {
+            try? await app.backend.completeTapAnimation(partyId: partyId, userId: userId, deviceId: app.deviceId)
+            guard app.mode == .diner, app.partyId == nil, departurePartyId == partyId else { return }
+            proximity.stop()
+            app.tapAnimationInProgress = false
+            app.partyId = partyId
+            app.tapSearchPaused = false
+        }
     }
 
     private func joinByCode(_ code: String) async {

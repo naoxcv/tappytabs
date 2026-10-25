@@ -76,7 +76,8 @@ struct DinerFlow: View {
                 guard app.mode == .diner, app.userId == userId, app.backend === backend,
                       !app.tapSearchPaused else { return }
                 checkedUserId = userId
-                if let hosted, app.partyId == nil, !app.tapSearchPaused {
+                let tapInProgress = app.tapAnimationInProgress || Proximity.shared.state == .tapped
+                if let hosted, app.partyId == nil, !app.tapSearchPaused, !tapInProgress {
                     app.partyId = hosted.partyId
                     resumeWatch = nil
                 }

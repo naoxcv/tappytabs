@@ -27,6 +27,7 @@ enum API {
     // parties
     static let partiesCreate = "parties:create"
     static let partiesJoin = "parties:join"
+    static let partiesCompleteTapAnimation = "parties:completeTapAnimation"
     static let partiesLeave = "parties:leave"
     static let partiesCurrent = "parties:current"
     static let partiesHosted = "parties:hosted"

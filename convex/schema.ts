@@ -104,6 +104,7 @@ export default defineSchema({
     userId: v.id("users"),
     joinedVia: joinViaV,
     joinedAt: v.number(),
+    tapAnimationComplete: v.optional(v.boolean()),
     hunger: v.optional(hungerV),
     pickedItemId: v.optional(v.id("menuItems")),
     confirmedAt: v.optional(v.number()),

@@ -76,7 +76,7 @@ final class MockBackend: Backend {
         guard let p = partySubject.value, p.status == .checkin else { return }
         let next = pickParty.members.first { m in !p.members.contains { $0.userId == m.userId } }
         guard let next else { return }
-        _ = try? joinSync(userId: next.userId)
+        _ = try? joinSync(userId: next.userId, tapAnimationComplete: true)
     }
 
     // MARK: Backend
@@ -183,7 +183,7 @@ final class MockBackend: Backend {
     func join(partyId: String?, joinCode: String?, userId: String, via: JoinVia,
               hostDeviceId: String?, deviceId: String?) async throws -> JoinResult {
         if partySubject.value == nil { _ = try await createParty(restaurantId: Self.restaurantId, size: 4, hostDeviceId: ids.hostDeviceId, autoMode: false) }
-        return try joinSync(userId: userId)
+        return try joinSync(userId: userId, tapAnimationComplete: via == .qr)
     }
 
     func leave(partyId: String, userId: String, deviceId: String) async throws {
@@ -192,14 +192,20 @@ final class MockBackend: Backend {
         setParty(party.with(members: party.members.filter { $0.userId != userId }))
     }
 
-    private func joinSync(userId: String) throws -> JoinResult {
+    func completeTapAnimation(partyId: String, userId: String, deviceId: String) async throws {
+        guard let party = partySubject.value, party.id == partyId else { throw TTError(code: .NOT_FOUND, message: "Table not found") }
+        guard party.members.contains(where: { $0.userId == userId }) else { throw TTError(code: .NOT_MEMBER, message: "Not at this table") }
+        updateMember(userId) { $0.with(tapAnimationComplete: true) }
+    }
+
+    private func joinSync(userId: String, tapAnimationComplete: Bool = true) throws -> JoinResult {
         guard let p = partySubject.value else { throw TTError(code: .NOT_FOUND, message: "Table not found") }
         if p.members.contains(where: { $0.userId == userId }) { return JoinResult(result: "already", partyId: p.id) }
         guard p.status == .checkin else { throw TTError(code: .BAD_STATUS, message: "Party is \(p.status.rawValue)") }
         guard Double(p.members.count) < p.size else { throw TTError(code: .FULL, message: "Table is full") }
         let fixture = pickParty.members.first { $0.userId == userId }
             ?? Member(userId: userId, name: "You", avatarId: "avatar_5", hunger: nil, picked: false, confirmed: false)
-        let members = p.members + [fixture.with(hunger: p.autoMode == true ? .normal : nil)]
+        let members = p.members + [fixture.with(hunger: p.autoMode == true ? .normal : nil).with(tapAnimationComplete: tapAnimationComplete)]
         let isFull = Double(members.count) == p.size
         setParty(p.with(status: isFull && p.autoMode == true ? .negotiating : (isFull ? .hunger : .checkin), members: members))
         if isFull && p.autoMode == true {
@@ -372,9 +378,15 @@ extension Party {
 
 extension Member {
     func with(hunger: Hunger?) -> Member {
-        Member(userId: userId, name: name, avatarId: avatarId, hunger: hunger, picked: picked, confirmed: confirmed)
+        Member(userId: userId, name: name, avatarId: avatarId, hunger: hunger, picked: picked, confirmed: confirmed,
+               tapAnimationComplete: tapAnimationComplete)
     }
     func with(picked: Bool? = nil, confirmed: Bool? = nil) -> Member {
-        Member(userId: userId, name: name, avatarId: avatarId, hunger: hunger, picked: picked ?? self.picked, confirmed: confirmed ?? self.confirmed)
+        Member(userId: userId, name: name, avatarId: avatarId, hunger: hunger, picked: picked ?? self.picked,
+               confirmed: confirmed ?? self.confirmed, tapAnimationComplete: tapAnimationComplete)
+    }
+    func with(tapAnimationComplete: Bool) -> Member {
+        Member(userId: userId, name: name, avatarId: avatarId, hunger: hunger, picked: picked, confirmed: confirmed,
+               tapAnimationComplete: tapAnimationComplete)
     }
 }
