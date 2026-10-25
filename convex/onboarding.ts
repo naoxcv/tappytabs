@@ -95,8 +95,11 @@ export const publish = action({
             name: item.name,
             description: item.description,
             category: item.category,
-            ...(item.priceVerified === false && item.priceCents === 0 ? {} : { price: item.priceCents / 100 }),
-            ...(item.imageUrl ? { imageUrl: item.imageUrl } : {}),
+            // Match the published Actor input schema: prices are documented
+            // as strings, and image URLs are restored from the draft locally.
+            ...(item.priceVerified === false && item.priceCents === 0
+              ? {}
+              : { price: `$${(item.priceCents / 100).toFixed(2)}` }),
           })),
           batchSize: 8,
         }),
