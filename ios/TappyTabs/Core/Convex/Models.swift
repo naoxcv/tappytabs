@@ -164,6 +164,11 @@ struct RestaurantOnboarding: Decodable, Equatable, Identifiable {
     let status: String
     let candidates: [RestaurantCandidate]
     let selectedCandidate: RestaurantCandidate?
+    let acquisitionMode: String?
+    let sourceUrl: String?
+    let searchQuery: String?
+    let searchLocation: String?
+    let actorRunId: String?
     let errorMessage: String?
     var id: String { _id }
 }
@@ -171,6 +176,9 @@ struct RestaurantOnboarding: Decodable, Equatable, Identifiable {
 struct RestaurantCandidate: Codable, Equatable, Identifiable {
     let name: String
     let address: String
+    let sourceUrl: String?
+    let confidence: String?
+    let extractionConfidence: String?
     let mapsUrl: String?
     let googlePlaceId: String?
     let websiteUrl: String?
@@ -179,7 +187,7 @@ struct RestaurantCandidate: Codable, Equatable, Identifiable {
     let rating: Double?
     let distance: Double?
     let matchScore: Double?
-    var id: String { googlePlaceId ?? mapsUrl ?? "\(name)-\(address)" }
+    var id: String { sourceUrl ?? googlePlaceId ?? mapsUrl ?? "\(name)-\(address)" }
 }
 
 struct RestaurantRawMenuItem: Codable, Equatable, Identifiable {

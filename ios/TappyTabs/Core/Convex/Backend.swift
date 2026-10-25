@@ -30,9 +30,9 @@ protocol Backend: AnyObject {
     func restaurantAccount(deviceId: String, displayName: String) async throws -> RestaurantAccount
     func createRestaurantDraft(deviceId: String, name: String, address: String) async throws -> String
     func restaurantOnboardingStatus(deviceId: String, onboardingId: String) -> AnyPublisher<RestaurantOnboarding?, TTError>
-    func resolveRestaurant(deviceId: String, onboardingId: String) async throws
+    func startRestaurantUrlImport(deviceId: String, onboardingId: String, url: String, location: String?) async throws
+    func startRestaurantSearch(deviceId: String, onboardingId: String, query: String, location: String) async throws
     func selectRestaurantCandidate(deviceId: String, onboardingId: String, candidate: RestaurantCandidate) async throws
-    func scrapeRestaurantMenu(deviceId: String, onboardingId: String, menuUrl: String?) async throws
     func restaurantDraft(deviceId: String, onboardingId: String) async throws -> RestaurantMenuDraft?
     func updateRestaurantDraft(deviceId: String, onboardingId: String, items: [RestaurantMenuItem]) async throws
     func publishRestaurant(deviceId: String, onboardingId: String, items: [RestaurantMenuItem]) async throws

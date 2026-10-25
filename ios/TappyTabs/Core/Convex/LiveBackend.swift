@@ -119,12 +119,19 @@ final class LiveBackend: Backend {
         sub(API.restaurantGetStatus, ["deviceId": deviceId, "onboardingId": onboardingId])
     }
 
-    func resolveRestaurant(deviceId: String, onboardingId: String) async throws {
-        let _: String = try await act(API.restaurantResolveGoogleMaps, ["deviceId": deviceId, "onboardingId": onboardingId])
+    func startRestaurantUrlImport(deviceId: String, onboardingId: String, url: String, location: String?) async throws {
+        var args: [String: ConvexEncodable?] = ["deviceId": deviceId, "onboardingId": onboardingId, "url": url]
+        if let location { args["location"] = location }
+        let _: RestaurantScrapeResult = try await act(API.restaurantStartUrlImport, args)
+    }
+
+    func startRestaurantSearch(deviceId: String, onboardingId: String, query: String, location: String) async throws {
+        let _: RestaurantScrapeResult = try await act(API.restaurantStartSearch, ["deviceId": deviceId, "onboardingId": onboardingId, "query": query, "location": location])
     }
 
     private static func candidateArgs(_ c: RestaurantCandidate) -> [String: ConvexEncodable?] {
         var args: [String: ConvexEncodable?] = ["name": c.name, "address": c.address]
+        if let value = c.sourceUrl { args["sourceUrl"] = value }
         if let value = c.mapsUrl { args["mapsUrl"] = value }
         if let value = c.googlePlaceId { args["googlePlaceId"] = value }
         if let value = c.websiteUrl { args["websiteUrl"] = value }
@@ -138,12 +145,6 @@ final class LiveBackend: Backend {
 
     func selectRestaurantCandidate(deviceId: String, onboardingId: String, candidate: RestaurantCandidate) async throws {
         try await mutate(API.restaurantSelectCandidate, ["deviceId": deviceId, "onboardingId": onboardingId, "candidate": Self.candidateArgs(candidate)])
-    }
-
-    func scrapeRestaurantMenu(deviceId: String, onboardingId: String, menuUrl: String?) async throws {
-        var args: [String: ConvexEncodable?] = ["deviceId": deviceId, "onboardingId": onboardingId]
-        if let menuUrl { args["menuUrl"] = menuUrl }
-        let _: RestaurantScrapeResult = try await act(API.restaurantScrapeMenu, args)
     }
 
     func restaurantDraft(deviceId: String, onboardingId: String) async throws -> RestaurantMenuDraft? {

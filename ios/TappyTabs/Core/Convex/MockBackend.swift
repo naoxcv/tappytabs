@@ -139,9 +139,9 @@ final class MockBackend: Backend {
     func restaurantOnboardingStatus(deviceId: String, onboardingId: String) -> AnyPublisher<RestaurantOnboarding?, TTError> {
         onMain(Just(nil).setFailureType(to: TTError.self))
     }
-    func resolveRestaurant(deviceId: String, onboardingId: String) async throws {}
+    func startRestaurantUrlImport(deviceId: String, onboardingId: String, url: String, location: String?) async throws {}
+    func startRestaurantSearch(deviceId: String, onboardingId: String, query: String, location: String) async throws {}
     func selectRestaurantCandidate(deviceId: String, onboardingId: String, candidate: RestaurantCandidate) async throws {}
-    func scrapeRestaurantMenu(deviceId: String, onboardingId: String, menuUrl: String?) async throws {}
     func restaurantDraft(deviceId: String, onboardingId: String) async throws -> RestaurantMenuDraft? { nil }
     func updateRestaurantDraft(deviceId: String, onboardingId: String, items: [RestaurantMenuItem]) async throws {}
     func publishRestaurant(deviceId: String, onboardingId: String, items: [RestaurantMenuItem]) async throws {}
