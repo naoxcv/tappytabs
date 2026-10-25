@@ -119,7 +119,9 @@ export const ingest = action({
         const mapped = mapScraperOutput(scraped.items);
         if (mapped.length >= 5) { raw = mapped; note = `scraped ${mapped.length} items`; }
       }
-      const run = await runActor(normalizer, { items: raw }, token, Math.max(3_000, deadline - Date.now()));
+      // Pass this explicitly: Apify may apply the deployed Actor schema's
+      // default when the field is omitted, even if the Actor source default changed.
+      const run = await runActor(normalizer, { items: raw, batchSize: 8 }, token, Math.max(3_000, deadline - Date.now()));
       const items: NormalizedItem[] = [];
       for (const row of run.items) {
         const parsed = normalizedItem.safeParse(row);

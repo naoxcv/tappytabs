@@ -22,26 +22,30 @@ if (!client) log.warning("BITDEER_API_KEY/BITDEER_MODEL not set: keyword-only ta
 async function tagBatch(batch: { index: number; item: RawItem }[]): Promise<Map<number, LlmTags>> {
   const out = new Map<number, LlmTags>();
   if (!client) return out;
-  try {
-    // Give the model batch-local indexes, then translate them back to source indexes.
-    // Models commonly restart numbering at zero for each independent batch.
-    const requestBatch = batch.map(({ item }, index) => ({ index, item }));
-    const res = await client.chat.completions.create({
-      model: model!,
-      temperature: 0,
-      response_format: { type: "json_object" },
-      messages: [{ role: "system", content: TAG_SYSTEM }, { role: "user", content: tagUser(requestBatch) }],
-    }, { timeout: 45_000, maxRetries: 0 });
-    const parsed = JSON.parse(res.choices[0]?.message?.content ?? "{}") as { items?: (LlmTags & { index: number })[] };
-    for (const row of parsed.items ?? []) {
-      if (!Number.isInteger(row.index)) continue;
-      const sourceIndex = batch[row.index]?.index ?? (batch.some((entry) => entry.index === row.index) ? row.index : undefined);
-      if (sourceIndex !== undefined) out.set(sourceIndex, row);
+  // Give the model batch-local indexes, then translate them back to source indexes.
+  // Models commonly restart numbering at zero for each independent batch.
+  const requestBatch = batch.map(({ item }, index) => ({ index, item }));
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    try {
+      const res = await client.chat.completions.create({
+        model: model!,
+        temperature: 0,
+        response_format: { type: "json_object" },
+        messages: [{ role: "system", content: TAG_SYSTEM }, { role: "user", content: tagUser(requestBatch) }],
+      }, { timeout: 20_000, maxRetries: 0 });
+      const parsed = JSON.parse(res.choices[0]?.message?.content ?? "{}") as { items?: (LlmTags & { index: number })[] };
+      for (const row of parsed.items ?? []) {
+        if (!Number.isInteger(row.index)) continue;
+        const sourceIndex = batch[row.index]?.index ?? (batch.some((entry) => entry.index === row.index) ? row.index : undefined);
+        if (sourceIndex !== undefined) out.set(sourceIndex, row);
+      }
+      const missing = batch.filter(({ index }) => !out.has(index)).map(({ index }) => index);
+      if (missing.length) log.warning(`tag response missing ${missing.length}/${batch.length} item(s), source indices: ${missing.join(", ")}`);
+      return out;
+    } catch (e) {
+      log.warning(`tag batch attempt ${attempt}/2 failed: ${String(e)}`);
+      if (attempt === 2) return out;
     }
-    const missing = batch.filter(({ index }) => !out.has(index)).map(({ index }) => index);
-    if (missing.length) log.warning(`tag response missing ${missing.length}/${batch.length} item(s), source indices: ${missing.join(", ")}`);
-  } catch (e) {
-    log.warning(`tag batch failed: ${String(e)}`);
   }
   return out;
 }
