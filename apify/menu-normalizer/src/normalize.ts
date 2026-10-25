@@ -12,7 +12,7 @@ export type NormalizedItem = {
   cuisine?: string;
   tags: string[];
   description: string;
-  /** Unknown prices are 0; priceVerified distinguishes them from free items. */
+  /** Unknown prices are 0; estimated prices are positive but remain unverified. */
   priceCents: number;
   allergens: { allergen: Allergen; level: Level }[];
   diet: Diet[];
@@ -28,6 +28,7 @@ export type NormalizedItem = {
 
 /** LLM tag output per item (validated in main.ts). May only add or raise. */
 export type LlmTags = {
+  estimatedPriceCents?: number;
   allergens?: Partial<Record<Allergen, Level>>;
   diet?: Diet[];
   tags?: string[];
@@ -42,9 +43,9 @@ const RANK: Record<Level, number> = { not_detected: 0, may_contain: 1, contains:
 const raise = (a: Level, b: Level): Level => (RANK[b] > RANK[a] ? b : a);
 
 export function parsePrice(price: RawItem["price"]): { cents: number | null; currency?: string } {
-  if (typeof price === "number") return Number.isFinite(price) && price >= 0 && price <= 200 ? { cents: Math.round(price * 100) } : { cents: null };
+  if (typeof price === "number") return Number.isFinite(price) && price > 0 && price <= 200 ? { cents: Math.round(price * 100) } : { cents: null };
   const source = String(price ?? "").trim();
-  if (!source || /\b(from|starting|market|varies|ask)\b|[-–]\s*[$€£]?\d/i.test(source)) return { cents: null };
+  if (!source || /^0+(?:[.,]0{1,2})?$/.test(source) || /\b(from|starting|market|varies|ask)\b|[-–]\s*[$€£]?\d/i.test(source)) return { cents: null };
   const symbols = [...source.matchAll(/[$€£]/g)].map((m) => m[0]);
   const codes = [...source.matchAll(/\b(?:USD|EUR|GBP|CAD|AUD)\b/gi)].map((m) => m[0].toUpperCase());
   const currencies = [...new Set([...symbols.map((s) => ({ "$": "USD", "€": "EUR", "£": "GBP" })[s]), ...codes])];
@@ -55,6 +56,13 @@ export function parsePrice(price: RawItem["price"]): { cents: number | null; cur
 }
 
 export const parsePriceCents = (price: RawItem["price"]): number | null => parsePrice(price).cents;
+
+/** Scrapers use bare zero for a failed lookup; a currency-marked zero can be an intentional free item. */
+export function isMissingPrice(price: RawItem["price"]): boolean {
+  return price === null || price === undefined ||
+    (typeof price === "number" && price === 0) ||
+    (typeof price === "string" && (!price.trim() || /^0+(?:[.,]0{1,2})?$/.test(price.trim())));
+}
 
 /** Only annotate traits directly supported by menu wording. Missing traits stay unknown. */
 export function inferTaste(text: string): NormalizedItem["taste"] {
@@ -113,7 +121,7 @@ export function keywordPass(raw: RawItem, index: number): NormalizedItem {
 }
 
 /** Merge the LLM pass in: allergens may only go up; diets are intersected (both must agree) so they can only get stricter. */
-export function mergeLlm(base: NormalizedItem, llm: LlmTags | null): NormalizedItem {
+export function mergeLlm(base: NormalizedItem, llm: LlmTags | null, allowPriceEstimate = false): NormalizedItem {
   if (!llm) return markUnreadable(base);
   const allergens = base.allergens.map(({ allergen, level }) => ({
     allergen, level: raise(level, llm.allergens?.[allergen] ?? "not_detected"),
@@ -123,6 +131,9 @@ export function mergeLlm(base: NormalizedItem, llm: LlmTags | null): NormalizedI
   ) : base.diet;
   return {
     ...base,
+    priceCents: allowPriceEstimate && !base.priceVerified && base.priceCents === 0 &&
+      Number.isInteger(llm.estimatedPriceCents) && llm.estimatedPriceCents! > 0 && llm.estimatedPriceCents! <= 20_000
+      ? llm.estimatedPriceCents! : base.priceCents,
     taste: [
       ...base.taste,
       ...(Array.isArray(llm.taste) ? llm.taste : []).filter((t) =>
