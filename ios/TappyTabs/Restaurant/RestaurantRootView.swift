@@ -54,12 +54,22 @@ struct RestaurantOnboardingView: View {
     @State private var saving = false
     @State private var error: String?
     @State private var statusSub: AnyCancellable?
+    @State private var showingResetConfirmation = false
 
     private enum Acquisition: Hashable { case url, search }
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 18) {
+                HStack {
+                    Button { app.switchMode() } label: {
+                        Label("Back", systemImage: "chevron.left")
+                    }
+                    .buttonStyle(.bordered)
+                    Spacer()
+                    Button("Start over") { showingResetConfirmation = true }
+                        .buttonStyle(.bordered)
+                }
                 Text("Set up your restaurant").font(AppTypography.style(.largeTitle, weight: .bold))
                 Text("This device owns one restaurant account. You can edit every detail before publishing.")
                     .foregroundStyle(Theme.accent)
@@ -69,8 +79,14 @@ struct RestaurantOnboardingView: View {
             }
             .padding()
         }
-        .task { await loadAccount() }
+        .task(id: app.deviceId) { await loadAccount() }
         .onDisappear { statusSub?.cancel() }
+        .confirmationDialog("Start over with a fresh restaurant?", isPresented: $showingResetConfirmation, titleVisibility: .visible) {
+            Button("Start over", role: .destructive) { startFreshRestaurant() }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("Your previous imported menu will remain saved, but this device will use a new restaurant identity and start at menu import.")
+        }
     }
 
     @ViewBuilder private var content: some View {
@@ -126,6 +142,19 @@ struct RestaurantOnboardingView: View {
                 address = onboarding?.submittedAddress ?? ""
             }
         } catch let caught { self.error = TTError.from(caught).userMessage }
+    }
+
+    private func startFreshRestaurant() {
+        statusSub?.cancel()
+        onboardingId = nil
+        onboarding = nil
+        draft = nil
+        showSourceEntry = false
+        sourceURL = ""
+        name = ""
+        address = ""
+        error = nil
+        app.deviceId = UUID().uuidString
     }
 
     private func submitDetails() async {
