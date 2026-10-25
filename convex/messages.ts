@@ -5,7 +5,7 @@ import { internalMutation, query, type MutationCtx } from "./_generated/server";
 import { TIMING } from "./shared/enums";
 import { splitBubbleText } from "./agents/bubbles";
 
-/** Match mock pacing: 2.5 s minimum, then add 15 ms per character above the minimum threshold. */
+/** Match mock pacing: 1.8 s minimum, with longer display time for longer messages. */
 export function bubbleDisplayDurationMs(text: string): number {
   return Math.max(TIMING.bubbleGapMs, TIMING.bubbleBaseHoldMs + text.trim().length * TIMING.bubbleMsPerChar);
 }

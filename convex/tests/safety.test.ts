@@ -68,10 +68,10 @@ describe("sets", () => {
 });
 
 describe("dropBubbleText", () => {
-  test("names the real allergen, matches the PRD line", () => {
+  test("names the real allergen in a short message", () => {
     const paella = byName("Seafood Paella");
     const failed = PARTY.map((user) => ({ user, safety: isSafeFor(paella, [user], "shared") })).filter((f) => !f.safety.safe);
-    expect(dropBubbleText(paella, failed)).toBe("Maya's allergic to shellfish, so no Seafood Paella for the table.");
+    expect(dropBubbleText(paella, failed)).toBe("Maya's allergic to shellfish.");
   });
 
   test("stays within 120 characters", () => {

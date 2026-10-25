@@ -52,8 +52,11 @@ export async function usersOf(ctx: QueryCtx, members: Doc<"members">[]): Promise
 }
 
 export async function menuOf(ctx: QueryCtx, restaurantId: Id<"restaurants">): Promise<Doc<"menuItems">[]> {
+  const restaurant = await ctx.db.get(restaurantId);
   const items = await ctx.db.query("menuItems").withIndex("by_restaurant", (q) => q.eq("restaurantId", restaurantId)).collect();
-  return items.sort((a, b) => a.menuOrder - b.menuOrder);
+  const active = restaurant?.activeMenuVersionId;
+  const versioned = active ? items.filter((item) => item.menuVersionId === active) : items.filter((item) => !item.menuVersionId);
+  return versioned.sort((a, b) => a.menuOrder - b.menuOrder);
 }
 
 export async function linesOf(ctx: QueryCtx, partyId: Id<"parties">): Promise<Doc<"orderLines">[]> {

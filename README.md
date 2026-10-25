@@ -110,7 +110,15 @@ npm run seed
 
 The seed writes the checked menu snapshot first, then tries the configured normalizer Actor using the raw mock menu. If Apify is unavailable or unconfigured, the snapshot remains in place. `npm run seed:negotiated` and `npm run seed:placed` prepare screen fixtures. `npm run e2e` exercises the full backend flow and **wipes app data in the active Convex deployment**, so use a disposable local or personal deployment.
 
-To enable live model and menu processing, set Convex environment variables with `npx convex env set`: `ANTHROPIC_API_KEY`, `CLAUDE_MODEL`, `BITDEER_API_KEY`, `BITDEER_MODEL`, `APIFY_TOKEN`, `APIFY_NORMALIZER_ACTOR` (the demo currently uses `naoxcv/menu-normalizer`), and optionally `APIFY_SCRAPER_ACTOR` plus `DEMO_SEED`. After a successful live ingest, refresh the checked fallback with `CONVEX_URL=<your-deployment-url> npm run menu:snapshot`. This exports the current normalized menu without reseeding. The Actor's public Apify Store listing will be linked here after publication.
+To enable live model and menu processing, set Convex environment variables with `npx convex env set`: `ANTHROPIC_API_KEY`, `CLAUDE_MODEL`, `BITDEER_API_KEY`, `BITDEER_MODEL`, `APIFY_TOKEN`, `APIFY_NORMALIZER_ACTOR` (the demo currently uses `naoxcv/menu-normalizer`), `APIFY_SCRAPER_ACTOR`, and `APIFY_GOOGLE_MAPS_ACTOR` for restaurant onboarding, plus optionally `DEMO_SEED`. The Maps Actor must return place candidates; TappyTabs always requires owner selection. After a successful live ingest, refresh the checked fallback with `CONVEX_URL=<your-deployment-url> npm run menu:snapshot`. This exports the current normalized menu without reseeding. The Actor's public Apify Store listing will be linked here after publication.
+
+To deploy and seed the shared demo deployment, first configure its Convex environment variables, then run:
+
+```bash
+npm run deploy:demo
+```
+
+This runs `npx convex deploy` followed by `seedActions:baseAndIngest --prod`. The seed wipes and recreates the demo app data. To deploy without reseeding, use `npm run deploy:demo -- --skip-seed`.
 
 ## Success criteria and demo
 

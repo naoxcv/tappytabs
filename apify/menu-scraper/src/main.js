@@ -12,7 +12,8 @@ await Actor.init();
 Actor.on('aborting', async () => Actor.exit());
 
 // Structure of input is defined in input_schema.json
-const { startUrls, maxRequestsPerCrawl = 1 } = (await Actor.getInput()) ?? {};
+const { startUrls: suppliedStartUrls, menuUrl, maxRequestsPerCrawl = 1 } = (await Actor.getInput()) ?? {};
+const startUrls = suppliedStartUrls?.length ? suppliedStartUrls : menuUrl ? [{ url: menuUrl }] : [];
 
 if (
     !Array.isArray(startUrls) ||

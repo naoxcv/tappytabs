@@ -131,6 +131,21 @@ final class MockBackend: Backend {
         ProfileSummary(profileSummary: "You love noodles and anything spicy, and your agent will always steer clear of shellfish.", personality: .adventurous)
     }
 
+    // Restaurant onboarding is intentionally kept out of the seeded demo path.
+    func restaurantAccount(deviceId: String, displayName: String) async throws -> RestaurantAccount {
+        RestaurantAccount(_id: "mock-account", deviceId: deviceId, displayName: displayName, restaurantId: Self.restaurantId, onboardingId: nil)
+    }
+    func createRestaurantDraft(deviceId: String, name: String, address: String) async throws -> String { "mock-onboarding" }
+    func restaurantOnboardingStatus(deviceId: String, onboardingId: String) -> AnyPublisher<RestaurantOnboarding?, TTError> {
+        onMain(Just(nil).setFailureType(to: TTError.self))
+    }
+    func resolveRestaurant(deviceId: String, onboardingId: String) async throws {}
+    func selectRestaurantCandidate(deviceId: String, onboardingId: String, candidate: RestaurantCandidate) async throws {}
+    func scrapeRestaurantMenu(deviceId: String, onboardingId: String, menuUrl: String?) async throws {}
+    func restaurantDraft(deviceId: String, onboardingId: String) async throws -> RestaurantMenuDraft? { nil }
+    func updateRestaurantDraft(deviceId: String, onboardingId: String, items: [RestaurantMenuItem]) async throws {}
+    func publishRestaurant(deviceId: String, onboardingId: String, items: [RestaurantMenuItem]) async throws {}
+
     func ingestMenu(restaurantId: String) async throws -> IngestResult {
         try await Task.sleep(for: .seconds(1))
         return IngestResult(count: menu.itemCount, source: "seed", apifyRunId: nil, note: "mock")
@@ -258,7 +273,7 @@ final class MockBackend: Backend {
     }
 
     private static func bubbleDisplayDurationMs(_ text: String) -> Double {
-        max(2500, 1200 + Double(text.trimmingCharacters(in: .whitespacesAndNewlines).count) * 15)
+        max(1800, 1200 + Double(text.trimmingCharacters(in: .whitespacesAndNewlines).count) * 15)
     }
 
     private func playMessages(thenAdvance: Bool) {

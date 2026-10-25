@@ -9,10 +9,10 @@ import { agentDraftV, agentVoteV, planV, type AgentDraft, type AgentVote, type P
 import { summaryTemplate } from "./bubbles";
 import { callJson, type CallLog } from "./models/provider";
 import { draftPrompt, draftSchema, repairDraft } from "./prompts/draft";
-import { repairSummary, summaryPrompt, summarySchema } from "./prompts/summaryBubble";
+import { conversationPrompt, conversationSchema, fallbackConversation, repairConversation } from "./prompts/summaryBubble";
 import { repairVote, votePrompt, voteSchema } from "./prompts/vote";
 import { fallbackDraft, fallbackVote, isSharePlate, mainPool, rankItems, scoreContext, scoreItem } from "./ranking";
-import { buildPlan, sharedTarget, tally } from "./rules";
+import { buildPlan, poolForParty, sharedTarget, tally } from "./rules";
 import { safeSet, sharedSafeSet } from "./safety";
 
 export const logTo = (ctx: ActionCtx, partyId?: Id<"parties">, userId?: Id<"users">) =>
@@ -25,7 +25,7 @@ export const logTo = (ctx: ActionCtx, partyId?: Id<"parties">, userId?: Id<"user
   };
 
 const emptyDraft = (userId: string): AgentDraft => ({
-  userId, mains: [], drink: null, sharedProposals: [], bubble: "Still thinking…", fallback: true,
+  userId, mains: [], drink: null, sharedProposals: [], bubble: "Thinking.", fallback: true,
 });
 
 export const draftStep = internalAction({
@@ -81,9 +81,9 @@ export const draftStep = internalAction({
 });
 
 export const voteStep = internalAction({
-  args: { partyId: v.id("parties"), userId: v.id("users"), pooled: v.array(v.string()), drafts: v.array(agentDraftV) },
+  args: { partyId: v.id("parties"), userId: v.id("users"), pooled: v.array(v.string()) },
   returns: agentVoteV,
-  handler: async (ctx, { partyId, userId, pooled, drafts }): Promise<AgentVote> => {
+  handler: async (ctx, { partyId, userId, pooled }): Promise<AgentVote> => {
     let fb: AgentVote = { userId, yes: [...pooled], bubble: "Sounds good to me.", fallback: true };
     try {
       const c: PartyContext = await ctx.runQuery(internal.negotiation.context, { partyId });
@@ -93,8 +93,7 @@ export const voteStep = internalAction({
       const pooledItems = c.menu.filter((m) => pooled.includes(m._id));
       fb = fallbackVote(pooledItems, user, hunger, c.menu);
       if (pooledItems.length === 0) return fb;
-      const names = Object.fromEntries(c.users.map((u) => [u._id, u.name]));
-      const p = votePrompt({ user, hunger, pooled: pooledItems, drafts, names });
+      const p = votePrompt({ user, hunger, pooled: pooledItems });
       const r = await callJson({
         prompt: "vote", primary: "claude", system: p.system, user: p.user, schema: voteSchema,
         onLog: logTo(ctx, partyId, userId),
@@ -115,21 +114,31 @@ export const settleStep = internalAction({
     const chosen = tally(pooled, votes, c.menu, target);
     const plan = buildPlan(drafts, chosen, c.menu, c.users);
     const name = (id: string) => c.menu.find((m) => m._id === id)?.name ?? "a dish";
-    const userName = (id: string) => c.users.find((u) => u._id === id)?.name ?? "someone";
     const template = summaryTemplate(plan.shared.map((s) => name(s.itemId)), plan.mains.length);
+    const pooling = poolForParty(drafts, c.menu, c.users);
+    const transcriptContext = {
+      styleSeed: partyId,
+      restaurant: c.restaurantName,
+      users: c.users,
+      menu: c.menu,
+      drafts: drafts.map(({ userId, sharedProposals }) => ({ userId, sharedProposals })),
+      votes,
+      pooled,
+      plan,
+      drops: pooling.drops,
+      topUps: pooling.topUps,
+    };
+    const fallback = fallbackConversation(transcriptContext, template);
     try {
-      const p = summaryPrompt({
-        restaurant: c.restaurantName,
-        shared: plan.shared.map((s) => ({ name: name(s.itemId), sharers: s.sharedBy.map(userName) })),
-        mains: plan.mains.map((m) => ({ diner: userName(m.userId), dish: name(m.itemId) })),
-      });
+      const p = conversationPrompt(transcriptContext);
       const r = await callJson({
-        prompt: "summaryBubble", primary: "bitdeer", system: p.system, user: p.user, schema: summarySchema,
+        prompt: "conversation", primary: "bitdeer", system: p.system, user: p.user, schema: conversationSchema,
         onLog: logTo(ctx, partyId),
       });
-      return { ...plan, summaryBubble: r ? repairSummary(r.data, template) : template, fallback: !r };
+      const conversation = r ? repairConversation(r.data, transcriptContext, template) : fallback;
+      return { ...plan, ...conversation, fallback: !r };
     } catch {
-      return { ...plan, summaryBubble: template, fallback: true };
+      return { ...plan, ...fallback, fallback: true };
     }
   },
 });

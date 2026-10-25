@@ -14,13 +14,37 @@ const variant = (key: string, options: string[], preferredIndex?: number) => {
   }
   return options[(hash >>> 0) % options.length];
 };
-const listNames = (names: string[]) => names.length < 2
-  ? names[0] ?? ""
-  : `${names.slice(0, -1).join(", ")} and ${names.at(-1)}`;
-
 export function clip(text: string, max = BUBBLE_MAX_CHARS): string {
   const t = text.replace(/\s+/g, " ").trim();
-  return t.length <= max ? t : t.slice(0, max - 1).trimEnd() + "…";
+  if (t.length <= max) return t;
+  const cut = t.slice(0, max + 1);
+  const boundary = cut.lastIndexOf(" ");
+  return t.slice(0, boundary > 0 ? boundary : max).trimEnd();
+}
+
+/** Keep generated chat bubbles short without cutting a word in half. */
+export function clipBubbleWords(text: string, maxWords = 8, maxChars = 80): string {
+  const normalized = text.replace(/\s+/g, " ").trim();
+  const words = normalized.split(" ").filter(Boolean);
+  if (words.length <= maxWords && normalized.length <= maxChars) {
+    return normalized.replace(/(?:…|\.{3,})+$/, "").trimEnd();
+  }
+  const kept: string[] = [];
+  for (const word of words) {
+    if (kept.length >= maxWords) break;
+    const candidate = [...kept, word].join(" ");
+    if (candidate.length > maxChars) break;
+    kept.push(word);
+  }
+  if (kept.length === 0) return "";
+  const shortened = kept.join(" ");
+  const sentenceEnds = [...shortened.matchAll(/[.!?](?=\s|$)/g)];
+  const sentenceEnd = sentenceEnds.at(-1);
+  if (sentenceEnd?.index !== undefined) return shortened.slice(0, sentenceEnd.index + 1).trimEnd();
+  return shortened
+    .replace(/\s+(?:and|but|or|so|because|with|to|for|of|in|on|at|a|an|the|my|your|our|their|this|that)$/i, "")
+    .replace(/(?:…|\.{3,})+$/, "")
+    .trimEnd();
 }
 
 function capitalize(text: string): string {
@@ -79,54 +103,40 @@ export function reasonFor(item: MenuItemLite, user: UserLite): string {
 }
 
 export function openingBubble(user: UserLite, topMain?: string, topShared?: string, partyIndex?: number): string {
-  const n = first(user.name);
-  if (topMain && topShared) return variant(`${n}:${topMain}:${topShared}`, [
-    `${n} is leaning toward ${topMain}, and thinks ${topShared} could be good to share.`,
-    `${n} likes the look of ${topMain}; ${topShared} might be worth sharing too.`,
-    `${n}'s pick is ${topMain}, with ${topShared} as a possible plate for the table.`,
+  const key = `${first(user.name)}:${topMain ?? ""}:${topShared ?? ""}`;
+  if (topMain && topShared) return variant(key, [
+    `Thoughts on ${topShared}?`,
+    `Let's share ${topShared}!`,
+    `I'd try ${topShared}.`,
   ], partyIndex);
-  if (topMain) return variant(`${n}:${topMain}`, [
-    `${n} is leaning toward ${topMain}.`,
-    `${n} likes the look of ${topMain}.`,
-    `${n}'s pick is ${topMain}.`,
+  if (topMain) return variant(key, [
+    `I'm ready to eat!`,
+    `Thoughts on ${topMain}?`,
+    `That sounds tasty!`,
   ], partyIndex);
-  return variant(`${n}:no-main`, [
-    `${n} hasn't found a main yet.`,
-    `${n} is still weighing the menu.`,
+  return variant(key, [
+    `Still looking for my pick.`,
+    `I haven't picked yet.`,
   ], partyIndex);
 }
 
 export function voteBubble(user: UserLite, yesNames: string[]): string {
-  const n = first(user.name);
-  if (yesNames.length === 0) return variant(`${n}:pass`, [
-    `${n} will pass on the shared dishes.`,
-    `${n} isn't feeling the shared options this time.`,
-    `${n} is sitting out the shared plates.`,
+  const key = `${first(user.name)}:${yesNames.join(":")}`;
+  if (yesNames.length === 0) return variant(key, [
+    `I'll pass on this.`,
+    `Not for me!`,
+    `Maybe something else?`,
   ]);
-  const picks = listNames(yesNames);
-  return variant(`${n}:${picks}`, [
-    `${n} gives ${picks} the green light.`,
-    `${picks} gets ${n}'s vote.`,
-    `${n} is happy to share ${picks}.`,
-    `${n} would put ${picks} in the middle.`,
-    `${n} is backing ${picks} for the table.`,
+  return variant(key, [
+    `I'm down!`,
+    `Yum!`,
+    `Sounds good!`,
   ]);
 }
 
-export function summaryTemplate(shared: string[], mainsCount: number): string {
-  const dishes = listNames(shared);
-  const key = `${dishes}:${mainsCount}`;
-  if (shared.length === 0) return variant(key, [
-    `${mainsCount} mains are ready. Check your phones to choose yours!`,
-    `Your mains are lined up; take a look at your phones to pick.`,
-    `No shared plates made the cut, but your main is ready to choose on your phone.`,
-  ]);
-  return variant(key, [
-    `${dishes} for the middle, plus ${mainsCount} mains. Check your phones to choose yours!`,
-    `The table's sharing ${dishes}; your mains are ready on your phones.`,
-    `Sharing ${dishes}, with a main for everyone. Take a look at your phones!`,
-    `${dishes} are headed to the table. Choose your main on your phone!`,
-  ]);
+export function summaryTemplate(shared: string[], _mainsCount: number): string {
+  if (shared.length === 0) return `Pick your main on your phone!`;
+  return `We picked our shared plates. Pick your main on your phone!`;
 }
 
 /**
@@ -146,13 +156,13 @@ export function dropBubbleText(item: MenuItemLite, failed: { user: UserLite; saf
   }
   // Lead with allergies (exact claims); mention diets only when no allergy is involved. Max 2 names.
   const who = (parts.length ? parts : diets).slice(0, 2);
-  if (who.length === 0) return clip(`No ${item.name} for the table this time.`);
+  if (who.length === 0) return clip(`No ${item.name} this time.`);
   const list = who.length === 1 ? who[0] : `${who.slice(0, -1).join(", ")} and ${who.at(-1)}`;
-  return clip(`${list}, so no ${item.name} for the table.`);
+  return clip(`${list}.`);
 }
 
 export const topUpBubble = (item: MenuItemLite) => clip(variant(item.name, [
-  `${item.name} works for everyone; let's add it to the mix.`,
-  `The whole table can share ${item.name}.`,
-  `${item.name} is a good fit for everyone at the table.`,
+  `Thoughts on ${item.name}?`,
+  `Should we share ${item.name}?`,
+  `${item.name}?`,
 ]));

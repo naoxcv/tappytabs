@@ -31,7 +31,7 @@ export const list = query({
 });
 
 // Exactly the menuItems fields minus restaurantId: the normalizer Actor's output contract.
-const normalizedItem = z.object({
+export const normalizedItem = z.object({
   name: z.string().min(1),
   category: z.string(),
   cuisine: z.string().optional(),

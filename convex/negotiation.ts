@@ -6,21 +6,21 @@ import { components, internal } from "./_generated/api";
 import type { Id } from "./_generated/dataModel";
 import { internalAction, internalMutation, internalQuery, type MutationCtx } from "./_generated/server";
 import { TIMING, type Hunger } from "./shared/enums";
-import { agentDraftV, agentVoteV, planV, type AgentDraft, type AgentVote, type MenuItemLite, type Plan, type UserLite } from "./shared/types";
+import { agentDraftV, planV, type AgentDraft, type AgentVote, type MenuItemLite, type Plan, type UserLite } from "./shared/types";
 import { membersOf, menuOf, usersOf } from "./lib/guards";
 import { bubbleDisplayDurationMs, postBubble } from "./messages";
-import { dropBubbleText, openingBubble, splitBubbleText, summaryTemplate } from "./agents/bubbles";
+import { splitBubbleText, summaryTemplate } from "./agents/bubbles";
 import { fallbackDraft, fallbackVote } from "./agents/ranking";
 import { buildPlan, poolForParty, sharedTarget, tally } from "./agents/rules";
 import { isSafeFor, safeSet } from "./agents/safety";
+import { fallbackConversation } from "./agents/prompts/summaryBubble";
 
 export const workflow = new WorkflowManager(components.workflow, {
   workpoolOptions: { maxParallelism: 10 },
 });
 
-// Bound the transcript so 2.2 s bubble pacing does not dominate the live demo.
-// Keep one slot for the plan summary and, during pooling, one slot for a vote reaction.
-const MAX_NEGOTIATION_BUBBLES = 8;
+// Keep room for a fuller exchange: opening + up to 9 transcript bubbles + split summary.
+const MAX_NEGOTIATION_BUBBLES = 12;
 
 async function bubbleCount(ctx: MutationCtx, partyId: Id<"parties">): Promise<number> {
   return (await ctx.db.query("messages")
@@ -42,7 +42,7 @@ async function postBubbleIfRoom(
 
 /** Called from parties.setHunger once every diner has chosen. */
 export async function startNegotiation(ctx: MutationCtx, partyId: Id<"parties">, epoch: number) {
-  await postBubble(ctx, partyId, undefined, "The agents are checking the menu for options that fit the table.");
+  await postBubble(ctx, partyId, undefined, "Let's look at the menu.");
   await workflow.start(ctx, internal.negotiation.negotiate, { partyId, epoch });
   await ctx.scheduler.runAfter(TIMING.rescueAfterMs, internal.negotiation.rescue, { partyId, epoch });
 }
@@ -57,9 +57,8 @@ export const negotiate = workflow
     const { pooled, live } = await step.runMutation(internal.negotiation.poolAndPost, { partyId, epoch, drafts });
     if (!live) return;
     const votes: AgentVote[] = await Promise.all(
-      userIds.map((userId) => step.runAction(internal.agents.steps.voteStep, { partyId, userId, pooled, drafts })),
+      userIds.map((userId) => step.runAction(internal.agents.steps.voteStep, { partyId, userId, pooled })),
     );
-    await step.runMutation(internal.negotiation.postVotes, { partyId, epoch, votes });
     const plan: Plan = await step.runAction(internal.agents.steps.settleStep, { partyId, pooled, drafts, votes });
     await step.runMutation(internal.negotiation.commit, { partyId, epoch, drafts, plan });
   });
@@ -104,40 +103,16 @@ async function isLive(ctx: MutationCtx, partyId: Id<"parties">, epoch: number) {
   return !!p && p.epoch === epoch && p.status === "negotiating" && !p.committedAt;
 }
 
-/** Keep every diner's opening bubble, then prioritize exact safety drops within the transcript budget. */
+/** Pool options after all diners draft. The public conversation is written after votes settle. */
 export const poolAndPost = internalMutation({
   args: { partyId: v.id("parties"), epoch: v.number(), drafts: v.array(agentDraftV) },
   handler: async (ctx, { partyId, epoch, drafts }): Promise<{ pooled: string[]; live: boolean }> => {
     if (!(await isLive(ctx, partyId, epoch))) return { pooled: [], live: false };
     const party = (await ctx.db.get(partyId))!;
-    const users = await usersOf(ctx, await membersOf(ctx, partyId));
     const menu = await menuOf(ctx, party.restaurantId);
-    // Openings fit for the supported maximum party size of six, leaving room for the plan summary.
-    for (const [index, d] of drafts.entries()) {
-      const user = users.find((u) => u._id === d.userId);
-      const mainName = menu.find((m) => m._id === d.mains[0]?.itemId)?.name;
-      const sharedName = menu.find((m) => m._id === d.sharedProposals[0])?.name;
-      const text = user ? openingBubble(user, mainName, sharedName, index) : d.bubble;
-      await postBubbleIfRoom(ctx, partyId, d.userId as Id<"users">, text, drafts.length - index - 1 + 1);
-    }
-    const { pooled, drops } = poolForParty(drafts, menu, users);
-    // Reserve two slots for a potentially split summary. Safety explanations take priority
-    // over vote and restaurant top-up narration; the selected plan still includes top-ups.
-    for (const d of drops) {
-      if (!(await postBubbleIfRoom(ctx, partyId, undefined, dropBubbleText(d.item, d.failed), 2))) break;
-    }
+    const users = await usersOf(ctx, await membersOf(ctx, partyId));
+    const { pooled } = poolForParty(drafts, menu, users);
     return { pooled, live: true };
-  },
-});
-
-export const postVotes = internalMutation({
-  args: { partyId: v.id("parties"), epoch: v.number(), votes: v.array(agentVoteV) },
-  handler: async (ctx, { partyId, epoch, votes }) => {
-    if (!(await isLive(ctx, partyId, epoch))) return;
-    // Keep up to two slots for a summary that needs splitting.
-    for (const vote of votes) {
-      if (!(await postBubbleIfRoom(ctx, partyId, vote.userId as Id<"users">, vote.bubble, 2))) break;
-    }
   },
 });
 
@@ -180,6 +155,15 @@ export const commit = internalMutation({
     }
     const sharedNames = plan.shared.map((s) => byId.get(s.itemId)?.name ?? "a dish");
     let summaryText = plan.summaryBubble;
+    for (const message of plan.conversation) {
+      if (!(await postBubbleIfRoom(
+        ctx,
+        partyId,
+        message.speakerId ? message.speakerId as Id<"users"> : undefined,
+        message.text,
+        2,
+      ))) break;
+    }
     let summaryPosted = await postBubbleIfRoom(ctx, partyId, undefined, summaryText);
     if (summaryPosted === null) {
       summaryText = summaryTemplate(sharedNames, plan.mains.length);
@@ -216,7 +200,21 @@ export const rescue = internalAction({
     const chosen = tally(pooled, votes, c.menu, sharedTarget(c.users.map((u) => c.hungers[u._id] ?? "normal")));
     const partial = buildPlan(drafts, chosen, c.menu, c.users);
     const names = partial.shared.map((s) => c.menu.find((m) => m._id === s.itemId)?.name ?? "a dish");
-    const plan: Plan = { ...partial, summaryBubble: summaryTemplate(names, partial.mains.length), fallback: true };
+    const pooling = poolForParty(drafts, c.menu, c.users);
+    const transcriptContext = {
+      styleSeed: partyId,
+      restaurant: c.restaurantName,
+      users: c.users,
+      menu: c.menu,
+      drafts: drafts.map(({ userId, sharedProposals }) => ({ userId, sharedProposals })),
+      votes,
+      pooled,
+      plan: partial,
+      drops: pooling.drops,
+      topUps: pooling.topUps,
+    };
+    const conversation = fallbackConversation(transcriptContext, summaryTemplate(names, partial.mains.length));
+    const plan: Plan = { ...partial, ...conversation, fallback: true };
     await ctx.runMutation(internal.negotiation.commit, { partyId, epoch, drafts, plan });
   },
 });

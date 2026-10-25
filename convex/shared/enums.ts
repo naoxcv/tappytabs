@@ -45,7 +45,7 @@ export const TIMING = {
   stepTimeoutMs: 8_000,
   rescueAfterMs: 30_000,
   ingestTimeoutMs: 60_000,
-  bubbleGapMs: 2_500,
+  bubbleGapMs: 1_800,
   bubbleBaseHoldMs: 1_200,
   bubbleMsPerChar: 15,
   firstBubbleDelayMs: 250,
