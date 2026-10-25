@@ -595,6 +595,7 @@
 			baseConfigurationReference = EF160CA36220A4D50281D2D7 /* TappyTabs.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = TappyTabs/Resources/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -611,6 +612,7 @@
 			baseConfigurationReference = EF160CA36220A4D50281D2D7 /* TappyTabs.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = TappyTabs/Resources/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (

@@ -12,6 +12,10 @@ struct TapInView: View {
     @State private var promoteQR = false
     @State private var message: String?
     @State private var joiningByQR = false
+    @State private var avatarId = "avatar_1"
+    @State private var departing = false
+    @State private var departurePartyId: String?
+    @State private var simulatedPartyId: String?
     @State private var watches: [String: AnyCancellable] = [:]
     @State private var tableLabels: [String: String] = [:]
 
@@ -25,7 +29,9 @@ struct TapInView: View {
                 Image(systemName: proximity.state == .tapped ? "checkmark.circle.fill" : "iphone.radiowaves.left.and.right")
                     .font(.system(size: 80)).foregroundStyle(Theme.accent)
                     .symbolEffect(.bounce, value: proximity.state == .tapped)
+                    .opacity(departing ? 0 : 1)
             }
+            .anchorPreference(key: TapIconBoundsKey.self, value: .bounds) { $0 }
             Text(title).font(AppTypography.style(.title2, weight: .bold)).multilineTextAlignment(.center)
             if proximity.inRangeTableCount > 0 {
                 Text("\(proximity.inRangeTableCount) nearby table\(proximity.inRangeTableCount == 1 ? "" : "s") in UWB range")
@@ -40,7 +46,7 @@ struct TapInView: View {
                             Button(tableLabels[table.partyId] ?? "Table \(table.partyId.suffix(6))") {
                                 proximity.focus(on: table.partyId)
                             }
-                            .buttonStyle(SecondaryButtonStyle())
+                            .buttonStyle(.bordered)
                         }
                     }
                 }
@@ -48,29 +54,46 @@ struct TapInView: View {
             if let message { Text(message).foregroundStyle(Theme.accent) }
             if joiningByQR { ProgressView("Joining table…") }
             if !proximity.supportsTap { Text("This phone can't tap, use QR").foregroundStyle(Theme.accent) }
-            if app.tapSearchPaused || promoteQR || proximity.state == .tapped {
-                Button(app.tapSearchPaused ? "Search for tables" : "Restart tap search") {
-                    if app.tapSearchPaused { app.resumeTapSearch() }
+            if (app.tapSearchPaused && simulatedPartyId == nil) || promoteQR || proximity.state == .tapped {
+                Button(app.tapSearchPaused && simulatedPartyId == nil ? "Search for tables" : "Restart tap search") {
+                    if app.tapSearchPaused && simulatedPartyId == nil { app.resumeTapSearch() }
                     else { app.leaveTable() }
                 }
-                    .buttonStyle(SecondaryButtonStyle())
+                    .buttonStyle(.bordered)
                     .accessibilityIdentifier("restartTapSearch")
             }
             Spacer()
             if promoteQR || !proximity.supportsTap {
                 Button("Scan QR") { showScanner = true }.buttonStyle(BigButtonStyle()).disabled(joiningByQR)
             } else {
-                Button("Scan QR instead") { showScanner = true }.buttonStyle(SecondaryButtonStyle()).disabled(joiningByQR)
+                Button("Scan QR instead") { showScanner = true }.disabled(joiningByQR)
             }
             if let mock = app.mock {
                 Button("Simulate tap (mock)") { Task { await simulatedJoin(mock) } }.font(AppTypography.footnote)
             }
         }
         .padding()
+        .overlayPreferenceValue(TapIconBoundsKey.self) { source in
+            GeometryReader { proxy in
+                if departing {
+                    let rect = source.map { proxy[$0] }
+                        ?? CGRect(x: proxy.size.width / 2 - 100, y: proxy.size.height * 0.3, width: 200, height: 200)
+                    AvatarFlight(
+                        avatarId: avatarId,
+                        from: CGPoint(x: rect.midX, y: rect.midY),
+                        to: CGPoint(x: rect.midX, y: -104),
+                        rotationDegrees: -90
+                    ) {
+                        finishDeparture()
+                    }
+                }
+            }
+            .allowsHitTesting(false)
+        }
         .sheet(isPresented: $showScanner) {
             QRScannerView { code in showScanner = false; Task { await joinByCode(code) } }.ignoresSafeArea()
         }
-        .task(id: app.tapAttemptID) { start() }
+        .task(id: app.tapAttemptID) { await loadAvatar(); start() }
         .task(id: app.tapAttemptID) {
             try? await Task.sleep(for: .seconds(5))
             if !Task.isCancelled && (proximity.state == .searching || proximity.state == .preparing) { promoteQR = true }
@@ -80,7 +103,7 @@ struct TapInView: View {
     }
 
     private var title: String {
-        if app.tapSearchPaused { return "You left the table" }
+        if app.tapSearchPaused && simulatedPartyId == nil { return "You left the table" }
         return switch proximity.state {
         case .idle, .searching, .preparing, .connected: "Hold your phone to the restaurant phone"
         case .tapped: "Tapped! Joining…"
@@ -121,7 +144,39 @@ struct TapInView: View {
             guard app.mode == .diner, app.userId == userId, app.backend === backend, app.tapAttemptID == attemptID,
                   app.partyId == nil, !joiningByQR else { return }
             if let party { tableLabels[partyId] = "Table \(party.joinCode)" }
-            if party?.member(userId) != nil { proximity.stop(); app.partyId = partyId }
+            if party?.member(userId) != nil {
+                if proximity.tappedPartyId == partyId || simulatedPartyId == partyId {
+                    beginDeparture(to: partyId)
+                } else {
+                    proximity.stop()
+                    app.partyId = partyId
+                }
+            }
+        }
+    }
+
+    private func loadAvatar() async {
+        guard let profile = try? await app.backend.me(deviceId: app.deviceId) else { return }
+        avatarId = profile.avatarId
+    }
+
+    private func beginDeparture(to partyId: String) {
+        guard !departing, departurePartyId != partyId else { return }
+        departurePartyId = partyId
+        app.tapAnimationInProgress = true
+        departing = true
+    }
+
+    private func finishDeparture() {
+        guard let partyId = departurePartyId, app.mode == .diner, app.partyId == nil,
+              let userId = app.userId else { return }
+        Task {
+            try? await app.backend.completeTapAnimation(partyId: partyId, userId: userId, deviceId: app.deviceId)
+            guard app.mode == .diner, app.partyId == nil, departurePartyId == partyId else { return }
+            proximity.stop()
+            app.tapAnimationInProgress = false
+            app.partyId = partyId
+            app.tapSearchPaused = false
         }
     }
 
@@ -152,10 +207,12 @@ struct TapInView: View {
 
     private func simulatedJoin(_ mock: MockBackend) async {
         guard let userId = app.userId else { return }
+        simulatedPartyId = mock.ids.partyId
+        app.tapSearchPaused = true
         _ = try? await mock.createParty(restaurantId: MockBackend.restaurantId, size: 4, hostDeviceId: mock.ids.hostDeviceId, autoMode: false)
         _ = try? await mock.join(partyId: nil, joinCode: nil, userId: userId, via: .sim, hostDeviceId: mock.ids.hostDeviceId, deviceId: nil)
         for _ in 0..<3 { mock.simulateTap() }
         proximity.stop()
-        app.partyId = mock.ids.partyId
+        beginDeparture(to: mock.ids.partyId)
     }
 }

@@ -24,7 +24,7 @@ struct DinerFlow: View {
                     VStack(spacing: 12) {
                         if let resumeError {
                             Text(resumeError).foregroundStyle(Theme.accent)
-                            Button("Retry") { watchForExistingTable() }.buttonStyle(SecondaryButtonStyle())
+                            Button("Retry") { watchForExistingTable() }.buttonStyle(.bordered)
                         } else {
                             ProgressView("Checking your table…")
                         }
@@ -73,9 +73,11 @@ struct DinerFlow: View {
                 }
             },
             receiveValue: { hosted in
-                guard app.mode == .diner, app.userId == userId, app.backend === backend else { return }
+                guard app.mode == .diner, app.userId == userId, app.backend === backend,
+                      !app.tapSearchPaused else { return }
                 checkedUserId = userId
-                if let hosted, app.partyId == nil, !app.tapSearchPaused {
+                let tapInProgress = app.tapAnimationInProgress || Proximity.shared.state == .tapped
+                if let hosted, app.partyId == nil, !app.tapSearchPaused, !tapInProgress {
                     app.partyId = hosted.partyId
                     resumeWatch = nil
                 }
@@ -93,7 +95,7 @@ struct DinerRootView: View {
         Group {
             switch store.party?.status {
             case nil: ProgressView("Loading your table…")
-            case .checkin: WaitingView(title: "You're in!", subtitle: "Waiting for everyone to tap in", store: store, avatarSize: 68) { _ in true }
+            case .checkin: WaitingView(title: "You're in!", subtitle: "Waiting for everyone to tap in", store: store) { _ in true }
             case .hunger:
                 if store.me?.hunger == nil { HungerView(store: store) }
                 else { WaitingView(title: "Waiting for the table", subtitle: "Who's chosen so far", store: store) { $0.hunger != nil } }
@@ -140,7 +142,6 @@ struct WaitingView: View {
     let title: String
     let subtitle: String
     let store: PartyStore
-    var avatarSize: CGFloat = 44
     let done: (Member) -> Bool
 
     var body: some View {
@@ -148,7 +149,7 @@ struct WaitingView: View {
             Spacer()
             Text(title).font(AppTypography.style(.largeTitle, weight: .bold))
             Text(subtitle).foregroundStyle(Theme.accent)
-            MemberTicks(members: store.party?.members ?? [], done: done, avatarSize: avatarSize)
+            MemberTicks(members: store.party?.members ?? [], done: done)
             Spacer()
         }
         .padding()

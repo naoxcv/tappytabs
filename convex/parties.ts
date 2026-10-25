@@ -120,6 +120,7 @@ export const join = mutation({
     await ctx.db.insert("tapClaims", { userId: a.userId, partyId: party._id, expiresAt: Date.now() + 300_000 });
     await ctx.db.insert("members", {
       partyId: party._id, userId: a.userId, joinedVia: a.via, joinedAt: Date.now(),
+      tapAnimationComplete: a.via === "qr",
       ...(party.autoMode ? { hunger: "normal" as const } : {}),
     });
     if (members.length + 1 === party.size) {
@@ -131,6 +132,19 @@ export const join = mutation({
       }
     }
     return { result: "joined", partyId: party._id };
+  },
+});
+
+/** The diner calls this after its tap-in avatar has completely exited its screen. */
+export const completeTapAnimation = mutation({
+  args: { partyId: v.id("parties"), userId: v.id("users"), deviceId: v.string() },
+  handler: async (ctx, { partyId, userId, deviceId }): Promise<void> => {
+    await requireUser(ctx, userId, deviceId);
+    await getParty(ctx, partyId);
+    const member = await requireMember(ctx, partyId, userId);
+    if (!member.tapAnimationComplete) {
+      await ctx.db.patch(member._id, { tapAnimationComplete: true });
+    }
   },
 });
 
@@ -212,6 +226,7 @@ export const current = query({
           hunger: m.hunger ?? null,
           picked: !!m.pickedItemId,
           confirmed: !!m.confirmedAt,
+          tapAnimationComplete: m.tapAnimationComplete ?? m.joinedVia === "qr",
         };
       }),
     );

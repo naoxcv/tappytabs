@@ -169,6 +169,7 @@ final class LiveBackend: Backend {
             "isDrink": item.isDrink, "shareable": item.shareable, "menuOrder": item.menuOrder, "tagStatus": item.tagStatus,
         ]
         if let cuisine = item.cuisine { args["cuisine"] = cuisine }
+        if let priceVerified = item.priceVerified { args["priceVerified"] = priceVerified }
         if let imageUrl = item.imageUrl { args["imageUrl"] = imageUrl }
         return args
     }
@@ -225,6 +226,10 @@ final class LiveBackend: Backend {
 
     func leave(partyId: String, userId: String, deviceId: String) async throws {
         try await mutate(API.partiesLeave, ["partyId": partyId, "userId": userId, "deviceId": deviceId])
+    }
+
+    func completeTapAnimation(partyId: String, userId: String, deviceId: String) async throws {
+        try await mutate(API.partiesCompleteTapAnimation, ["partyId": partyId, "userId": userId, "deviceId": deviceId])
     }
 
     func setHunger(partyId: String, userId: String, deviceId: String, hunger: Hunger) async throws {
