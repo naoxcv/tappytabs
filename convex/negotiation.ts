@@ -8,7 +8,7 @@ import { internalAction, internalMutation, internalQuery, type MutationCtx } fro
 import { TIMING, type Hunger } from "./shared/enums";
 import { agentDraftV, agentVoteV, planV, type AgentDraft, type AgentVote, type MenuItemLite, type Plan, type UserLite } from "./shared/types";
 import { membersOf, menuOf, usersOf } from "./lib/guards";
-import { postBubble } from "./messages";
+import { bubbleDisplayDurationMs, postBubble } from "./messages";
 import { dropBubbleText, openingBubble, splitBubbleText, summaryTemplate } from "./agents/bubbles";
 import { fallbackDraft, fallbackVote } from "./agents/ranking";
 import { buildPlan, poolForParty, sharedTarget, tally } from "./agents/rules";
@@ -179,17 +179,24 @@ export const commit = internalMutation({
       });
     }
     const sharedNames = plan.shared.map((s) => byId.get(s.itemId)?.name ?? "a dish");
-    let summaryPosted = await postBubbleIfRoom(ctx, partyId, undefined, plan.summaryBubble);
+    let summaryText = plan.summaryBubble;
+    let summaryPosted = await postBubbleIfRoom(ctx, partyId, undefined, summaryText);
     if (summaryPosted === null) {
-      summaryPosted = await postBubbleIfRoom(ctx, partyId, undefined, summaryTemplate(sharedNames, plan.mains.length));
+      summaryText = summaryTemplate(sharedNames, plan.mains.length);
+      summaryPosted = await postBubbleIfRoom(ctx, partyId, undefined, summaryText);
     }
     if (summaryPosted === null) {
-      summaryPosted = await postBubbleIfRoom(ctx, partyId, undefined, "Your mains are ready. Check your phones to choose yours!");
+      summaryText = "Your mains are ready. Check your phones to choose yours!";
+      summaryPosted = await postBubbleIfRoom(ctx, partyId, undefined, summaryText);
     }
     await ctx.db.patch(partyId, { committedAt: Date.now() });
     // Let the final summary bubble finish before opening the pick screen.
+    const finalSummaryBody = splitBubbleText(summaryText).at(-1) ?? summaryText;
     await ctx.scheduler.runAt(
-      (summaryPosted ?? Date.now()) + TIMING.bubbleEndHoldMs,
+      (summaryPosted ?? Date.now()) + Math.max(
+        TIMING.bubbleEndHoldMs,
+        bubbleDisplayDurationMs(finalSummaryBody),
+      ),
       internal.parties.advance,
       { partyId, epoch },
     );
