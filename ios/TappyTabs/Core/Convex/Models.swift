@@ -207,6 +207,7 @@ struct RestaurantMenuItem: Codable, Equatable, Identifiable {
     var tags: [String]
     var description: String
     var priceCents: Double
+    var priceVerified: Bool?
     var allergens: [[String: String]]
     var diet: [String]
     var spice: Double
@@ -239,6 +240,12 @@ struct RestaurantPublishResult: Decodable {
 
 struct RestaurantRef: Decodable, Equatable, Identifiable {
     let id: String
+    let name: String
+}
+
+/// onboarding:getOwned returns the stored restaurant document, whose Convex id is `_id`.
+struct OwnedRestaurantRecord: Decodable {
+    let _id: String
     let name: String
 }
 

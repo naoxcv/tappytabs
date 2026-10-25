@@ -113,6 +113,7 @@ final class MockBackend: Backend {
 
     func me(deviceId: String) async throws -> UserProfile? { nil }
     func restaurants() async throws -> [RestaurantRef] { [RestaurantRef(id: Self.restaurantId, name: menu.name)] }
+    func ownedRestaurant(deviceId: String) async throws -> RestaurantRef? { RestaurantRef(id: Self.restaurantId, name: menu.name) }
     func hosted(hostDeviceId: String) async throws -> HostedParty? { partySubject.value.map { HostedParty(partyId: $0.id, status: $0.status) } }
     func forUser(userId: String) async throws -> HostedParty? {
         guard let party = partySubject.value, party.status != .placed, party.member(userId) != nil else { return nil }
@@ -136,6 +137,7 @@ final class MockBackend: Backend {
         RestaurantAccount(_id: "mock-account", deviceId: deviceId, displayName: displayName, restaurantId: Self.restaurantId, onboardingId: nil)
     }
     func createRestaurantDraft(deviceId: String, name: String, address: String) async throws -> String { "mock-onboarding" }
+    func skipRestaurantOnboarding(deviceId: String) async throws {}
     func restaurantOnboardingStatus(deviceId: String, onboardingId: String) -> AnyPublisher<RestaurantOnboarding?, TTError> {
         onMain(Just(nil).setFailureType(to: TTError.self))
     }

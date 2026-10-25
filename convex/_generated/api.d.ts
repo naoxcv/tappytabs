@@ -25,6 +25,7 @@ import type * as agents_rules from "../agents/rules.js";
 import type * as agents_safety from "../agents/safety.js";
 import type * as agents_steps from "../agents/steps.js";
 import type * as agents_substitute from "../agents/substitute.js";
+import type * as agents_taste from "../agents/taste.js";
 import type * as e2e from "../e2e.js";
 import type * as lib_guards from "../lib/guards.js";
 import type * as menu from "../menu.js";
@@ -67,6 +68,7 @@ declare const fullApi: ApiFromModules<{
   "agents/safety": typeof agents_safety;
   "agents/steps": typeof agents_steps;
   "agents/substitute": typeof agents_substitute;
+  "agents/taste": typeof agents_taste;
   e2e: typeof e2e;
   "lib/guards": typeof lib_guards;
   menu: typeof menu;

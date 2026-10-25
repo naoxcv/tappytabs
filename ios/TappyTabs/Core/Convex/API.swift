@@ -13,6 +13,7 @@ enum API {
     static let restaurantAccountsCreateOrGet = "onboarding:createOrGet"
     static let restaurantOnboardingMe = "onboarding:me"
     static let restaurantCreateDraft = "onboarding:createDraft"
+    static let restaurantSkipToDemo = "onboarding:skipToDemo"
     static let restaurantGetOwned = "onboarding:getOwned"
     static let restaurantSubmitDetails = "onboarding:submitDetails"
     static let restaurantGetStatus = "onboarding:getStatus"

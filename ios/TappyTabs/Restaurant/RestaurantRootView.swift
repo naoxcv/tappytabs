@@ -6,6 +6,7 @@ struct RestaurantFlow: View {
     @Environment(AppModel.self) private var app
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @AppStorage("tt.debugOverlay") private var debugOverlay = false
+    @State private var restaurantReady = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -13,13 +14,15 @@ struct RestaurantFlow: View {
             Group {
                 if let partyId = app.partyId {
                     PartyScope(partyId: partyId, userId: nil) { store in RestaurantRootView(store: store) }
-                } else if app.backendKind == .live {
-                    RestaurantOnboardingView()
+                } else if app.backendKind == .live && !restaurantReady {
+                    RestaurantOnboardingView {
+                        restaurantReady = true
+                    }
                 } else {
                     PartySetupView()
                 }
             }
-            .id(app.partyId == nil ? "setup" : "party")
+            .id(app.partyId == nil ? (restaurantReady ? "party-setup" : "setup") : "party")
             .transition(AppPageTransition.transition(reduceMotion: reduceMotion))
             .animation(AppPageTransition.animation(reduceMotion: reduceMotion), value: app.partyId)
             .frame(maxHeight: .infinity)
@@ -42,6 +45,7 @@ struct RestaurantFlow: View {
 /// so killing the app resumes at the last completed stage.
 struct RestaurantOnboardingView: View {
     @Environment(AppModel.self) private var app
+    private let onReady: () -> Void
     @State private var name = ""
     @State private var address = ""
     @State private var sourceURL = ""
@@ -52,14 +56,31 @@ struct RestaurantOnboardingView: View {
     @State private var draft: RestaurantMenuDraft?
     @State private var loading = true
     @State private var saving = false
+    @State private var skipping = false
     @State private var error: String?
     @State private var statusSub: AnyCancellable?
+    @State private var showingResetConfirmation = false
+    @State private var lastDraftLoadKey: String?
+    @State private var draftLoadInFlight = false
 
     private enum Acquisition: Hashable { case url, search }
+
+    init(onReady: @escaping () -> Void = {}) {
+        self.onReady = onReady
+    }
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 18) {
+                HStack {
+                    Button { app.switchMode() } label: {
+                        Label("Back", systemImage: "chevron.left")
+                    }
+                    .buttonStyle(.bordered)
+                    Spacer()
+                    Button("Start over") { showingResetConfirmation = true }
+                        .buttonStyle(.bordered)
+                }
                 Text("Set up your restaurant").font(AppTypography.style(.largeTitle, weight: .bold))
                 Text("This device owns one restaurant account. You can edit every detail before publishing.")
                     .foregroundStyle(Theme.accent)
@@ -69,8 +90,14 @@ struct RestaurantOnboardingView: View {
             }
             .padding()
         }
-        .task { await loadAccount() }
+        .task(id: app.deviceId) { await loadAccount() }
         .onDisappear { statusSub?.cancel() }
+        .confirmationDialog("Start over with a fresh restaurant?", isPresented: $showingResetConfirmation, titleVisibility: .visible) {
+            Button("Start over", role: .destructive) { startFreshRestaurant() }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("Your previous imported menu will remain saved, but this device will use a new restaurant identity and start at menu import.")
+        }
     }
 
     @ViewBuilder private var content: some View {
@@ -85,6 +112,14 @@ struct RestaurantOnboardingView: View {
             if acquisition == .search { Text("This may take several minutes. You’ll choose a result before reviewing its menu.").font(AppTypography.footnote).foregroundStyle(Theme.accent) }
             Button(acquisition == .url ? "Import menu" : "Find it automatically") { Task { await submitDetails() } }
                 .buttonStyle(.borderedProminent).disabled((acquisition == .url ? sourceURL : name).trimmed.isEmpty || (acquisition == .search && address.trimmed.isEmpty) || saving)
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Just want to demo the ordering flow?")
+                    .font(AppTypography.footnote)
+                    .foregroundStyle(Theme.accent)
+                Button(skipping ? "Preparing demo menu…" : "Skip setup — use demo menu") { Task { await skipToDemo() } }
+                    .buttonStyle(.bordered)
+                    .disabled(saving || skipping)
+            }
         } else if let onboarding, ["awaiting_source", "created", "details_submitted", "scraping_url", "scraping_search", "finding_restaurant"].contains(onboarding.status) {
             ProgressView(onboarding.status == "scraping_search" ? "Searching menus…" : "Importing menu…")
         } else if let onboarding, ["search_results_ready", "candidates_ready"].contains(onboarding.status) {
@@ -111,7 +146,6 @@ struct RestaurantOnboardingView: View {
             MenuDraftEditor(draft: draft, saving: saving) { items in Task { await update(items) } } publish: { items in Task { await publish(items) } }
         } else {
             ProgressView(onboarding?.status == "normalizing" ? "Normalizing menu…" : "Preparing review…")
-                .task { await loadDraftIfNeeded() }
         }
     }
 
@@ -122,10 +156,21 @@ struct RestaurantOnboardingView: View {
             if let id = account.onboardingId {
                 onboardingId = id
                 subscribe(id)
-                name = onboarding?.submittedName ?? ""
-                address = onboarding?.submittedAddress ?? ""
             }
         } catch let caught { self.error = TTError.from(caught).userMessage }
+    }
+
+    private func startFreshRestaurant() {
+        statusSub?.cancel()
+        onboardingId = nil
+        onboarding = nil
+        draft = nil
+        showSourceEntry = false
+        sourceURL = ""
+        name = ""
+        address = ""
+        error = nil
+        app.deviceId = UUID().uuidString
     }
 
     private func submitDetails() async {
@@ -142,12 +187,29 @@ struct RestaurantOnboardingView: View {
         } catch let caught { self.error = TTError.from(caught).userMessage }
     }
 
+    private func skipToDemo() async {
+        skipping = true; defer { skipping = false }
+        do {
+            try await app.backend.skipRestaurantOnboarding(deviceId: app.deviceId)
+            onReady()
+        } catch let caught { self.error = TTError.from(caught).userMessage }
+    }
+
     private func subscribe(_ id: String) {
         statusSub?.cancel()
         statusSub = app.backend.restaurantOnboardingStatus(deviceId: app.deviceId, onboardingId: id)
             .sink(receiveCompletion: { completion in if case .failure(let e) = completion { self.error = e.userMessage } }, receiveValue: { value in
                 onboarding = value
-                if let value, ["review_required", "manual_review", "normalization_failed"].contains(value.status) { Task { await loadDraftIfNeeded() } }
+                if value?.status == "ready" {
+                    onReady()
+                    return
+                }
+                if let value, ["review_required", "manual_review", "normalization_failed"].contains(value.status) {
+                    let loadKey = "\(id):\(value.status)"
+                    guard lastDraftLoadKey != loadKey else { return }
+                    lastDraftLoadKey = loadKey
+                    Task { await loadDraftIfNeeded() }
+                }
             })
     }
 
@@ -161,7 +223,9 @@ struct RestaurantOnboardingView: View {
     private func resetToSourceEntry() { acquisition = .url; sourceURL = ""; showSourceEntry = true; draft = nil; error = nil }
 
     private func loadDraftIfNeeded() async {
-        guard let onboardingId else { return }
+        guard let onboardingId, !draftLoadInFlight else { return }
+        draftLoadInFlight = true
+        defer { draftLoadInFlight = false }
         do { draft = try await app.backend.restaurantDraft(deviceId: app.deviceId, onboardingId: onboardingId) }
         catch let caught { self.error = TTError.from(caught).userMessage }
     }
@@ -200,7 +264,7 @@ private struct MenuDraftEditor: View {
                     TextField("Item name", text: $item.name).textFieldStyle(.roundedBorder)
                     TextField("Description", text: $item.description).textFieldStyle(.roundedBorder)
                     HStack {
-                        TextField("Price cents", value: $item.priceCents, format: .number).textFieldStyle(.roundedBorder)
+                        TextField(item.priceVerified == false ? "Price unavailable — enter cents" : "Price cents", value: $item.priceCents, format: .number).textFieldStyle(.roundedBorder)
                         Text(item.category).foregroundStyle(Theme.accent)
                     }
                 }
@@ -208,7 +272,13 @@ private struct MenuDraftEditor: View {
             }
             HStack {
                 Button("Save edits") { onSave(items) }.buttonStyle(.bordered)
-                Button("Publish menu") { publish(items) }.buttonStyle(.borderedProminent).disabled(items.isEmpty || saving)
+                Button { publish(items) } label: {
+                    Text("Publish menu")
+                        .foregroundStyle(Theme.accentForeground)
+                }
+                    .buttonStyle(.borderedProminent)
+                    .tint(Theme.accent)
+                    .disabled(items.isEmpty || saving)
             }
         }
     }

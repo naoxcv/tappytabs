@@ -18,6 +18,7 @@ protocol Backend: AnyObject {
     // One-shot reads
     func me(deviceId: String) async throws -> UserProfile?
     func restaurants() async throws -> [RestaurantRef]
+    func ownedRestaurant(deviceId: String) async throws -> RestaurantRef?
     func hosted(hostDeviceId: String) async throws -> HostedParty?
     func forUser(userId: String) async throws -> HostedParty?
 
@@ -29,6 +30,7 @@ protocol Backend: AnyObject {
     // Restaurant onboarding
     func restaurantAccount(deviceId: String, displayName: String) async throws -> RestaurantAccount
     func createRestaurantDraft(deviceId: String, name: String, address: String) async throws -> String
+    func skipRestaurantOnboarding(deviceId: String) async throws
     func restaurantOnboardingStatus(deviceId: String, onboardingId: String) -> AnyPublisher<RestaurantOnboarding?, TTError>
     func startRestaurantUrlImport(deviceId: String, onboardingId: String, url: String, location: String?) async throws
     func startRestaurantSearch(deviceId: String, onboardingId: String, query: String, location: String) async throws

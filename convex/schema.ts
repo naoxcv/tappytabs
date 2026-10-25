@@ -228,6 +228,7 @@ export default defineSchema({
     rawItems: v.array(v.any()),
     editedItems: v.array(v.any()),
     status: v.union(v.literal("draft"), v.literal("publishing"), v.literal("published"), v.literal("failed")),
+    errorMessage: v.optional(v.string()),
     createdAt: v.number(),
     updatedAt: v.number(),
   }).index("by_onboarding", ["onboardingId"]),
