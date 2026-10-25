@@ -5,6 +5,7 @@ struct GroupOrderView: View {
     let store: PartyStore
     @State private var substitute: RemoveResult.Substitute?
     @State private var showAdd = false
+    @State private var removingLineId: String?
 
     private var confirmed: Bool { store.me?.confirmed == true }
 
@@ -16,16 +17,23 @@ struct GroupOrderView: View {
             Section(header: Text("For the table").font(AppTypography.headline)) {
                 if store.sharedLines.isEmpty { Text("Nothing shared").foregroundStyle(Theme.accent) }
                 ForEach(store.sharedLines) { line in
-                    LineRow(line: line, avatars: line.sharedBy.compactMap { store.avatar(of: $0) })
-                        .swipeActions { if !confirmed { removeButton(line) } }
+                    HStack {
+                        LineRow(line: line, avatars: line.sharedBy.compactMap { store.avatar(of: $0) })
+                        if !confirmed { removeButton(line) }
+                    }
                 }
             }
             Section(header: Text("Yours").font(AppTypography.headline)) {
                 ForEach(store.myLines()) { line in
-                    LineRow(line: line, avatars: [])
-                        .swipeActions { if !confirmed { removeButton(line) } }
+                    HStack {
+                        LineRow(line: line, avatars: [])
+                        if !confirmed { removeButton(line) }
+                    }
                 }
-                if !confirmed { Button { showAdd = true } label: { Label("Add something", systemImage: "plus") } }
+                if !confirmed {
+                    Button { showAdd = true } label: { Label("Add something", systemImage: "plus") }
+                        .disabled(removingLineId != nil)
+                }
             }
             Section(header: Text("Everyone else").font(AppTypography.headline)) {
                 ForEach(store.party?.members.filter { $0.userId != store.userId } ?? []) { m in
@@ -40,6 +48,27 @@ struct GroupOrderView: View {
         }
         .safeAreaInset(edge: .bottom) {
             VStack(spacing: 8) {
+                if let substitute {
+                    VStack(spacing: 6) {
+                        Text("Swap for \(substitute.name)?").font(AppTypography.style(.headline, weight: .bold))
+                        Text(substitute.reason).font(AppTypography.footnote).foregroundStyle(Theme.accent)
+                        HStack {
+                            PriceText(cents: substitute.priceCents)
+                            if substitute.askServer { AskServerBadge() }
+                        }
+                        HStack {
+                            Button("No thanks") { self.substitute = nil }
+                            Spacer()
+                            Button("Swap") {
+                                self.substitute = nil
+                                Task { await store.add(substitute.itemId, shared: false) }
+                            }
+                            .buttonStyle(.borderedProminent)
+                        }
+                    }
+                    .padding(10)
+                    .background(Theme.background, in: RoundedRectangle(cornerRadius: 10))
+                }
                 HStack {
                     Text("Your share").bold(); PriceText(cents: store.myShareCents).bold()
                     Spacer()
@@ -50,14 +79,10 @@ struct GroupOrderView: View {
                 } else {
                     Button("Confirm my order") {
                         Task { await store.confirm(); UINotificationFeedbackGenerator().notificationOccurred(.success) }
-                    }.buttonStyle(BigButtonStyle())
+                    }.buttonStyle(BigButtonStyle()).disabled(removingLineId != nil)
                 }
             }
             .padding().background(.bar)
-        }
-        .sheet(item: $substitute) { sub in
-            SubstituteSheet(sub: sub, store: store)
-                .presentationBackground(Theme.background)
         }
         .sheet(isPresented: $showAdd) {
             AddSheet(store: store)
@@ -67,12 +92,24 @@ struct GroupOrderView: View {
 
     private func removeButton(_ line: Line) -> some View {
         Button(role: .destructive) {
-            Task { if let s = await store.remove(line.lineId) { substitute = s } }
-        } label: { Label("Remove", systemImage: "minus.circle").foregroundStyle(Theme.accent) }
+            guard removingLineId == nil else { return }
+            removingLineId = line.lineId
+            substitute = nil
+            Task {
+                let replacement = await store.remove(line.lineId)
+                removingLineId = nil
+                if store.party?.status == .confirm, !confirmed { substitute = replacement }
+            }
+        } label: {
+            Image(systemName: "minus.circle")
+                .font(.title3)
+                .foregroundStyle(Theme.accent)
+                .accessibilityLabel("Remove \(line.name)")
+        }
+        .buttonStyle(.borderless)
+        .disabled(removingLineId != nil)
     }
 }
-
-extension RemoveResult.Substitute: Identifiable { var id: String { itemId } }
 
 struct LineRow: View {
     let line: Line
@@ -88,24 +125,6 @@ struct LineRow: View {
             HStack(spacing: -8) { ForEach(avatars, id: \.self) { AvatarView(avatarId: $0, size: 22) } }
             PriceText(cents: line.priceCents * line.qty)
         }
-    }
-}
-
-struct SubstituteSheet: View {
-    let sub: RemoveResult.Substitute
-    let store: PartyStore
-    @Environment(\.dismiss) private var dismiss
-    var body: some View {
-        VStack(spacing: 16) {
-            Text("Swap for \(sub.name)?").font(AppTypography.style(.title2, weight: .bold))
-            Text(sub.reason).foregroundStyle(Theme.accent)
-            PriceText(cents: sub.priceCents).font(AppTypography.custom(20))
-            if sub.askServer { AskServerBadge() }
-            Button("Swap") { Task { await store.add(sub.itemId, shared: false); dismiss() } }.buttonStyle(BigButtonStyle())
-            Button("No thanks") { dismiss() }
-        }
-        .padding()
-        .presentationDetents([.medium])
     }
 }
 

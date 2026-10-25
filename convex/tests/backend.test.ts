@@ -250,6 +250,31 @@ describe("orders", () => {
     expect((await t.query(api.parties.current, { partyId }))!.status).toBe("placed");
   });
 
+  test("removing a drink during confirmation updates the order and returns a safe drink suggestion", async () => {
+    const t = convexTest(schema, modules);
+    workflowTest.register(t, "workflow");
+    const { partyId, userIds } = await t.mutation(internal.seed.scenario, { scenario: "negotiated" });
+    for (const [i, userId] of userIds.entries()) {
+      const candidates = await t.query(api.orders.candidates, { partyId, userId });
+      await t.mutation(api.orders.pick, {
+        partyId, userId, deviceId: `demo-diner-${i + 1}`,
+        itemId: candidates.find(candidate => !candidate.isDrink)!.itemId,
+      });
+    }
+    const before = await t.query(api.orders.lines, { partyId });
+    const drink = before.lines.find(line => line.kind === "drink" && line.sharedBy.includes(userIds[0]));
+    expect(drink).toBeDefined();
+    const result = await t.mutation(api.orders.remove, {
+      partyId, userId: userIds[0], deviceId: "demo-diner-1", lineId: drink!.lineId,
+    });
+    const after = await t.query(api.orders.lines, { partyId });
+    expect(after.lines.some(line => line.lineId === drink!.lineId)).toBe(false);
+    expect(after.totals.total).toBe(before.totals.total - drink!.priceCents * drink!.qty);
+    expect(result.substitute).not.toBeNull();
+    expect(result.substitute!.itemId).not.toBe(drink!.itemId);
+    expect((await t.run(ctx => ctx.db.get(result.substitute!.itemId)))?.isDrink).toBe(true);
+  });
+
   test("diner calls are bound to their device", async () => {
     const t = convexTest(schema, modules);
     workflowTest.register(t, "workflow");

@@ -27,8 +27,8 @@ struct TapInView: View {
                     .symbolEffect(.bounce, value: proximity.state == .tapped)
             }
             Text(title).font(AppTypography.style(.title2, weight: .bold)).multilineTextAlignment(.center)
-            if !proximity.nearbyTables.isEmpty {
-                Text("\(proximity.nearbyTables.count) nearby table\(proximity.nearbyTables.count == 1 ? "" : "s") found")
+            if proximity.inRangeTableCount > 0 {
+                Text("\(proximity.inRangeTableCount) nearby table\(proximity.inRangeTableCount == 1 ? "" : "s") in UWB range")
                     .font(AppTypography.subheadline).foregroundStyle(Theme.accent)
             }
             if proximity.hasCapacityOverflow {
