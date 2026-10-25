@@ -1,26 +1,77 @@
-// Owner: Role 2. Onboarding under 90 s: basics → allergies/diet → spice → swipe deck → follow-ups → avatar → summary.
-// Ends with users:upsert + users:summarize, then saves app.userId (the hand-off to Role 1).
+// Fixed offline onboarding: basics → hard rules → spice → five pairs → decision style → avatar → editable summary.
 import SwiftUI
 
-struct OnboardingCard: Decodable, Identifiable, Equatable {
-    let name: String
-    let emoji: String
-    let category: String
-    let cuisine: String
-    let tags: [String]
-    var id: String { name }
+private struct TasteOption {
+    let title: String
+    let restaurant: String
+    let detail: String
+}
+
+private struct TastePair: Identifiable {
+    let id: String
+    let contrast: String
+    let a: TasteOption
+    let b: TasteOption
+    var summaryA: String {
+        switch contrast {
+        case "texture": "crisp textures"
+        case "richness": "lighter dishes"
+        case "brightness": "mellow flavors"
+        case "brothiness": "dry or seared preparations"
+        case "boldness": "mild seasoning"
+        default: "fresh herbs"
+        }
+    }
+    var summaryB: String {
+        switch contrast {
+        case "texture": "tender textures"
+        case "richness": "richer dishes"
+        case "brightness": "bright or tangy flavors"
+        case "brothiness": "brothy dishes"
+        case "boldness": "bold seasoning"
+        default: "smoky or charred flavors"
+        }
+    }
+    static let all = [
+        TastePair(id: "v2_dumpling_texture", contrast: "texture",
+                  a: TasteOption(title: "Pan-fried pork soup buns", restaurant: "Dumpling Home",
+                                 detail: "Juicy pork and hot broth inside a soft bun, pan-fried until the bottom is golden and crunches when you bite in."),
+                  b: TasteOption(title: "Pork soup dumplings (xiao long bao)", restaurant: "Dumpling Home",
+                                 detail: "The same juicy pork and broth, steamed in a thin, delicate wrapper. Soft all the way through.")),
+        TastePair(id: "v2_kokkari_richness", contrast: "richness",
+                  a: TasteOption(title: "Whole grilled fish", restaurant: "Kokkari",
+                                 detail: "Sea bass grilled on the bone over charcoal, finished with olive oil, lemon, and an herb-and-caper dressing."),
+                  b: TasteOption(title: "Moussaka", restaurant: "Kokkari",
+                                 detail: "Baked layers of cinnamon-spiced lamb and eggplant under a thick, creamy yogurt béchamel.")),
+        TastePair(id: "v2_turtle_brightness", contrast: "brightness",
+                  a: TasteOption(title: "Fresh spring rolls", restaurant: "Turtle Tower",
+                                 detail: "Shrimp, rice noodles, and lettuce rolled in soft rice paper, with a creamy dipping sauce. Cool and gentle."),
+                  b: TasteOption(title: "Green papaya salad", restaurant: "Turtle Tower",
+                                 detail: "Crunchy shredded green papaya tossed with lime, fish sauce, herbs, and peanuts. Zingy and tart.")),
+        TastePair(id: "v2_tadich_brothiness", contrast: "brothiness",
+                  a: TasteOption(title: "Pan-fried sand dabs", restaurant: "Tadich Grill",
+                                 detail: "A delicate local flatfish, pan-fried until golden. A simple plate of fish."),
+                  b: TasteOption(title: "Cioppino", restaurant: "Tadich Grill",
+                                 detail: "San Francisco’s classic seafood stew: crab, prawns, clams, mussels, scallops, and white fish in a tomato broth, with garlic bread for dipping.")),
+        TastePair(id: "v2_burma_boldness", contrast: "boldness",
+                  a: TasteOption(title: "Rainbow salad", restaurant: "Burma Superstar",
+                                 detail: "A lighter, refreshing toss of 22 ingredients, including four kinds of noodles and green papaya."),
+                  b: TasteOption(title: "Tea leaf salad", restaurant: "Burma Superstar",
+                                 detail: "Fermented tea leaves with crunchy peanuts and seeds, fried garlic, ground dried shrimp, lemon, and fish sauce. Deeply savory and earthy.")),
+        TastePair(id: "v2_khao_char", contrast: "char",
+                  a: TasteOption(title: "Beef larb (larb nuer)", restaurant: "Khao Tiew",
+                                 detail: "Northeastern Thai minced beef tossed with lime, fish sauce, toasted rice, and fresh herbs. Bright and cool."),
+                  b: TasteOption(title: "Pork pad see ew", restaurant: "Khao Tiew",
+                                 detail: "Wide rice noodles seared in a very hot wok until the edges char, with pork and Chinese broccoli. Smoky and savory.")),
+    ]
 }
 
 @Observable
 final class OnboardingModel {
-    enum Step: Int, CaseIterable { case basics, allergies, spice, swipe, followups, avatar, summary }
+    enum Step: Int, CaseIterable { case basics, allergies, spice, pairs, decision, avatar, summary }
     var step: Step = .basics
     var isMovingBackward = false
     var draft = DraftProfile()
-    var questions: [FollowUpQuestion] = []
-    var answers: [String: String] = [:]
-    var remainingCards: [OnboardingCard] = Fixtures.load("OnboardingCards")
-    var summary: ProfileSummary?
     var error: String?
 
     func next() {
@@ -29,27 +80,9 @@ final class OnboardingModel {
     }
     func back() {
         isMovingBackward = true
-        let previous = Step(rawValue: step.rawValue - 1) ?? .basics
-        step = previous == .followups && questions.isEmpty ? .swipe : previous
+        step = Step(rawValue: step.rawValue - 1) ?? .basics
     }
 
-    func swipe(_ card: OnboardingCard, liked: Bool) {
-        if liked {
-            draft.likes = Array(Set(draft.likes + card.tags).subtracting(draft.dislikes)).sorted()
-            if !draft.cuisines.contains(card.cuisine) { draft.cuisines.append(card.cuisine) }
-            draft.dislikedCuisines.removeAll { $0 == card.cuisine }
-            if card.category != "cuisine", !draft.likedCategories.contains(card.category) {
-                draft.likedCategories.append(card.category)
-            }
-        } else {
-            draft.dislikes = Array(Set(draft.dislikes + card.tags).subtracting(draft.likes)).sorted()
-            draft.likes.removeAll { card.tags.contains($0) }
-            if card.category == "cuisine" {
-                if !draft.dislikedCuisines.contains(card.cuisine) { draft.dislikedCuisines.append(card.cuisine) }
-                draft.cuisines.removeAll { $0 == card.cuisine }
-            }
-        }
-    }
 }
 
 struct OnboardingFlow: View {
@@ -80,8 +113,8 @@ struct OnboardingFlow: View {
                     case .basics: BasicsStep(model: model)
                     case .allergies: AllergyDietStep(model: model)
                     case .spice: SpiceStep(model: model)
-                    case .swipe: SwipeDeckStep(model: model)
-                    case .followups: FollowUpStep(model: model)
+                    case .pairs: PairStep(model: model)
+                    case .decision: DecisionStep(model: model)
                     case .avatar: AvatarPickerStep(model: model)
                     case .summary: ProfileSummaryStep(model: model)
                     }
@@ -272,210 +305,94 @@ struct SpiceStep: View {
     }
 }
 
-struct SwipeDeckStep: View {
+struct PairStep: View {
     @Bindable var model: OnboardingModel
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @State private var offset: CGSize = .zero
-    @State private var deciding = false
-    @State private var decisionTask: Task<Void, Never>?
-
-    private var cards: [OnboardingCard] { model.remainingCards }
-    private static let totalCount: Int = {
-        let allCards: [OnboardingCard] = Fixtures.load("OnboardingCards")
-        return allCards.count
-    }()
+    @State private var index = 0
+    @State private var showTieBreaker = false
 
     var body: some View {
-        StepScaffold(title: "Which cuisines do you enjoy?",
-                     nextTitle: cards.isEmpty ? "Next" : "Skip the rest", canContinue: !deciding, onNext: model.next) {
-            GeometryReader { geometry in
-                let photoHeight = max(140, min(240, geometry.size.height - 220))
-                ScrollView {
-                    VStack(spacing: 16) {
-                        Text("\(min(Self.totalCount, Self.totalCount - cards.count + 1)) of \(Self.totalCount) cuisines")
-                            .font(AppTypography.caption)
-                        ZStack {
-                            if cards.isEmpty {
-                                VStack(spacing: 12) {
-                                    Image(systemName: "checkmark.circle").font(.system(size: 40))
-                                    Text("Your tastes are saved").font(AppTypography.headline)
-                                }
-                                .frame(maxWidth: .infinity, minHeight: photoHeight + 110)
-                                .background(Theme.card, in: RoundedRectangle(cornerRadius: 24))
-                            }
-                            ForEach(Array(cards.prefix(2).reversed())) { card in
-                                let top = card == cards.first
-                                CuisineSwipeCard(card: card, photoHeight: photoHeight)
-                                    .overlay(alignment: offset.width > 0 ? .topLeading : .topTrailing) {
-                                        if top && abs(offset.width) > 35 {
-                                            Text(offset.width > 0 ? "SOUNDS GOOD" : "SKIP")
-                                                .font(AppTypography.style(.caption, weight: .bold))
-                                                .padding(.horizontal, 12).padding(.vertical, 8)
-                                                .foregroundStyle(Theme.accentForeground)
-                                                .background(Theme.accent, in: Capsule())
-                                                .padding(16)
-                                        }
-                                    }
-                                    .scaleEffect(top ? 1 : 0.97, anchor: .bottom)
-                                    .offset(top ? offset : CGSize(width: 0, height: 8))
-                                    .rotationEffect(.degrees(top && !reduceMotion ? max(-12, min(12, Double(offset.width / 30))) : 0))
-                                    .zIndex(top ? 1 : 0)
-                                    .accessibilityHidden(!top)
-                                    .allowsHitTesting(top && !deciding)
-                                    .simultaneousGesture(top ? DragGesture(minimumDistance: 15)
-                                        .onChanged { gesture in
-                                            guard !deciding, abs(gesture.translation.width) > abs(gesture.translation.height) else { return }
-                                            offset = CGSize(width: gesture.translation.width, height: gesture.translation.height * 0.12)
-                                        }
-                                        .onEnded { gesture in
-                                            if abs(gesture.translation.width) > 100 && abs(gesture.translation.width) > abs(gesture.translation.height) {
-                                                decide(card, liked: gesture.translation.width > 0, travel: geometry.size.width + 80)
-                                            } else {
-                                                withAnimation(reduceMotion ? nil : .spring(duration: 0.3)) { offset = .zero }
-                                            }
-                                        } : nil)
-                            }
-                        }
-                        .padding(.bottom, 8)
-                        HStack(spacing: 32) {
-                            Button {
-                                if let card = cards.first { decide(card, liked: false, travel: geometry.size.width + 80) }
-                            } label: {
-                                Image(systemName: "xmark")
-                                    .font(.system(size: 22, weight: .semibold))
-                                    .foregroundStyle(Theme.accent)
-                                    .frame(width: 60, height: 60)
-                                    .background(Theme.card, in: Circle())
-                                    .overlay(Circle().strokeBorder(Theme.accent.opacity(0.35)))
-                                    .contentShape(Circle())
-                            }
-                            .accessibilityLabel("Skip cuisine")
-                            Button {
-                                if let card = cards.first { decide(card, liked: true, travel: geometry.size.width + 80) }
-                            } label: {
-                                Image(systemName: "heart.fill")
-                                    .font(.system(size: 24))
-                                    .foregroundStyle(Theme.accentForeground)
-                                    .frame(width: 60, height: 60)
-                                    .background(Theme.accent, in: Circle())
-                                    .contentShape(Circle())
-                            }
-                            .accessibilityLabel("Like cuisine")
-                        }
-                        .buttonStyle(.plain)
-                        .disabled(cards.isEmpty || deciding)
+        let pair = TastePair.all[index]
+        StepScaffold(title: "This or That", subtitle: index == 5 ? "Optional tie-breaker · Prices are hidden." : "\(index + 1) of 5 · Choose what sounds better. Prices are hidden.",
+                     nextTitle: index == 4 ? "Continue" : "Skip this pair", onNext: {
+                        model.draft.pairAnswers.removeValue(forKey: pair.id)
+                        advance()
+                     }) {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 14) {
+                    Text("Which sounds better to you?").font(AppTypography.headline)
+                    optionChoice(pair.a, value: "a", pair: pair)
+                    optionChoice(pair.b, value: "b", pair: pair)
+                    HStack {
+                        choice("Both", value: "both", pair: pair)
+                        choice("Neither", value: "neither", pair: pair)
                     }
-                    .frame(maxWidth: 480)
-                    .frame(maxWidth: .infinity)
-                    .padding(.bottom, 8)
                 }
-                .scrollBounceBehavior(.basedOnSize)
             }
         }
-        .onDisappear { decisionTask?.cancel() }
+        .alert("One more comparison?", isPresented: $showTieBreaker) {
+            Button("Try it") { index = 5 }
+            Button("Continue") { model.next() }
+        } message: { Text("An optional fresh herbs versus smoky char question can sharpen your profile.") }
     }
 
-    private func decide(_ card: OnboardingCard, liked: Bool, travel: CGFloat) {
-        guard !deciding, cards.first?.id == card.id else { return }
-        deciding = true
-        withAnimation(reduceMotion ? nil : .easeIn(duration: 0.18)) {
-            offset = reduceMotion ? .zero : CGSize(width: liked ? travel : -travel, height: -16)
-        }
-        decisionTask = Task { @MainActor in
-            if !reduceMotion {
-                do { try await Task.sleep(for: .milliseconds(180)) }
-                catch { deciding = false; return }
+    private func optionChoice(_ option: TasteOption, value: String, pair: TastePair) -> some View {
+        Button {
+            model.draft.pairAnswers[pair.id] = value
+            advance()
+        } label: {
+            VStack(alignment: .leading, spacing: 5) {
+                Text(option.title).font(AppTypography.headline)
+                Text(option.restaurant).font(AppTypography.caption)
+                Text(option.detail).font(AppTypography.footnote).fixedSize(horizontal: false, vertical: true)
             }
-            guard !Task.isCancelled, model.step == .swipe, cards.first?.id == card.id else { deciding = false; return }
-            model.swipe(card, liked: liked)
-            var transaction = Transaction(animation: nil)
-            transaction.disablesAnimations = true
-            withTransaction(transaction) {
-                model.remainingCards.removeFirst()
-                offset = .zero
-                deciding = false
-            }
-            if cards.isEmpty { model.next() }
-        }
-    }
-}
-
-private struct CuisineSwipeCard: View {
-    let card: OnboardingCard
-    let photoHeight: CGFloat
-
-    private var caption: String {
-        switch card.cuisine {
-        case "Thai": "Pad Thai, curries, fragrant herbs"
-        case "Italian": "Pasta, pizza, rich tomato sauces"
-        case "Japanese": "Ramen, sushi, comforting bowls"
-        case "Mexican": "Tacos, salsas, bold flavors"
-        case "Mediterranean": "Falafel, pita, fresh vegetables"
-        default: card.tags.joined(separator: " · ")
-        }
-    }
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            GeometryReader { geometry in
-                Image("cuisine_\(card.cuisine.lowercased())")
-                    .renderingMode(.original)
-                    .resizable()
-                    .scaledToFill()
-                    .frame(width: geometry.size.width, height: photoHeight)
-                    .clipped()
-            }
-            .frame(height: photoHeight)
-            .accessibilityHidden(true)
-            VStack(alignment: .leading, spacing: 8) {
-                Text(card.name).font(AppTypography.style(.title, weight: .bold))
-                Text(caption).font(AppTypography.subheadline)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-            .padding(18)
+            .multilineTextAlignment(.leading)
+            .padding(14)
             .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .foregroundStyle(Theme.accent)
-        .background(Theme.card)
-        .clipShape(RoundedRectangle(cornerRadius: 24))
+        .buttonStyle(BigButtonStyle())
+    }
+
+    private func choice(_ title: String, value: String, pair: TastePair) -> some View {
+        Button(title) {
+            model.draft.pairAnswers[pair.id] = value
+            advance()
+        }
+        .buttonStyle(BigButtonStyle())
+    }
+
+    private func advance() {
+        if index < 4 { index += 1 }
+        else if index == 4 { showTieBreaker = true }
+        else { model.next() }
     }
 }
 
-struct FollowUpStep: View {
-    @Environment(AppModel.self) private var app
+struct DecisionStep: View {
     @Bindable var model: OnboardingModel
-    @State private var loading = true
-
     var body: some View {
-        StepScaffold(title: "A couple more", subtitle: "Your agent asked these", onNext: model.next) {
-            if loading { ProgressView("Thinking…") }
-            ForEach(model.questions) { q in
-                VStack(alignment: .leading) {
-                    Text(q.question).font(AppTypography.headline)
-                    Picker(q.question, selection: Binding(get: { model.answers[q.id] ?? "" }, set: { model.answers[q.id] = $0 })) {
-                        ForEach(q.options, id: \.self) { Text($0).tag($0) }
-                    }.pickerStyle(.segmented)
-                }
-            }
-        }
-        .task {
-            // Skip the step if Claude takes longer than 4 s.
-            if model.isMovingBackward && !model.questions.isEmpty {
-                loading = false
-                return
-            }
-            let draft = model.draft
-            let backend = app.backend
-            let result = await withTaskGroup(of: [FollowUpQuestion]?.self) { group in
-                group.addTask { try? await backend.followups(draft: draft) }
-                group.addTask { try? await Task.sleep(for: .seconds(4)); return nil }
-                let first = await group.next() ?? nil
-                group.cancelAll()
-                return first
-            }
-            guard !Task.isCancelled, model.step == .followups else { return }
-            loading = false
-            if let result, !result.isEmpty { model.questions = result } else { model.next() }
+        StepScaffold(title: "Your decision style", onNext: model.next) {
+            ScrollView { VStack(alignment: .leading, spacing: 24) {
+                Text("How much should your agent favor lower-priced choices?").font(AppTypography.headline)
+                Picker("Price preference", selection: $model.draft.priceSensitivity) {
+                    Text("A lot").tag("a_lot")
+                    Text("Somewhat").tag("somewhat")
+                    Text("Not much").tag("not_much")
+                }.pickerStyle(.segmented)
+                Text("What feels more fun?").font(AppTypography.headline)
+                Picker("Familiarity", selection: $model.draft.familiarity) {
+                    Text("Familiar things").tag("familiar")
+                    Text("Open to surprises").tag("open")
+                }.pickerStyle(.segmented)
+                Text("Any ingredients you especially like or avoid? Optional.").font(AppTypography.headline)
+                TextField("Ingredients you like", text: Binding(
+                    get: { model.draft.ingredientLikes.joined(separator: ", ") },
+                    set: { model.draft.ingredientLikes = $0.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty } }
+                )).textFieldStyle(.roundedBorder)
+                TextField("Ingredients you avoid", text: Binding(
+                    get: { model.draft.ingredientAvoids.joined(separator: ", ") },
+                    set: { model.draft.ingredientAvoids = $0.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty } }
+                )).textFieldStyle(.roundedBorder)
+            } }
         }
     }
 }
@@ -526,23 +443,47 @@ private struct AgentStartAnchor: PreferenceKey {
 struct ProfileSummaryStep: View {
     @Environment(AppModel.self) private var app
     @Bindable var model: OnboardingModel
-    @State private var saving = true
-    @State private var userId: String?
+    @State private var saving = false
+
+    private var supported: [TastePair] {
+        TastePair.all.filter { pair in
+            guard !model.draft.removedContrasts.contains(pair.contrast) else { return false }
+            return ["a", "b"].contains(model.draft.pairAnswers[pair.id] ?? "") || model.draft.tasteCorrections[pair.contrast] != nil
+        }
+    }
 
     var body: some View {
-        StepScaffold(title: "Meet your agent", nextTitle: "Let's eat", canContinue: userId != nil, onNext: { app.userId = userId }) {
-            VStack(spacing: 16) {
-                Color.clear.frame(height: 328)
-                    .anchorPreference(key: AgentStartAnchor.self, value: .bounds) { $0 }
-                    .accessibilityHidden(true)
-                if saving { ProgressView("Saving your profile…") }
-                if let s = model.summary {
-                    Text(s.personality.label).font(AppTypography.style(.caption, weight: .bold)).padding(6).background(Theme.accent.opacity(0.2), in: Capsule())
-                    Text(s.profileSummary).multilineTextAlignment(.center)
+        StepScaffold(title: "Your taste, so far", subtitle: "These are early guesses. Correct or remove anything that feels wrong.",
+                     nextTitle: saving ? "Saving…" : "Let's eat", canContinue: !saving, onNext: { Task { await save() } }) {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 18) {
+                    Color.clear.frame(height: 328)
+                        .anchorPreference(key: AgentStartAnchor.self, value: .bounds) { $0 }
+                        .accessibilityHidden(true)
+                    ForEach(supported) { pair in
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text(statement(pair)).font(AppTypography.headline)
+                            HStack {
+                                Button("Other side") {
+                                    let current = model.draft.tasteCorrections[pair.contrast] ?? (model.draft.pairAnswers[pair.id] == "b" ? 1.0 : -1.0)
+                                    model.draft.tasteCorrections[pair.contrast] = -current
+                                }
+                                Button("Remove") {
+                                    model.draft.removedContrasts.insert(pair.contrast)
+                                    model.draft.tasteCorrections.removeValue(forKey: pair.contrast)
+                                }
+                            }.font(AppTypography.footnote)
+                        }
+                        .padding(12)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(Theme.card, in: RoundedRectangle(cornerRadius: 12))
+                    }
+                    if supported.isEmpty { Text("Your agent will start with the safety rules and learn your choices here.") }
+                    Text("Price: \(model.draft.priceSensitivity.replacingOccurrences(of: "_", with: " ")) · \(model.draft.familiarity == "open" ? "Open to surprises" : "Familiar choices")")
+                        .foregroundStyle(Theme.accent)
+                    if let error = model.error { Text(error).foregroundStyle(.red) }
                 }
-                if let e = model.error { Text(e).foregroundStyle(Theme.accent) }
             }
-            .frame(maxWidth: .infinity)
         }
         .overlayPreferenceValue(AgentStartAnchor.self) { anchor in
             GeometryReader { geometry in
@@ -555,16 +496,22 @@ struct ProfileSummaryStep: View {
             }
             .padding(.bottom, 70)
         }
-        .task {
-            do {
-                let id = try await app.backend.upsertUser(deviceId: app.deviceId, profile: model.draft)
-                let answers = model.questions.compactMap { q in model.answers[q.id].map { FollowUpAnswer(id: q.id, question: q.question, answer: $0) } }
-                model.summary = try? await app.backend.summarize(userId: id, answers: answers)
-                userId = id
-            } catch {
-                model.error = TTError.from(error).userMessage
-            }
-            saving = false
+    }
+
+    private func statement(_ pair: TastePair) -> String {
+        let value = model.draft.tasteCorrections[pair.contrast] ?? (model.draft.pairAnswers[pair.id] == "b" ? 1.0 : -1.0)
+        return "You may prefer \(value > 0 ? pair.summaryB : pair.summaryA)."
+    }
+
+    private func save() async {
+        guard !saving else { return }
+        saving = true
+        defer { saving = false }
+        do {
+            let id = try await app.backend.upsertUser(deviceId: app.deviceId, profile: model.draft)
+            app.userId = id
+        } catch {
+            model.error = TTError.from(error).userMessage
         }
     }
 }

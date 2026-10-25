@@ -47,6 +47,11 @@
 	<string>TappyTabs finds the restaurant phone nearby to check you in.</string>
 	<key>NSNearbyInteractionUsageDescription</key>
 	<string>TappyTabs measures the distance to the restaurant phone so you can tap to join a table.</string>
+	<key>UIAppFonts</key>
+	<array>
+		<string>Raleway-Variable.ttf</string>
+		<string>OpenSans-Variable.ttf</string>
+	</array>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>UILaunchScreen</key>
@@ -54,18 +59,13 @@
 		<key>UIColorName</key>
 		<string>AppBackground</string>
 	</dict>
-	<key>UIUserInterfaceStyle</key>
-	<string>Dark</string>
-	<key>UIAppFonts</key>
-	<array>
-		<string>Raleway-Variable.ttf</string>
-		<string>OpenSans-Variable.ttf</string>
-	</array>
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>UIUserInterfaceStyle</key>
+	<string>Dark</string>
 </dict>
 </plist>

@@ -23,7 +23,7 @@ open ios/TappyTabs.xcodeproj                 # build & run "TappyTabs" on a simu
 - To point the app at your backend, open the **Debug menu (ladybug icon)** → Live, set the URL (`http://127.0.0.1:3210` on the simulator; on a phone use your Mac's LAN IP and run `npx convex dev --local` reachable on the LAN, or your personal cloud dev deployment), then pick **Be demo diner N** or **Be the demo restaurant** to use the seeded profiles.
 - Seeded ids: host `deviceId` = `demo-restaurant`; diners `demo-diner-1..4` = Maya (shellfish), Leo (peanut, tree nut, budget-minded), Priya (vegetarian, picky), Sam (gluten).
 - `npm run seed:negotiated` / `seed:placed` put a party straight at `pick` / `placed` (join code `DEMO42`).
-- Keys are optional for everything except "real brains": `npx convex env set ANTHROPIC_API_KEY …` (also `BITDEER_API_KEY`, `BITDEER_MODEL`, `CLAUDE_MODEL`, `APIFY_TOKEN`, `APIFY_NORMALIZER_ACTOR`, `APIFY_SCRAPER_ACTOR`, `DEMO_SEED`).
+- Keys are optional for everything except "real brains": `npx convex env set ANTHROPIC_API_KEY …` (also `BITDEER_API_KEY`, `BITDEER_MODEL`, `CLAUDE_MODEL`, `APIFY_TOKEN`, `APIFY_NORMALIZER_ACTOR`, `APIFY_SCRAPER_URL_TASK`, `APIFY_SCRAPER_SEARCH_TASK`, `DEMO_SEED`).
 
 ## 1. Repo map
 
@@ -294,7 +294,7 @@ Profile and menu go inside XML tags as data. Only listed ids may be returned. Bu
 
 1. **Push the scaffold** (it isn't committed yet) and share the repo.
 2. **Demo deployment:** `npx convex deploy` (or a dedicated project). Set env vars there, run `npx convex run seed:base --prod`, and put the URL in `ios/TappyTabs/App/Env.swift → demoURL`.
-3. **Choose the restaurant with Role 2.** Try Apify Store scrapers on its Maps URL and pick the one that returns the full menu. Set `APIFY_SCRAPER_ACTOR`, then tighten `mapScraperOutput` to that scraper's shape.
+3. **Choose the restaurant with Role 2.** Try Apify Store scrapers on its menu URL and pick the one that returns the full menu. Save separate URL and Search Tasks, then tighten `mapScraperOutput` to that scraper's shape.
 4. **Publish the Actor:** `cd apify/menu-normalizer && apify login && apify push`. Add a README for the Store and make it public. Set `APIFY_NORMALIZER_ACTOR=<user>/menu-normalizer` and `BITDEER_*` as Actor env vars.
 5. Run `menu:ingest` on the real restaurant. Hand-check its allergen tags against the menu, then **refresh `seedData.ts`** from the real run (the seed becomes the real menu, hand-checked).
 6. Regenerate iOS fixtures (`node scripts/export-fixtures.mjs`) whenever a return shape changes, and tell Role 1.

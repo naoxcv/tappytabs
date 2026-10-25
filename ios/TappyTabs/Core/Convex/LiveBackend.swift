@@ -75,10 +75,17 @@ final class LiveBackend: Backend {
             "spice": p.spice,
             "likes": strings(p.likes),
             "dislikes": strings(p.dislikes),
+            "ingredientLikes": strings(p.ingredientLikes),
+            "ingredientAvoids": strings(p.ingredientAvoids),
             "cuisines": strings(p.cuisines),
             "dislikedCuisines": strings(p.dislikedCuisines),
             "likedCategories": strings(p.likedCategories),
             "avatarId": p.avatarId,
+            "pairAnswers": p.pairAnswers.sorted { $0.key < $1.key }.map { ["pairId": $0.key, "choice": $0.value] as [String: ConvexEncodable?] },
+            "tasteCorrections": p.tasteCorrections.sorted { $0.key < $1.key }.map { ["contrast": $0.key, "value": $0.value] as [String: ConvexEncodable?] },
+            "removedContrasts": strings(p.removedContrasts.sorted()),
+            "priceSensitivity": p.priceSensitivity,
+            "familiarity": p.familiarity,
         ]
     }
 
@@ -112,12 +119,19 @@ final class LiveBackend: Backend {
         sub(API.restaurantGetStatus, ["deviceId": deviceId, "onboardingId": onboardingId])
     }
 
-    func resolveRestaurant(deviceId: String, onboardingId: String) async throws {
-        let _: String = try await act(API.restaurantResolveGoogleMaps, ["deviceId": deviceId, "onboardingId": onboardingId])
+    func startRestaurantUrlImport(deviceId: String, onboardingId: String, url: String, location: String?) async throws {
+        var args: [String: ConvexEncodable?] = ["deviceId": deviceId, "onboardingId": onboardingId, "url": url]
+        if let location { args["location"] = location }
+        let _: RestaurantScrapeResult = try await act(API.restaurantStartUrlImport, args)
+    }
+
+    func startRestaurantSearch(deviceId: String, onboardingId: String, query: String, location: String) async throws {
+        let _: RestaurantScrapeResult = try await act(API.restaurantStartSearch, ["deviceId": deviceId, "onboardingId": onboardingId, "query": query, "location": location])
     }
 
     private static func candidateArgs(_ c: RestaurantCandidate) -> [String: ConvexEncodable?] {
         var args: [String: ConvexEncodable?] = ["name": c.name, "address": c.address]
+        if let value = c.sourceUrl { args["sourceUrl"] = value }
         if let value = c.mapsUrl { args["mapsUrl"] = value }
         if let value = c.googlePlaceId { args["googlePlaceId"] = value }
         if let value = c.websiteUrl { args["websiteUrl"] = value }
@@ -131,12 +145,6 @@ final class LiveBackend: Backend {
 
     func selectRestaurantCandidate(deviceId: String, onboardingId: String, candidate: RestaurantCandidate) async throws {
         try await mutate(API.restaurantSelectCandidate, ["deviceId": deviceId, "onboardingId": onboardingId, "candidate": Self.candidateArgs(candidate)])
-    }
-
-    func scrapeRestaurantMenu(deviceId: String, onboardingId: String, menuUrl: String?) async throws {
-        var args: [String: ConvexEncodable?] = ["deviceId": deviceId, "onboardingId": onboardingId]
-        if let menuUrl { args["menuUrl"] = menuUrl }
-        let _: RestaurantScrapeResult = try await act(API.restaurantScrapeMenu, args)
     }
 
     func restaurantDraft(deviceId: String, onboardingId: String) async throws -> RestaurantMenuDraft? {
@@ -171,8 +179,10 @@ final class LiveBackend: Backend {
         try await act(API.menuIngest, ["restaurantId": restaurantId])
     }
 
-    func createParty(restaurantId: String, size: Int, hostDeviceId: String) async throws -> CreatedParty {
-        try await mutate(API.partiesCreate, ["restaurantId": restaurantId, "size": Double(size), "hostDeviceId": hostDeviceId])
+    func createParty(restaurantId: String, size: Int, hostDeviceId: String, autoMode: Bool) async throws -> CreatedParty {
+        try await mutate(API.partiesCreate, [
+            "restaurantId": restaurantId, "size": Double(size), "hostDeviceId": hostDeviceId, "autoMode": autoMode,
+        ])
     }
 
     func startWithFewer(partyId: String, hostDeviceId: String) async throws {
@@ -217,7 +227,7 @@ final class LiveBackend: Backend {
         try await mutate(API.ordersPick, ["partyId": partyId, "userId": userId, "deviceId": deviceId, "itemId": itemId])
     }
 
-    func cacheDishCutout(partyId: String, userId: String, deviceId: String, itemId: String, sourceImageUrl: String, pngData: Data) async throws {
+    func cacheDishImage(partyId: String, userId: String, deviceId: String, itemId: String, sourceImageUrl: String, pngData: Data) async throws {
         let uploadUrl: String? = try await mutate(API.ordersPrepareDishImageUpload, [
             "partyId": partyId, "userId": userId, "deviceId": deviceId, "itemId": itemId, "imageUrl": sourceImageUrl,
         ])

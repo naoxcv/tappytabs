@@ -20,8 +20,8 @@ if (rows.length < rawMenu.length) throw new Error(`Expected at least ${rawMenu.l
 const untagged = rows.filter((row) => row.tagStatus !== "tagged");
 if (untagged.length) throw new Error(`${untagged.length} rows are untagged; configure Bitdeer and rerun before refreshing the fallback.`);
 
-const snapshot = rows.map(({ name, category, cuisine, tags, description, priceCents, allergens, diet, spice, isDrink, shareable, menuOrder, tagStatus }) => ({
-  name, category, cuisine, tags, description, priceCents, allergens, diet, spice, isDrink, shareable, menuOrder, tagStatus,
+const snapshot = rows.map(({ name, category, cuisine, tags, description, priceCents, currency, priceVerified, taste, allergens, diet, spice, isDrink, shareable, menuOrder, tagStatus }) => ({
+  name, category, cuisine, tags, description, priceCents, currency, priceVerified: priceVerified ?? false, taste: taste ?? [], allergens, diet, spice, isDrink, shareable, menuOrder, tagStatus,
 }));
 writeFileSync("convex/fixtures/normalized-menu.json", `${JSON.stringify(snapshot, null, 2)}\n`);
 process.stdout.write(`Updated normalized fallback with ${snapshot.length} items from ${restaurant.name}.\n`);

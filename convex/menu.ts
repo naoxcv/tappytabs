@@ -38,6 +38,9 @@ export const normalizedItem = z.object({
   tags: z.array(z.string()),
   description: z.string(),
   priceCents: z.number().int().nonnegative(),
+  currency: z.string().optional(),
+  priceVerified: z.boolean().optional(),
+  taste: z.array(z.object({ contrast: z.string(), value: z.number(), evidence: z.enum(["stated", "inferred"]), detail: z.string() })).optional(),
   allergens: z.array(z.object({ allergen: z.enum(ALLERGENS), level: z.enum(ALLERGEN_LEVELS) })),
   diet: z.array(z.enum(DIETS)),
   spice: z.number().min(0).max(4),
@@ -69,6 +72,20 @@ async function runActor(actorId: string, input: unknown, token: string, timeoutM
       method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(input), signal: ctrl.signal,
     });
     if (!res.ok) throw new Error(`Apify ${actorId} HTTP ${res.status}`);
+    return { items: (await res.json()) as unknown[], runId: res.headers.get("x-apify-run-id") ?? undefined };
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+async function runTask(taskId: string, input: unknown, token: string, timeoutMs: number) {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+  try {
+    const url = `https://api.apify.com/v2/actor-tasks/${encodeURIComponent(taskId.replace("/", "~"))}/run-sync-get-dataset-items` +
+      `?token=${token}&timeout=${Math.floor(timeoutMs / 1000)}`;
+    const res = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(input), signal: ctrl.signal });
+    if (!res.ok) throw new Error(`Apify task ${taskId} HTTP ${res.status}`);
     return { items: (await res.json()) as unknown[], runId: res.headers.get("x-apify-run-id") ?? undefined };
   } finally {
     clearTimeout(timer);
@@ -118,7 +135,7 @@ export const ingest = action({
     const r = restaurantId ? await ctx.runQuery(internal.menu.getRestaurant, { restaurantId }) : null;
     const token = process.env.APIFY_TOKEN;
     const normalizer = process.env.APIFY_NORMALIZER_ACTOR; // e.g. "yourname/menu-normalizer"
-    const scraper = process.env.APIFY_SCRAPER_ACTOR; // e.g. a Google Maps menu scraper from the Apify Store
+    const scraperTask = process.env.APIFY_SCRAPER_URL_TASK;
     const keep = (note: string) => ({ count: r?.itemCount ?? 0, source: "seed" as const, apifyRunId: null, note, restaurantId: restaurantId ?? null });
     if (restaurantId && !r) return keep("restaurant not found");
     if (!restaurantId && (!menuUrl?.trim() || !restaurantName?.trim())) {
@@ -132,8 +149,8 @@ export const ingest = action({
       let raw: RawItem[] = suppliedItems ?? RAW_MENU;
       let note = "normalized the hand-written source menu";
       if (!suppliedItems && sourceUrl) {
-        if (!scraper) return keep("APIFY_SCRAPER_ACTOR not set; kept the existing menu");
-        const scraped = await runActor(scraper, { startUrls: [{ url: sourceUrl }], maxRequestsPerCrawl: 200 }, token, Math.max(3_000, deadline - Date.now() - 8_000));
+        if (!scraperTask) return keep("APIFY_SCRAPER_URL_TASK not set; kept the existing menu");
+        const scraped = await runTask(scraperTask, { mode: "url", url: sourceUrl, freshness: "med_cache" }, token, Math.max(3_000, deadline - Date.now() - 8_000));
         const mapped = mapScraperOutput(scraped.items);
         if (mapped.length < 5) return keep(`scraper found ${mapped.length} menu items; kept the existing menu`);
         raw = mapped;
@@ -200,7 +217,7 @@ export const upsertItems = internalMutation({
         await ctx.db.patch(existing._id, {
           ...item,
           ...(!item.imageUrl && existing.imageUrl ? { imageUrl: existing.imageUrl } : {}),
-          ...(changedPhoto ? { imageStorageId: undefined } : existing.imageStorageId ? { imageStorageId: existing.imageStorageId } : {}),
+          ...(changedPhoto ? { imageStorageId: undefined, imageProcessingVersion: undefined } : existing.imageStorageId ? { imageStorageId: existing.imageStorageId } : {}),
         });
       }
       else await ctx.db.insert("menuItems", { restaurantId, ...item });
@@ -213,4 +230,3 @@ export const upsertItems = internalMutation({
     return items.length;
   },
 });
-

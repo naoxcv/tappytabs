@@ -92,6 +92,9 @@ export function splitBubbleText(text: string, max = BUBBLE_MAX_CHARS): string[] 
 }
 
 export function reasonFor(item: MenuItemLite, user: UserLite): string {
+  const supported = (user.taste ?? []).filter((p) => Math.abs(p.value) >= 0.5 && p.confidence >= 0.5);
+  const matching = (item.taste ?? []).find((t) => supported.some((p) => p.contrast === t.contrast && p.value * t.value > 0));
+  if (matching) return `Matches ${first(user.name)}'s taste for ${matching.detail}`;
   const tags = new Set(item.tags.map((t) => t.toLowerCase()));
   const like = user.likes.find((l) => tags.has(l.toLowerCase()));
   if (like) return `Matches ${first(user.name)}'s love of ${like}`;

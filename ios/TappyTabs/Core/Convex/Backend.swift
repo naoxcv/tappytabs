@@ -30,16 +30,16 @@ protocol Backend: AnyObject {
     func restaurantAccount(deviceId: String, displayName: String) async throws -> RestaurantAccount
     func createRestaurantDraft(deviceId: String, name: String, address: String) async throws -> String
     func restaurantOnboardingStatus(deviceId: String, onboardingId: String) -> AnyPublisher<RestaurantOnboarding?, TTError>
-    func resolveRestaurant(deviceId: String, onboardingId: String) async throws
+    func startRestaurantUrlImport(deviceId: String, onboardingId: String, url: String, location: String?) async throws
+    func startRestaurantSearch(deviceId: String, onboardingId: String, query: String, location: String) async throws
     func selectRestaurantCandidate(deviceId: String, onboardingId: String, candidate: RestaurantCandidate) async throws
-    func scrapeRestaurantMenu(deviceId: String, onboardingId: String, menuUrl: String?) async throws
     func restaurantDraft(deviceId: String, onboardingId: String) async throws -> RestaurantMenuDraft?
     func updateRestaurantDraft(deviceId: String, onboardingId: String, items: [RestaurantMenuItem]) async throws
     func publishRestaurant(deviceId: String, onboardingId: String, items: [RestaurantMenuItem]) async throws
 
     // Restaurant
     func ingestMenu(restaurantId: String) async throws -> IngestResult
-    func createParty(restaurantId: String, size: Int, hostDeviceId: String) async throws -> CreatedParty
+    func createParty(restaurantId: String, size: Int, hostDeviceId: String, autoMode: Bool) async throws -> CreatedParty
     func startWithFewer(partyId: String, hostDeviceId: String) async throws
     func reset(partyId: String, hostDeviceId: String) async throws
     func announceTap(partyId: String, userId: String, deviceId: String, attemptId: String, token: String) async throws
@@ -54,7 +54,7 @@ protocol Backend: AnyObject {
     // Diner actions (bound to this device)
     func setHunger(partyId: String, userId: String, deviceId: String, hunger: Hunger) async throws
     func pick(partyId: String, userId: String, deviceId: String, itemId: String) async throws
-    func cacheDishCutout(partyId: String, userId: String, deviceId: String, itemId: String, sourceImageUrl: String, pngData: Data) async throws
+    func cacheDishImage(partyId: String, userId: String, deviceId: String, itemId: String, sourceImageUrl: String, pngData: Data) async throws
     func add(partyId: String, userId: String, deviceId: String, itemId: String, shared: Bool) async throws
     func remove(partyId: String, userId: String, deviceId: String, lineId: String) async throws -> RemoveResult
     func confirm(partyId: String, userId: String, deviceId: String) async throws

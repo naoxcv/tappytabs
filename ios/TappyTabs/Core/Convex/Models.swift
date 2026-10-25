@@ -45,6 +45,7 @@ struct Party: Decodable, Equatable {
     let status: PartyStatus
     let size: Double
     let joinCode: String
+    let autoMode: Bool?
     let pickDeadline: Double?
     let confirmDeadline: Double?
     let members: [Member]
@@ -86,7 +87,8 @@ struct Candidate: Decodable, Equatable, Identifiable {
     let isDrink: Bool
     let askServer: Bool
     let imageUrl: String?
-    let imageIsCutout: Bool?
+    let sourceImageUrl: String?
+    let imageIsProcessed: Bool?
     var id: String { itemId }
 }
 
@@ -163,6 +165,11 @@ struct RestaurantOnboarding: Decodable, Equatable, Identifiable {
     let status: String
     let candidates: [RestaurantCandidate]
     let selectedCandidate: RestaurantCandidate?
+    let acquisitionMode: String?
+    let sourceUrl: String?
+    let searchQuery: String?
+    let searchLocation: String?
+    let actorRunId: String?
     let errorMessage: String?
     var id: String { _id }
 }
@@ -170,6 +177,9 @@ struct RestaurantOnboarding: Decodable, Equatable, Identifiable {
 struct RestaurantCandidate: Codable, Equatable, Identifiable {
     let name: String
     let address: String
+    let sourceUrl: String?
+    let confidence: String?
+    let extractionConfidence: String?
     let mapsUrl: String?
     let googlePlaceId: String?
     let websiteUrl: String?
@@ -178,7 +188,7 @@ struct RestaurantCandidate: Codable, Equatable, Identifiable {
     let rating: Double?
     let distance: Double?
     let matchScore: Double?
-    var id: String { googlePlaceId ?? mapsUrl ?? "\(name)-\(address)" }
+    var id: String { sourceUrl ?? googlePlaceId ?? mapsUrl ?? "\(name)-\(address)" }
 }
 
 struct RestaurantRawMenuItem: Codable, Equatable, Identifiable {
@@ -290,10 +300,17 @@ struct DraftProfile: Equatable {
     var spice: Double = 2
     var likes: [String] = []
     var dislikes: [String] = []
+    var ingredientLikes: [String] = []
+    var ingredientAvoids: [String] = []
     var cuisines: [String] = []
     var dislikedCuisines: [String] = []
     var likedCategories: [String] = []
     var avatarId = "avatar_1"
+    var pairAnswers: [String: String] = [:]
+    var tasteCorrections: [String: Double] = [:]
+    var removedContrasts: Set<String> = []
+    var priceSensitivity = "somewhat"
+    var familiarity = "familiar"
 }
 
 enum JoinVia: String { case uwb, qr, sim }

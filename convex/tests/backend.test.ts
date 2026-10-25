@@ -123,17 +123,21 @@ describe("users", () => {
     const t = convexTest(schema, modules);
     const profile = {
       deviceId: "profile-test", name: "  Alex  ", allergies: [], diet: [], spice: 7,
-      likes: ["noodles"], dislikes: [], cuisines: ["Thai"], avatarId: "avatar_2",
+      likes: ["noodles"], dislikes: [], cuisines: ["Thai"],
+      dislikedCuisines: ["Italian"], likedCategories: ["mains"], avatarId: "avatar_2",
     };
     const firstId = await t.mutation(api.users.upsert, profile);
     const created = await t.query(api.users.me, { deviceId: "profile-test" });
     expect(created?._id).toBe(firstId);
     expect(created?.name).toBe("Alex");
     expect(created?.spice).toBe(4);
+    expect(created?.dislikedCuisines).toEqual(["Italian"]);
+    expect(created?.likedCategories).toEqual(["mains"]);
 
-    const secondId = await t.mutation(api.users.upsert, { ...profile, name: "Alex Updated", spice: -1 });
+    const secondId = await t.mutation(api.users.upsert, { ...profile, name: "Alex Updated", spice: -1, dislikedCuisines: [] });
     expect(secondId).toBe(firstId);
     expect((await t.query(api.users.me, { deviceId: "profile-test" }))?.name).toBe("Alex Updated");
+    expect((await t.query(api.users.me, { deviceId: "profile-test" }))?.dislikedCuisines).toEqual([]);
     expect((await t.query(api.users.me, { deviceId: "missing" }))).toBeNull();
   });
 
@@ -145,7 +149,7 @@ describe("users", () => {
       const followups = await t.action(api.users.followups, {
         draft: {
           name: "Alex", allergies: [], diet: [], spice: 2, likes: ["noodles"], dislikes: [],
-          cuisines: ["Thai"], avatarId: "avatar_2",
+          cuisines: ["Thai"], dislikedCuisines: ["Italian"], likedCategories: ["mains"], avatarId: "avatar_2",
         },
       });
       expect(followups.length).toBeGreaterThan(0);

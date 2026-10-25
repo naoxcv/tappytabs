@@ -6,6 +6,7 @@ import { clip } from "../bubbles";
 import { COMMON_RULES, tag } from "../models/provider";
 import { PERSONALITY_TONE } from "../personalities";
 import type { SafeItem } from "../safety";
+import { strongestTaste } from "../taste";
 
 export const draftSchema = z.object({
   // Claude structured outputs does not support JSON Schema maxItems; repairDraft enforces the cap.
@@ -15,7 +16,8 @@ export const draftSchema = z.object({
 });
 
 const menuRow = (i: SafeItem) => ({
-  id: i._id, name: i.name, category: i.category, price: `$${(i.priceCents / 100).toFixed(2)}`,
+  id: i._id, name: i.name, category: i.category, price: i.priceCents === null ? "unknown" : `$${(i.priceCents / 100).toFixed(2)}`,
+  priceVerified: i.priceVerified ?? false, taste: i.taste ?? [],
   cuisine: i.cuisine, description: i.description, tags: i.tags, askServer: i.askServer,
 });
 
@@ -30,13 +32,15 @@ export function draftPrompt(args: {
     "Prefer items without askServer. Give a one-line reason per pick (max 60 chars).",
     "The candidate list is pre-sorted by a rough code score; treat its order as a weak tie-breaker, not a recommendation.",
     "Use the diner's liked and disliked cuisines plus the actual candidate descriptions and tags to infer taste fit, including reasonable similarities across cuisines. Do not assume an entire cuisine is identical to another; ground each pick in the listed dish details.",
+    "Use supported taste contrasts and corrections. Ground reasons in descriptions or clearly marked inferences. Unknown or unverified prices cannot be called value picks. One main suffices for a normally hungry diner; do not guess portions.",
     COMMON_RULES,
   ].join("\n");
   const user_ = [
     tag("profile", {
-      name: user.name, likes: user.likes, dislikes: user.dislikes,
+      name: user.name, likes: user.likes, dislikes: user.dislikes, ingredientLikes: user.ingredientLikes, ingredientAvoids: user.ingredientAvoids,
       likedCuisines: user.cuisines, dislikedCuisines: user.dislikedCuisines ?? [],
       spiceTolerance: user.spice, hunger: args.hunger,
+      taste: strongestTaste(user.taste), corrections: user.tasteCorrections, priceSensitivity: user.priceSensitivity, familiarity: user.familiarity,
     }),
     tag("candidates", args.mains.map(menuRow)),
     tag("drinks", args.drinks.map(menuRow)),
