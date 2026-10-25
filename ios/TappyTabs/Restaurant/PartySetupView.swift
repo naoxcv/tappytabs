@@ -81,11 +81,6 @@ struct PartySetupView: View {
                     .font(AppTypography.footnote).foregroundStyle(Theme.accent)
             }
             Spacer()
-            if fetching { ProgressView() } else {
-                Button("Fetch menu") { Task { await fetch() } }
-                    .buttonStyle(SecondaryButtonStyle())
-                    .disabled(restaurant == nil)
-            }
         }
         .overlay(alignment: .bottomLeading) {
             if let note { Text(note).font(AppTypography.caption2).foregroundStyle(Theme.accent).offset(y: 16) }

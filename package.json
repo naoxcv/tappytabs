@@ -1,6 +1,7 @@
 {
   "name": "tappytabs",
   "private": true,
+  "license": "MIT",
   "version": "0.1.0",
   "type": "module",
   "description": "TappyTabs: tap to join a table, let AI agents negotiate the group order. Convex backend + iOS app.",

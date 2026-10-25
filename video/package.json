@@ -1,0 +1,25 @@
+{
+  "name": "tappytabs-launch-video",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "music": "node scripts/make-music.mjs",
+    "sync-assets": "cp ../assets/agent-characters/icons/characters.json src/assets/ && cp ../ios/TappyTabs/Resources/Fonts/*.ttf public/fonts/",
+    "studio": "remotion studio src/index.ts",
+    "render:entrance": "remotion render src/index.ts Entrance out/entrance.mp4",
+    "render": "remotion render src/index.ts LaunchVideo out/tappytabs-launch.mp4",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@remotion/cli": "^4.0.538",
+    "@remotion/fonts": "^4.0.538",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "remotion": "^4.0.538"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.2",
+    "typescript": "^5.9.3"
+  }
+}

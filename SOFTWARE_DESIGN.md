@@ -1,6 +1,6 @@
 # TappyTabs Software Design
 
-> MVP implementation guide. Product behavior and demo requirements live in [README.md](README.md); this document focuses on how to build them.
+> MVP implementation guide. Product behavior and demo requirements live in [PRD.md](PRD.md); this document focuses on how to build them.
 
 ## 1. System overview
 
@@ -63,7 +63,7 @@ sequenceDiagram
   C-->>R: Realtime conversation and final order
 ```
 
-Nearby Interaction provides UWB ranging; Multipeer Connectivity discovers the other app and exchanges the temporary discovery tokens required to begin ranging. The restaurant phone advertises while in host/join mode; the diner phone joins when measured distance crosses a configured threshold. QR join remains the fallback described in the README. This requires compatible UWB iPhones for the primary join path. (Apple documents Nearby Interaction and token exchange in its [framework overview](https://developer.apple.com/documentation/nearbyinteraction).)
+Nearby Interaction provides UWB ranging; Multipeer Connectivity discovers the other app and exchanges the temporary discovery tokens required to begin ranging. The restaurant phone advertises while in host/join mode; the diner phone joins when measured distance crosses a configured threshold. QR join remains the fallback described in the [PRD](PRD.md). This requires compatible UWB iPhones for the primary join path. (Apple documents Nearby Interaction and token exchange in its [framework overview](https://developer.apple.com/documentation/nearbyinteraction).)
 
 The backend starts one bounded workflow after the owner starts the party: filter each diner’s candidates; draft proposals; negotiate a group plan for a fixed number of rounds; publish the validated plan. Stage 1 records each diner’s pick. Stage 2 records group edits and each diner’s confirmation. A mutation checks the current phase and membership before accepting every change.
 
@@ -115,4 +115,4 @@ Use one Convex development deployment for the demo, with secrets for Claude, Bit
 
 **Should-have:** authentication and self-service restaurant profile creation. A separate Apify scraper Actor uses the owner’s Google Maps location to find a menu and prefill the editable menu section. The owner reviews/edits the items; the project normalizer/tagger Actor then processes them. This only speeds restaurant setup and is not required for the MVP.
 
-> The project README remains authoritative for product requirements and the demo checklist.
+> The [PRD](PRD.md) remains authoritative for product requirements and the demo checklist.
