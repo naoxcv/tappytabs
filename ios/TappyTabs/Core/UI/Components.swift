@@ -6,6 +6,10 @@ enum Theme {
     static let background = Color("AppBackground")
     static let accent = Color(red: 1, green: 0.96, blue: 0.86)
     static let accentForeground = background
+    static let primaryActionFill = accent
+    static let primaryActionText = background
+    static let secondaryActionText = accent
+    static let cardCornerRadius: CGFloat = 16
     static let card = Color(.secondarySystemBackground)
     static let restaurantBubble = Color(.tertiarySystemFill)
 }
@@ -210,31 +214,125 @@ extension View {
 }
 
 struct BigButtonStyle: ButtonStyle {
-    var tint: Color = Theme.accent
+    var tint: Color = Theme.primaryActionFill
+    @Environment(\.isEnabled) private var isEnabled
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .font(AppTypography.style(.body, weight: .semibold))
             .frame(maxWidth: .infinity, minHeight: 54)
             .background(tint.opacity(configuration.isPressed ? 0.7 : 1), in: RoundedRectangle(cornerRadius: 16))
-            .foregroundStyle(Theme.accentForeground)
+            .foregroundStyle(Theme.primaryActionText)
+            .contentShape(RoundedRectangle(cornerRadius: 16))
+            .opacity(isEnabled ? 1 : 0.48)
     }
+}
+
+struct CompactPrimaryButtonStyle: ButtonStyle {
+    @Environment(\.isEnabled) private var isEnabled
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .font(AppTypography.style(.subheadline, weight: .semibold))
+            .padding(.horizontal, 16)
+            .frame(minHeight: 44)
+            .background(Theme.primaryActionFill.opacity(configuration.isPressed ? 0.7 : 1),
+                        in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .foregroundStyle(Theme.primaryActionText)
+            .contentShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .opacity(isEnabled ? 1 : 0.48)
+    }
+}
+
+struct SecondaryButtonStyle: ButtonStyle {
+    @Environment(\.isEnabled) private var isEnabled
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .font(AppTypography.style(.body, weight: .semibold))
+            .frame(maxWidth: .infinity, minHeight: 44)
+            .foregroundStyle(Theme.secondaryActionText.opacity(configuration.isPressed ? 0.7 : 1))
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
+            .background {
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .strokeBorder(Theme.secondaryActionText.opacity(configuration.isPressed ? 0.9 : 0.42), lineWidth: 1)
+            }
+            .contentShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+            .opacity(isEnabled ? 1 : 0.48)
+    }
+}
+
+struct AppTextFieldStyle: TextFieldStyle {
+    func _body(configuration: TextField<Self._Label>) -> some View {
+        configuration
+            .font(AppTypography.body)
+            .foregroundStyle(Theme.accent)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 12)
+            .background(Color.white.opacity(0.045), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .overlay {
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .strokeBorder(Theme.accent.opacity(0.24), lineWidth: 1)
+            }
+    }
+}
+
+extension View {
+    func appFieldStyle() -> some View { textFieldStyle(AppTextFieldStyle()) }
 }
 
 /// "Waiting for the table" style row of member avatars with ticks.
 struct MemberTicks: View {
     let members: [Member]
     let done: (Member) -> Bool
+    var avatarSize: CGFloat = 44
+
     var body: some View {
-        HStack(spacing: 14) {
-            ForEach(members) { m in
-                VStack(spacing: 4) {
-                    Text(m.name).font(AppTypography.caption)
-                    AvatarView(avatarId: m.avatarId, size: 44)
-                        .overlay(alignment: .bottomTrailing) {
-                            if done(m) { Image(systemName: "checkmark.circle.fill").foregroundStyle(.green).background(Circle().fill(.background)) }
+        Group {
+            if avatarSize >= 60 {
+                let rows = centeredRows
+                VStack(spacing: 14) {
+                    ForEach(rows.indices, id: \.self) { rowIndex in
+                        HStack(spacing: 12) {
+                            ForEach(rows[rowIndex]) { member in
+                                memberTick(member)
+                                    .transition(.asymmetric(
+                                        insertion: .offset(x: avatarSize).combined(with: .scale(scale: 0.82)).combined(with: .opacity),
+                                        removal: .opacity
+                                    ))
+                            }
                         }
+                        .frame(maxWidth: .infinity, alignment: .center)
+                    }
+                }
+                .animation(.spring(response: 0.5, dampingFraction: 0.62), value: members.map(\.userId))
+            } else {
+                HStack(spacing: 14) {
+                    ForEach(members) { member in memberTick(member) }
                 }
             }
         }
+    }
+
+    private var centeredRows: [[Member]] {
+        stride(from: 0, to: members.count, by: 4).map { start in
+            Array(members[start..<min(start + 4, members.count)])
+        }
+    }
+
+    private func memberTick(_ member: Member) -> some View {
+        VStack(spacing: 4) {
+            Text(member.name)
+                .font(AppTypography.caption)
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
+            AvatarView(avatarId: member.avatarId, size: avatarSize)
+                .overlay(alignment: .bottomTrailing) {
+                    if done(member) {
+                        Image(systemName: "checkmark.circle.fill")
+                            .foregroundStyle(.green)
+                            .background(Circle().fill(.background))
+                    }
+                }
+        }
+        .frame(width: avatarSize >= 60 ? avatarSize + 12 : nil)
     }
 }

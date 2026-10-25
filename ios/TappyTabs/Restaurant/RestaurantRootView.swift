@@ -70,10 +70,10 @@ struct RestaurantOnboardingView: View {
 
     @ViewBuilder private var content: some View {
         if onboardingId == nil {
-            TextField("Restaurant name", text: $name).textFieldStyle(.roundedBorder)
-            TextField("Street address", text: $address).textFieldStyle(.roundedBorder)
+            TextField("Restaurant name", text: $name).appFieldStyle()
+            TextField("Street address", text: $address).appFieldStyle()
             Button("Find my restaurant") { Task { await submitDetails() } }
-                .buttonStyle(.borderedProminent).disabled(name.trimmed.isEmpty || address.trimmed.isEmpty || saving)
+                .buttonStyle(BigButtonStyle()).disabled(name.trimmed.isEmpty || address.trimmed.isEmpty || saving)
         } else if let onboarding, ["created", "details_submitted", "finding_restaurant"].contains(onboarding.status) {
             ProgressView("Finding restaurants…")
         } else if let onboarding, onboarding.status == "candidates_ready" {
@@ -92,6 +92,7 @@ struct RestaurantOnboardingView: View {
                 .buttonStyle(.plain)
             }
             Button("I’ll enter it manually") { Task { await manualReview() } }
+                .buttonStyle(SecondaryButtonStyle())
         } else if let draft {
             MenuDraftEditor(draft: draft, saving: saving) { items in Task { await update(items) } } publish: { items in Task { await publish(items) } }
         } else {
@@ -179,18 +180,18 @@ private struct MenuDraftEditor: View {
             Text("Scraped details require your review.").font(AppTypography.footnote).foregroundStyle(Theme.accent)
             ForEach($items) { $item in
                 VStack(alignment: .leading, spacing: 8) {
-                    TextField("Item name", text: $item.name).textFieldStyle(.roundedBorder)
-                    TextField("Description", text: $item.description).textFieldStyle(.roundedBorder)
+                    TextField("Item name", text: $item.name).appFieldStyle()
+                    TextField("Description", text: $item.description).appFieldStyle()
                     HStack {
-                        TextField("Price cents", value: $item.priceCents, format: .number).textFieldStyle(.roundedBorder)
+                        TextField("Price cents", value: $item.priceCents, format: .number).appFieldStyle()
                         Text(item.category).foregroundStyle(Theme.accent)
                     }
                 }
                 .padding(.vertical, 4)
             }
             HStack {
-                Button("Save edits") { onSave(items) }.buttonStyle(.bordered)
-                Button("Publish menu") { publish(items) }.buttonStyle(.borderedProminent).disabled(items.isEmpty || saving)
+                Button("Save edits") { onSave(items) }.buttonStyle(SecondaryButtonStyle())
+                Button("Publish menu") { publish(items) }.buttonStyle(BigButtonStyle()).disabled(items.isEmpty || saving)
             }
         }
     }

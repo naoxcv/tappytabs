@@ -36,8 +36,7 @@ struct PartySetupView: View {
                                         .font(AppTypography.style(.title, weight: .bold))
                                         .frame(maxWidth: .infinity, minHeight: 64)
                                 }
-                                .buttonStyle(.borderedProminent)
-                                .foregroundStyle(Theme.accentForeground)
+                                .buttonStyle(BigButtonStyle())
                                 .disabled(restaurant == nil || opening)
                             }
                         }
@@ -61,7 +60,7 @@ struct PartySetupView: View {
             Spacer()
             if fetching { ProgressView() } else {
                 Button("Fetch menu") { Task { await fetch() } }
-                    .font(AppTypography.footnote)
+                    .buttonStyle(SecondaryButtonStyle())
                     .disabled(restaurant == nil)
             }
         }

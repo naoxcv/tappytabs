@@ -40,7 +40,7 @@ struct TapInView: View {
                             Button(tableLabels[table.partyId] ?? "Table \(table.partyId.suffix(6))") {
                                 proximity.focus(on: table.partyId)
                             }
-                            .buttonStyle(.bordered)
+                            .buttonStyle(SecondaryButtonStyle())
                         }
                     }
                 }
@@ -53,14 +53,14 @@ struct TapInView: View {
                     if app.tapSearchPaused { app.resumeTapSearch() }
                     else { app.leaveTable() }
                 }
-                    .buttonStyle(.bordered)
+                    .buttonStyle(SecondaryButtonStyle())
                     .accessibilityIdentifier("restartTapSearch")
             }
             Spacer()
             if promoteQR || !proximity.supportsTap {
                 Button("Scan QR") { showScanner = true }.buttonStyle(BigButtonStyle()).disabled(joiningByQR)
             } else {
-                Button("Scan QR instead") { showScanner = true }.disabled(joiningByQR)
+                Button("Scan QR instead") { showScanner = true }.buttonStyle(SecondaryButtonStyle()).disabled(joiningByQR)
             }
             if let mock = app.mock {
                 Button("Simulate tap (mock)") { Task { await simulatedJoin(mock) } }.font(AppTypography.footnote)

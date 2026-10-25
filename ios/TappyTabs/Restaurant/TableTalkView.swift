@@ -58,8 +58,8 @@ private struct AgentPlayArea: View {
                    state: .celebrating, animated: true)
             .overlay(alignment: .topTrailing) {
                 if isSpeaking {
-                    // The indicator sits at the avatar's upper-right, so its tail points back toward it.
-                    SpeakingIndicator(tailOnRight: false)
+                    // A small, tail-free typing pill keeps the speaking cue visually quiet.
+                    SpeakingIndicator()
                         .offset(x: 8, y: -2)
                         .transition(.scale(scale: 0.6).combined(with: .opacity))
                 }
@@ -93,16 +93,19 @@ private struct AgentPlayArea: View {
 }
 
 private struct SpeakingIndicator: View {
-    let tailOnRight: Bool
     var body: some View {
-        let color = tailOnRight ? Theme.accent : Color(red: 0.23, green: 0.23, blue: 0.25)
-        Text("…")
-            .font(.system(size: 22, weight: .bold, design: .rounded))
-            .foregroundStyle(tailOnRight ? Theme.background : .white)
-            .frame(width: 56, height: 42)
-            .offset(y: -4)
-            .background(ChatBubbleBackground(tailOnRight: tailOnRight, color: color))
-            .accessibilityLabel("Speaking")
+        HStack(spacing: 4) {
+            ForEach(0..<3) { _ in
+                Circle().fill(Theme.background).frame(width: 5, height: 5)
+            }
+        }
+        .frame(width: 42, height: 28)
+        .background(Theme.accent, in: Capsule())
+        .overlay(alignment: .bottomLeading) {
+            Circle().fill(Theme.accent).frame(width: 8, height: 8).offset(x: 2, y: 2)
+        }
+        .shadow(color: Theme.background.opacity(0.16), radius: 3, y: 1)
+        .accessibilityLabel("Speaking")
     }
 }
 
@@ -187,6 +190,7 @@ private struct LiveChatRow: View {
     let message: Bubble
     let store: PartyStore
     let maxBubbleWidth: CGFloat
+    var bubbleStyle: ChatBubbleStyle = .standard
     private var isRestaurant: Bool { message.fromUserId == nil }
     private var speakerName: String {
         message.fromUserId.map { store.name(of: $0) } ?? (store.party?.restaurantName ?? "Restaurant")
@@ -194,10 +198,6 @@ private struct LiveChatRow: View {
     private var timestamp: String {
         Date(timeIntervalSince1970: message.showAt / 1000).formatted(date: .omitted, time: .shortened)
     }
-    private var bubbleColor: Color {
-        isRestaurant ? Theme.accent : Color(red: 0.23, green: 0.23, blue: 0.25)
-    }
-
     var body: some View {
         HStack {
             if isRestaurant { Spacer(minLength: 12) }
@@ -207,11 +207,14 @@ private struct LiveChatRow: View {
                     .foregroundStyle(Theme.accent.opacity(0.72))
                 Text(message.text)
                     .font(AppTypography.style(.caption))
-                    .foregroundStyle(isRestaurant ? Theme.background : .white)
+                    .foregroundStyle(Theme.background)
+                    .multilineTextAlignment(isRestaurant ? .trailing : .leading)
                     .fixedSize(horizontal: false, vertical: true)
-                    .padding(.horizontal, 13)
-                    .padding(.vertical, 10)
-                    .background(ChatBubbleBackground(tailOnRight: isRestaurant, color: bubbleColor))
+                    .frame(maxWidth: max(72, maxBubbleWidth - bubbleStyle.horizontalPadding * 2), alignment: isRestaurant ? .trailing : .leading)
+                    .padding(.horizontal, bubbleStyle.horizontalPadding)
+                    .padding(.top, bubbleStyle.verticalPadding)
+                    .padding(.bottom, bubbleStyle.verticalPadding + bubbleStyle.tailClearance)
+                    .background(ChatBubbleBackground(tailOnRight: isRestaurant, style: bubbleStyle))
                     .frame(maxWidth: maxBubbleWidth, alignment: isRestaurant ? .trailing : .leading)
                 Text(timestamp)
                     .font(AppTypography.style(.caption2))
@@ -224,54 +227,32 @@ private struct LiveChatRow: View {
     }
 }
 
-/// Draw the body and tail as filled overlapping shapes so their join stays opaque.
+/// Uses the SVG bubble asset directly. Cap insets protect the original corners and tail as the center stretches.
 private struct ChatBubbleBackground: View {
     var tailOnRight: Bool
-    var color: Color
+    var style: ChatBubbleStyle = .standard
 
     var body: some View {
         GeometryReader { geometry in
-            let tailHeight = min(28, max(11, geometry.size.height * 0.24))
-            let tailWidth = min(geometry.size.width * 0.5, max(34, geometry.size.width * 0.17))
-            let bodyHeight = max(1, geometry.size.height - tailHeight * 0.68)
-            ZStack(alignment: tailOnRight ? .bottomTrailing : .bottomLeading) {
-                RoundedRectangle(cornerRadius: bodyHeight / 2, style: .continuous)
-                    .fill(color)
-                    .padding(.bottom, tailHeight * 0.68)
-                ChatBubbleTail(tailOnRight: tailOnRight)
-                    .fill(color)
-                    .frame(width: tailWidth, height: tailHeight)
-                    .offset(x: tailOnRight ? tailWidth * 0.12 : -tailWidth * 0.12, y: 0)
-            }
-            .frame(width: geometry.size.width, height: geometry.size.height)
+            Image("MessageBubble")
+                .resizable(capInsets: style.capInsets, resizingMode: .stretch)
+                .frame(width: geometry.size.width, height: geometry.size.height)
+                .scaleEffect(x: tailOnRight ? -1 : 1, y: 1)
         }
+        .accessibilityHidden(true)
     }
 }
 
-private struct ChatBubbleTail: Shape {
-    var tailOnRight: Bool
-
-    func path(in rect: CGRect) -> Path {
-        func x(_ value: CGFloat) -> CGFloat { tailOnRight ? rect.maxX - value : rect.minX + value }
-        var path = Path()
-        // Keep the attachment broad along the bubble, then taper to a narrow rounded tip.
-        path.move(to: CGPoint(x: x(rect.width * 0.94), y: rect.minY))
-        path.addCurve(to: CGPoint(x: x(rect.width * 0.12), y: rect.height * 0.62),
-                      control1: CGPoint(x: x(rect.width * 0.65), y: rect.height * 0.02),
-                      control2: CGPoint(x: x(rect.width * 0.24), y: rect.height * 0.22))
-        path.addCurve(to: CGPoint(x: x(rect.width * 0.07), y: rect.height * 0.88),
-                      control1: CGPoint(x: x(rect.width * 0.01), y: rect.height * 0.74),
-                      control2: CGPoint(x: x(rect.width * 0.01), y: rect.height * 0.87))
-        path.addCurve(to: CGPoint(x: x(rect.width * 0.22), y: rect.height * 0.98),
-                      control1: CGPoint(x: x(rect.width * 0.07), y: rect.height * 0.98),
-                      control2: CGPoint(x: x(rect.width * 0.16), y: rect.height * 0.98))
-        path.addCurve(to: CGPoint(x: x(rect.width * 0.46), y: rect.height * 0.62),
-                      control1: CGPoint(x: x(rect.width * 0.31), y: rect.height * 0.91),
-                      control2: CGPoint(x: x(rect.width * 0.39), y: rect.height * 0.74))
-        path.addCurve(to: CGPoint(x: x(rect.width * 0.94), y: rect.minY),
-                      control1: CGPoint(x: x(rect.width * 0.62), y: rect.height * 0.38),
-                      control2: CGPoint(x: x(rect.width * 0.83), y: rect.height * 0.10))
-        path.closeSubpath()
-        return path
-    }
+/// Text insets and the SVG's stretch regions can be tuned here. Edit the SVG to change the tail silhouette.
+private struct ChatBubbleStyle {
+    static let standard = ChatBubbleStyle(
+        capInsets: EdgeInsets(top: 28, leading: 34, bottom: 28, trailing: 29),
+        horizontalPadding: 18,
+        verticalPadding: 14,
+        tailClearance: 14
+    )
+    var capInsets: EdgeInsets
+    var horizontalPadding: CGFloat = 18
+    var verticalPadding: CGFloat = 14
+    var tailClearance: CGFloat
 }

@@ -1,10 +1,11 @@
-// Fixed offline onboarding: basics → hard rules → spice → five pairs → decision style → avatar → editable summary.
+// Fixed offline onboarding: basics → hard rules → spice → taste pairs → decision style → avatar → editable summary.
 import SwiftUI
 
 private struct TasteOption {
     let title: String
     let restaurant: String
     let detail: String
+    let imageURL: URL
 }
 
 private struct TastePair: Identifiable {
@@ -35,40 +36,45 @@ private struct TastePair: Identifiable {
     static let all = [
         TastePair(id: "v2_dumpling_texture", contrast: "texture",
                   a: TasteOption(title: "Pan-fried pork soup buns", restaurant: "Dumpling Home",
-                                 detail: "Juicy pork and hot broth inside a soft bun, pan-fried until the bottom is golden and crunches when you bite in."),
+                                 detail: "Pork · broth · pan-fried bun",
+                                 imageURL: URL(string: "https://s3-media0.fl.yelpcdn.com/bphoto/Utdv29yFK-sfp9D1Tg-Bwg/o.jpg")!),
                   b: TasteOption(title: "Pork soup dumplings (xiao long bao)", restaurant: "Dumpling Home",
-                                 detail: "The same juicy pork and broth, steamed in a thin, delicate wrapper. Soft all the way through.")),
+                                 detail: "Pork · broth · steamed wrapper",
+                                 imageURL: URL(string: "https://s.hdnux.com/photos/01/15/03/50/20199986/22/rawImage.jpg")!)),
         TastePair(id: "v2_kokkari_richness", contrast: "richness",
                   a: TasteOption(title: "Whole grilled fish", restaurant: "Kokkari",
-                                 detail: "Sea bass grilled on the bone over charcoal, finished with olive oil, lemon, and an herb-and-caper dressing."),
+                                 detail: "Sea bass · lemon · olive oil · herbs · capers",
+                                 imageURL: URL(string: "https://s.hdnux.com/photos/54/11/64/15347683/3/premium_gallery_landscape.jpg")!),
                   b: TasteOption(title: "Moussaka", restaurant: "Kokkari",
-                                 detail: "Baked layers of cinnamon-spiced lamb and eggplant under a thick, creamy yogurt béchamel.")),
+                                 detail: "Lamb · beef · eggplant · potato · yogurt béchamel",
+                                 imageURL: URL(string: "https://res.cloudinary.com/the-infatuation/image/upload/f_auto/q_auto/v1735838424/images/Kitchen_Istanbul_Moussaka_1_SF_Erin_Ng_thalzn.jpg")!)),
         TastePair(id: "v2_turtle_brightness", contrast: "brightness",
                   a: TasteOption(title: "Fresh spring rolls", restaurant: "Turtle Tower",
-                                 detail: "Shrimp, rice noodles, and lettuce rolled in soft rice paper, with a creamy dipping sauce. Cool and gentle."),
+                                 detail: "Shrimp · pork · rice paper · peanut sauce",
+                                 imageURL: URL(string: "https://i0.wp.com/vickypham.com/wp-content/uploads/2024/08/f67fd-img_9264.jpg?fit=2500%2C2500&ssl=1")!),
                   b: TasteOption(title: "Green papaya salad", restaurant: "Turtle Tower",
-                                 detail: "Crunchy shredded green papaya tossed with lime, fish sauce, herbs, and peanuts. Zingy and tart.")),
+                                 detail: "Green papaya · peanuts · mint · cilantro",
+                                 imageURL: URL(string: "https://res.cloudinary.com/the-infatuation/image/upload/f_auto/q_auto/v1748979274/images/Turtle_Tower_Nom_Du_Du_1_SF_ERIN_NG_h4trdy.jpg")!)),
         TastePair(id: "v2_tadich_brothiness", contrast: "brothiness",
                   a: TasteOption(title: "Pan-fried sand dabs", restaurant: "Tadich Grill",
-                                 detail: "A delicate local flatfish, pan-fried until golden. A simple plate of fish."),
+                                 detail: "Sand dabs · pan-fried",
+                                 imageURL: URL(string: "https://tadichgrillsf.com/wp-content/uploads/2018/06/PanFriedSandDabs.jpg")!),
                   b: TasteOption(title: "Cioppino", restaurant: "Tadich Grill",
-                                 detail: "San Francisco’s classic seafood stew: crab, prawns, clams, mussels, scallops, and white fish in a tomato broth, with garlic bread for dipping.")),
+                                 detail: "Crab · prawns · clams · mussels · scallops · tomato broth",
+                                 imageURL: URL(string: "https://res.cloudinary.com/the-infatuation/image/upload/c_fill%2Cw_3840%2Car_4%3A3%2Cg_center%2Cf_auto/cms/reviews/tadich-grill/krescentcarasso-sf-tadichgrill-cioppinno-3")!)),
         TastePair(id: "v2_burma_boldness", contrast: "boldness",
                   a: TasteOption(title: "Rainbow salad", restaurant: "Burma Superstar",
-                                 detail: "A lighter, refreshing toss of 22 ingredients, including four kinds of noodles and green papaya."),
+                                 detail: "Four noodles · green papaya · 22 ingredients",
+                                 imageURL: URL(string: "https://d1w7312wesee68.cloudfront.net/QgeDhn5ZxVSRfJKiJYj1UmCgCX0Lczjaa8TN5Q4gmtQ/resize%3Afit%3A720%3A720/plain/s3%3A/toasttab/menu_service/restaurants/6c10d02e-f0e4-459a-a0a2-65f8b4e01490/MenuItem/b404b6b1-30b5-4da4-806b-c07245f9571b.jpg")!),
                   b: TasteOption(title: "Tea leaf salad", restaurant: "Burma Superstar",
-                                 detail: "Fermented tea leaves with crunchy peanuts and seeds, fried garlic, ground dried shrimp, lemon, and fish sauce. Deeply savory and earthy.")),
-        TastePair(id: "v2_khao_char", contrast: "char",
-                  a: TasteOption(title: "Beef larb (larb nuer)", restaurant: "Khao Tiew",
-                                 detail: "Northeastern Thai minced beef tossed with lime, fish sauce, toasted rice, and fresh herbs. Bright and cool."),
-                  b: TasteOption(title: "Pork pad see ew", restaurant: "Khao Tiew",
-                                 detail: "Wide rice noodles seared in a very hot wok until the edges char, with pork and Chinese broccoli. Smoky and savory.")),
+                                 detail: "Fermented tea leaves · peanuts · seeds · tomato · lime",
+                                 imageURL: URL(string: "https://s.hdnux.com/photos/01/23/64/63/21974270/7/rawImage.jpg")!)),
     ]
 }
 
 @Observable
 final class OnboardingModel {
-    enum Step: Int, CaseIterable { case basics, allergies, spice, pairs, decision, avatar, summary }
+    enum Step: Int, CaseIterable { case basics, allergies, spice, pairs, decision, summary, avatar, meetAgent }
     var step: Step = .basics
     var isMovingBackward = false
     var draft = DraftProfile()
@@ -76,7 +82,7 @@ final class OnboardingModel {
 
     func next() {
         isMovingBackward = false
-        step = Step(rawValue: step.rawValue + 1) ?? .summary
+        step = Step(rawValue: step.rawValue + 1) ?? .meetAgent
     }
     func back() {
         isMovingBackward = true
@@ -117,6 +123,7 @@ struct OnboardingFlow: View {
                     case .decision: DecisionStep(model: model)
                     case .avatar: AvatarPickerStep(model: model)
                     case .summary: ProfileSummaryStep(model: model)
+                    case .meetAgent: MeetAgentStep(model: model)
                     }
                 }
                 .padding()
@@ -127,6 +134,18 @@ struct OnboardingFlow: View {
             .frame(maxHeight: .infinity)
             .clipped()
             .animation(.easeInOut(duration: reduceMotion ? 0.15 : 0.35), value: model.step)
+        }
+        .background {
+            if model.step == .meetAgent {
+                GeometryReader { geometry in
+                    AgentPlayground(
+                        avatarId: model.draft.avatarId,
+                        initialPosition: CGPoint(x: geometry.size.width / 2, y: geometry.size.height / 2)
+                    )
+                    .frame(width: geometry.size.width, height: geometry.size.height)
+                }
+                .ignoresSafeArea()
+            }
         }
     }
 
@@ -144,7 +163,7 @@ struct OnboardingFlow: View {
 private struct StepScaffold<Content: View>: View {
     let title: String
     var subtitle: String? = nil
-    var nextTitle = "Next"
+    var nextTitle: String? = "Next"
     var canContinue = true
     let onNext: () -> Void
     @ViewBuilder let content: Content
@@ -154,7 +173,9 @@ private struct StepScaffold<Content: View>: View {
             Text(title).font(AppTypography.style(.largeTitle, weight: .bold))
             if let subtitle { Text(subtitle).foregroundStyle(Theme.accent) }
             content.frame(maxHeight: .infinity, alignment: .top)
-            Button(nextTitle, action: onNext).buttonStyle(BigButtonStyle()).disabled(!canContinue)
+            if let nextTitle {
+                Button(nextTitle, action: onNext).buttonStyle(BigButtonStyle()).disabled(!canContinue)
+            }
         }
     }
 }
@@ -191,11 +212,11 @@ struct BasicsStep: View {
                                   prompt: Text("e.g. Amy").foregroundStyle(Theme.accent.opacity(0.45)))
                             .font(AppTypography.custom(22))
                             .foregroundStyle(Theme.accent)
-                            .padding(.horizontal, 18)
-                            .padding(.vertical, 18)
-                            .background(Color.white.opacity(0.045), in: RoundedRectangle(cornerRadius: 18))
+                            .padding(.horizontal, 14)
+                            .padding(.vertical, 12)
+                            .background(Color.white.opacity(0.045), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
                             .overlay {
-                                RoundedRectangle(cornerRadius: 18)
+                                RoundedRectangle(cornerRadius: 12, style: .continuous)
                                     .strokeBorder(Theme.accent.opacity(nameFocused ? 1 : 0.25), lineWidth: nameFocused ? 2 : 1)
                             }
                             .focused($nameFocused)
@@ -231,7 +252,7 @@ struct BasicsStep: View {
 struct AllergyDietStep: View {
     @Bindable var model: OnboardingModel
     var body: some View {
-        StepScaffold(title: "Allergies & diet", subtitle: "Hard rules: your agent will never break these.", onNext: model.next) {
+        StepScaffold(title: "Allergies & diet", onNext: model.next) {
             ScrollView {
                 VStack(alignment: .leading) {
                     Text("Allergies").font(AppTypography.headline)
@@ -308,48 +329,117 @@ struct SpiceStep: View {
 struct PairStep: View {
     @Bindable var model: OnboardingModel
     @State private var index = 0
-    @State private var showTieBreaker = false
 
     var body: some View {
         let pair = TastePair.all[index]
-        StepScaffold(title: "This or That", subtitle: index == 5 ? "Optional tie-breaker · Prices are hidden." : "\(index + 1) of 5 · Choose what sounds better. Prices are hidden.",
-                     nextTitle: index == 4 ? "Continue" : "Skip this pair", onNext: {
-                        model.draft.pairAnswers.removeValue(forKey: pair.id)
-                        advance()
-                     }) {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 14) {
-                    Text("Which sounds better to you?").font(AppTypography.headline)
-                    optionChoice(pair.a, value: "a", pair: pair)
-                    optionChoice(pair.b, value: "b", pair: pair)
-                    HStack {
-                        choice("Both", value: "both", pair: pair)
-                        choice("Neither", value: "neither", pair: pair)
+        StepScaffold(title: "This or That", subtitle: "Chosen from popular restaurants near you.", nextTitle: nil, onNext: { model.next() }) {
+            GeometryReader { geometry in
+                let fixedHeight: CGFloat = 332 // card copy, buttons, and stack spacing
+                let imageHeight = min(154, max(48, (geometry.size.height - fixedHeight) / 2))
+
+                ZStack {
+                    VStack(spacing: 12) {
+                        optionChoice(pair.a, value: "a", pair: pair, imageHeight: imageHeight)
+                        optionChoice(pair.b, value: "b", pair: pair, imageHeight: imageHeight)
+                        Spacer(minLength: 0)
+                        HStack(spacing: 12) {
+                            choice("Both", value: "both", pair: pair)
+                            choice("Neither", value: "neither", pair: pair)
+                        }
                     }
+                    .id(pair.id)
+                    .transition(.asymmetric(
+                        insertion: .offset(x: 24).combined(with: .opacity),
+                        removal: .offset(x: -24).combined(with: .opacity)
+                    ))
                 }
+                .padding(.horizontal, 2)
+                .padding(.bottom, 8)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .animation(.easeInOut(duration: 0.3), value: pair.id)
             }
         }
-        .alert("One more comparison?", isPresented: $showTieBreaker) {
-            Button("Try it") { index = 5 }
-            Button("Continue") { model.next() }
-        } message: { Text("An optional fresh herbs versus smoky char question can sharpen your profile.") }
     }
 
-    private func optionChoice(_ option: TasteOption, value: String, pair: TastePair) -> some View {
+    private func optionChoice(_ option: TasteOption, value: String, pair: TastePair, imageHeight: CGFloat) -> some View {
         Button {
             model.draft.pairAnswers[pair.id] = value
             advance()
         } label: {
-            VStack(alignment: .leading, spacing: 5) {
-                Text(option.title).font(AppTypography.headline)
-                Text(option.restaurant).font(AppTypography.caption)
-                Text(option.detail).font(AppTypography.footnote).fixedSize(horizontal: false, vertical: true)
+            AsyncImage(url: option.imageURL) { phase in
+                optionCardContents(
+                    option,
+                    image: phase.image,
+                    imageHeight: imageHeight,
+                    isLoading: phase.image == nil && phase.error == nil
+                )
             }
-            .multilineTextAlignment(.leading)
+            .overlay {
+                RoundedRectangle(cornerRadius: 14)
+                    .strokeBorder(isSelected(value, pair: pair) ? Theme.accent : .clear, lineWidth: 2)
+            }
+            .overlay(alignment: .topTrailing) {
+                if isSelected(value, pair: pair) {
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.title3)
+                        .foregroundStyle(Theme.accent)
+                        .padding(8)
+                        .background(.black.opacity(0.45), in: Circle())
+                        .padding(8)
+                }
+            }
+        }
+        .buttonStyle(.plain)
+        .accessibilityAddTraits(isSelected(value, pair: pair) ? .isSelected : [])
+    }
+
+    private func optionCardContents(
+        _ option: TasteOption,
+        image: Image?,
+        imageHeight: CGFloat,
+        isLoading: Bool
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Group {
+                if let image {
+                    image.resizable().scaledToFill().transition(.opacity)
+                } else {
+                    imageFallback.overlay {
+                        if isLoading { ProgressView().tint(Theme.accent) }
+                    }
+                    .transition(.opacity)
+                }
+            }
+            .frame(maxWidth: .infinity)
+            .frame(height: imageHeight)
+            .clipped()
+
+            VStack(alignment: .leading, spacing: 7) {
+                Text(option.title).font(AppTypography.style(.title3, weight: .bold))
+                Text(option.restaurant).font(AppTypography.caption).foregroundStyle(Theme.accent.opacity(0.72))
+                Text(option.detail).font(AppTypography.subheadline).fixedSize(horizontal: false, vertical: true)
+            }
             .padding(14)
             .frame(maxWidth: .infinity, alignment: .leading)
+            .opacity(isLoading ? 0 : 1)
+            .accessibilityHidden(isLoading)
+            .overlay {
+                if isLoading {
+                    VStack(alignment: .leading, spacing: 9) {
+                        RoundedRectangle(cornerRadius: 4).fill(Theme.accent.opacity(0.16)).frame(width: 170, height: 16)
+                        RoundedRectangle(cornerRadius: 4).fill(Theme.accent.opacity(0.1)).frame(width: 90, height: 11)
+                        RoundedRectangle(cornerRadius: 4).fill(Theme.accent.opacity(0.1)).frame(maxWidth: 210).frame(height: 12)
+                    }
+                    .padding(14)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .transition(.opacity)
+                }
+            }
         }
-        .buttonStyle(BigButtonStyle())
+        .multilineTextAlignment(.leading)
+        .background(Theme.card, in: RoundedRectangle(cornerRadius: 14))
+        .clipShape(RoundedRectangle(cornerRadius: 14))
+        .animation(.easeInOut(duration: 0.25), value: isLoading)
     }
 
     private func choice(_ title: String, value: String, pair: TastePair) -> some View {
@@ -357,12 +447,30 @@ struct PairStep: View {
             model.draft.pairAnswers[pair.id] = value
             advance()
         }
-        .buttonStyle(BigButtonStyle())
+        .buttonStyle(.plain)
+        .font(AppTypography.style(.caption, weight: .semibold))
+        .frame(maxWidth: .infinity, minHeight: 46)
+        .foregroundStyle(Theme.primaryActionText)
+        .background(Theme.primaryActionFill, in: Capsule())
+        .overlay(Capsule().strokeBorder(isSelected(value, pair: pair) ? Theme.primaryActionText : .clear, lineWidth: 2))
+        .accessibilityAddTraits(isSelected(value, pair: pair) ? .isSelected : [])
+    }
+
+    private func isSelected(_ value: String, pair: TastePair) -> Bool {
+        model.draft.pairAnswers[pair.id] == value
+    }
+
+    private var imageFallback: some View {
+        ZStack {
+            Theme.card
+            Image(systemName: "fork.knife")
+                .font(.system(size: 28, weight: .light))
+                .foregroundStyle(Theme.accent.opacity(0.55))
+        }
     }
 
     private func advance() {
-        if index < 4 { index += 1 }
-        else if index == 4 { showTieBreaker = true }
+        if index < 4 { withAnimation(.easeInOut(duration: 0.3)) { index += 1 } }
         else { model.next() }
     }
 }
@@ -372,7 +480,7 @@ struct DecisionStep: View {
     var body: some View {
         StepScaffold(title: "Your decision style", onNext: model.next) {
             ScrollView { VStack(alignment: .leading, spacing: 24) {
-                Text("How much should your agent favor lower-priced choices?").font(AppTypography.headline)
+                Text("How important is it for a meal to be affordable to you?").font(AppTypography.headline)
                 Picker("Price preference", selection: $model.draft.priceSensitivity) {
                     Text("A lot").tag("a_lot")
                     Text("Somewhat").tag("somewhat")
@@ -383,15 +491,15 @@ struct DecisionStep: View {
                     Text("Familiar things").tag("familiar")
                     Text("Open to surprises").tag("open")
                 }.pickerStyle(.segmented)
-                Text("Any ingredients you especially like or avoid? Optional.").font(AppTypography.headline)
+                Text("Any ingredients you especially like or avoid?").font(AppTypography.headline)
                 TextField("Ingredients you like", text: Binding(
                     get: { model.draft.ingredientLikes.joined(separator: ", ") },
                     set: { model.draft.ingredientLikes = $0.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty } }
-                )).textFieldStyle(.roundedBorder)
+                )).appFieldStyle()
                 TextField("Ingredients you avoid", text: Binding(
                     get: { model.draft.ingredientAvoids.joined(separator: ", ") },
                     set: { model.draft.ingredientAvoids = $0.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty } }
-                )).textFieldStyle(.roundedBorder)
+                )).appFieldStyle()
             } }
         }
     }
@@ -433,17 +541,8 @@ struct AvatarPickerStep: View {
     }
 }
 
-private struct AgentStartAnchor: PreferenceKey {
-    static var defaultValue: Anchor<CGRect>? { nil }
-    static func reduce(value: inout Anchor<CGRect>?, nextValue: () -> Anchor<CGRect>?) {
-        value = nextValue() ?? value
-    }
-}
-
 struct ProfileSummaryStep: View {
-    @Environment(AppModel.self) private var app
     @Bindable var model: OnboardingModel
-    @State private var saving = false
 
     private var supported: [TastePair] {
         TastePair.all.filter { pair in
@@ -454,12 +553,9 @@ struct ProfileSummaryStep: View {
 
     var body: some View {
         StepScaffold(title: "Your taste, so far", subtitle: "These are early guesses. Correct or remove anything that feels wrong.",
-                     nextTitle: saving ? "Saving…" : "Let's eat", canContinue: !saving, onNext: { Task { await save() } }) {
+                     nextTitle: "Meet your agent", onNext: model.next) {
             ScrollView {
                 VStack(alignment: .leading, spacing: 18) {
-                    Color.clear.frame(height: 328)
-                        .anchorPreference(key: AgentStartAnchor.self, value: .bounds) { $0 }
-                        .accessibilityHidden(true)
                     ForEach(supported) { pair in
                         VStack(alignment: .leading, spacing: 8) {
                             Text(statement(pair)).font(AppTypography.headline)
@@ -485,22 +581,41 @@ struct ProfileSummaryStep: View {
                 }
             }
         }
-        .overlayPreferenceValue(AgentStartAnchor.self) { anchor in
-            GeometryReader { geometry in
-                if let anchor {
-                    let frame = geometry[anchor]
-                    AgentPlayground(avatarId: model.draft.avatarId,
-                                    initialPosition: CGPoint(x: geometry.size.width / 2,
-                                                             y: frame.midY + 16))
-                }
-            }
-            .padding(.bottom, 70)
-        }
     }
 
     private func statement(_ pair: TastePair) -> String {
         let value = model.draft.tasteCorrections[pair.contrast] ?? (model.draft.pairAnswers[pair.id] == "b" ? 1.0 : -1.0)
         return "You may prefer \(value > 0 ? pair.summaryB : pair.summaryA)."
+    }
+
+}
+
+struct MeetAgentStep: View {
+    @Environment(AppModel.self) private var app
+    @Bindable var model: OnboardingModel
+    @State private var saving = false
+
+    var body: some View {
+        StepScaffold(
+            title: "Meet your agent",
+            subtitle: "Drag, tap, or press and hold to play.",
+            nextTitle: saving ? "Saving…" : "Let's eat",
+            canContinue: !saving,
+            onNext: { Task { await save() } }
+        ) {
+            Spacer(minLength: 0)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .overlay(alignment: .bottom) {
+                    if let error = model.error {
+                        Text(error)
+                            .font(AppTypography.footnote)
+                            .foregroundStyle(.red)
+                            .padding(10)
+                            .background(Theme.background.opacity(0.9), in: Capsule())
+                            .padding(12)
+                    }
+                }
+        }
     }
 
     private func save() async {

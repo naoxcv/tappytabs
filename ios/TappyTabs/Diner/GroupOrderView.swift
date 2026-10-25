@@ -57,13 +57,13 @@ struct GroupOrderView: View {
                             if substitute.askServer { AskServerBadge() }
                         }
                         HStack {
-                            Button("No thanks") { self.substitute = nil }
+                            Button("No thanks") { self.substitute = nil }.buttonStyle(SecondaryButtonStyle())
                             Spacer()
                             Button("Swap") {
                                 self.substitute = nil
                                 Task { await store.add(substitute.itemId, shared: false) }
                             }
-                            .buttonStyle(.borderedProminent)
+                            .buttonStyle(BigButtonStyle())
                         }
                     }
                     .padding(10)

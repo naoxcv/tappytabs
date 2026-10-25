@@ -17,7 +17,7 @@ struct OrderPlacedView: View {
                     HStack { Text("Table total"); Spacer(); PriceText(cents: store.lines.totals.total) }
                 }
             }
-            Button("Done") { app.partyId = nil }.padding(.bottom)
+            Button("Done") { app.partyId = nil }.buttonStyle(BigButtonStyle()).padding(.bottom)
         }
         .onAppear { UINotificationFeedbackGenerator().notificationOccurred(.success) }
     }

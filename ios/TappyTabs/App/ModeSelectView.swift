@@ -20,19 +20,14 @@ struct ModeSelectView: View {
                 VStack(spacing: 10) {
                     Button { app.mode = .diner } label: {
                         Text("I am a diner")
-                            .font(AppTypography.custom(22, weight: .regular))
-                            .foregroundStyle(Theme.accentForeground)
-                            .frame(maxWidth: .infinity)
-                            .frame(height: 56)
-                            .background(Theme.accent, in: RoundedRectangle(cornerRadius: 15))
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(BigButtonStyle())
 
                     Button { app.mode = .restaurant } label: {
                         Text("This is a restaurant device.")
                             .font(AppTypography.custom(18, weight: .regular))
                             .underline()
-                            .foregroundStyle(Theme.accent)
+                            .foregroundStyle(Theme.secondaryActionText)
                             .frame(maxWidth: .infinity)
                             .frame(height: 38)
                             .contentShape(Rectangle())

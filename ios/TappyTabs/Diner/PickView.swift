@@ -25,7 +25,7 @@ struct PickView: View {
                         Spacer()
                         PriceText(cents: drink.priceCents).font(AppTypography.subheadline)
                     }
-                    .padding().background(Theme.card, in: RoundedRectangle(cornerRadius: 14))
+                    .padding().background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.cardCornerRadius, style: .continuous))
                     Text("You can remove it in the next step.").font(AppTypography.caption).foregroundStyle(Theme.accent)
                 }
             }
@@ -79,8 +79,8 @@ struct CandidateCard: View {
         }
         .padding(big ? 20 : 14)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Theme.card, in: RoundedRectangle(cornerRadius: 18))
-        .overlay(RoundedRectangle(cornerRadius: 18).stroke(selected ? Theme.accent : .clear, lineWidth: 3))
+        .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.cardCornerRadius, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: Theme.cardCornerRadius, style: .continuous).stroke(selected ? Theme.accent : .clear, lineWidth: 3))
     }
 }
 

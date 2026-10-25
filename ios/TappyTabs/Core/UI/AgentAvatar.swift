@@ -11,6 +11,7 @@ struct AvatarView: View {
     var state: AgentAvatarState = .idle
     var animated = true
     var interactive = false
+    var roaming = false
     var onAnimationComplete: (() -> Void)? = nil
     @State private var spinRequest = 0
     @State private var bounceRequest = 0
@@ -22,7 +23,7 @@ struct AvatarView: View {
         Group {
             if animated && size >= 48 {
                 AgentDrawing(name: name, state: state, reduceMotion: reduceMotion, active: scenePhase == .active,
-                             interactive: interactive, spinRequest: spinRequest, bounceRequest: bounceRequest,
+                             interactive: interactive, roaming: roaming, spinRequest: spinRequest, bounceRequest: bounceRequest,
                              onAnimationComplete: onAnimationComplete)
             } else {
                 Image("agent_\(name)").resizable().scaledToFit()
@@ -51,12 +52,14 @@ private struct AgentDrawing: UIViewRepresentable {
     let state: AgentAvatarState
     let reduceMotion, active: Bool
     let interactive: Bool
+    let roaming: Bool
     let spinRequest, bounceRequest: Int
     let onAnimationComplete: (() -> Void)?
     func makeUIView(context: Context) -> AgentDrawingView { AgentDrawingView() }
     func updateUIView(_ view: AgentDrawingView, context: Context) {
         view.configure(name: name, state: state, reduced: reduceMotion, active: active,
                        interactive: interactive, spinRequest: spinRequest, bounceRequest: bounceRequest,
+                       roaming: roaming,
                        onAnimationComplete: onAnimationComplete)
     }
     static func dismantleUIView(_ view: AgentDrawingView, coordinator: ()) { AgentAnimationLoop.shared.remove(view) }
@@ -65,15 +68,19 @@ private struct AgentDrawing: UIViewRepresentable {
 struct AgentPlayground: UIViewRepresentable {
     let avatarId: String
     let initialPosition: CGPoint
+    var state: AgentAvatarState = .idle
+    var displayName: String? = nil
+    var characterScale: CGFloat = 1
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.scenePhase) private var scenePhase
 
     func makeUIView(context: Context) -> AgentDrawingView { AgentDrawingView() }
 
     func updateUIView(_ view: AgentDrawingView, context: Context) {
-        view.configure(name: AvatarCatalog.character(avatarId), state: .idle,
+        view.configure(name: AvatarCatalog.character(avatarId), state: state,
                        reduced: reduceMotion, active: scenePhase == .active, interactive: true,
-                       roaming: true, initialPosition: initialPosition)
+                       roaming: true, initialPosition: initialPosition, displayName: displayName,
+                       roamingScale: characterScale)
     }
 }
 
@@ -299,15 +306,18 @@ final class AgentDrawingView: UIView {
     private var onAnimationComplete: (() -> Void)?
     private var spinTime = -1.0, nextSpin = 0.0, spinDirection = 1.0
     private var interactive = false, dragging = false
+    private var dragStrain = 0.0, dragTilt = 0.0
     private var dragOffset = CGPoint.zero, dragOrigin = CGPoint.zero
     private var wanderOffset = CGPoint.zero
     private var dragVelocity = CGVector.zero
     private var lastSpinRequest = 0, lastBounceRequest = 0
     private var roaming = false
     private var initialPosition = CGPoint.zero
+    private var displayName: String?
+    private var roamingScale: CGFloat = 1
     private var flingMotion = AgentFlingMotion()
-    private let playgroundCharacterSize: CGFloat = 360
-    private let playgroundRadius: CGFloat = 120
+    private var playgroundCharacterSize: CGFloat { min(360, min(bounds.width, bounds.height) * 0.88 * roamingScale) }
+    private var playgroundRadius: CGFloat { min(120, playgroundCharacterSize * 0.34) }
 
     private var spinDuration: Double { max(0.8, min(1.3, 1.8 / p.bs)) }
 
@@ -330,13 +340,17 @@ final class AgentDrawingView: UIView {
     override func layoutSubviews() {
         super.layoutSubviews()
         if roaming {
-            flingMotion.updateBounds(size: bounds.size, radius: playgroundRadius, start: initialPosition)
+            flingMotion.updateBounds(size: bounds.size, radius: playgroundRadius, start: resolvedInitialPosition)
         }
+    }
+    private var resolvedInitialPosition: CGPoint {
+        initialPosition == .zero ? CGPoint(x: bounds.midX, y: bounds.midY) : initialPosition
     }
     override func point(inside point: CGPoint, with event: UIEvent?) -> Bool {
         guard roaming else { return super.point(inside: point, with: event) }
-        return CGRect(x: flingMotion.position.x - 135, y: flingMotion.position.y - 135,
-                      width: 270, height: 270).contains(point) && bounds.contains(point)
+        let hitRadius = playgroundCharacterSize * 0.38
+        return CGRect(x: flingMotion.position.x - hitRadius, y: flingMotion.position.y - hitRadius,
+                      width: hitRadius * 2, height: hitRadius * 2).contains(point) && bounds.contains(point)
     }
     override func didMoveToWindow() {
         super.didMoveToWindow()
@@ -357,15 +371,18 @@ final class AgentDrawingView: UIView {
     func configure(name: String, state: AgentAvatarState, reduced: Bool, active: Bool,
                    interactive: Bool = false, spinRequest: Int = 0, bounceRequest: Int = 0,
                    roaming: Bool = false, initialPosition: CGPoint = .zero,
+                   displayName: String? = nil, roamingScale: CGFloat = 1,
                    onAnimationComplete: (() -> Void)? = nil) {
         self.onAnimationComplete = onAnimationComplete
         self.interactive = interactive
         isUserInteractionEnabled = interactive
         self.roaming = roaming
         self.initialPosition = initialPosition
+        self.displayName = displayName
+        self.roamingScale = roamingScale
         isAccessibilityElement = roaming
         if roaming {
-            flingMotion.updateBounds(size: bounds.size, radius: playgroundRadius, start: initialPosition)
+            flingMotion.updateBounds(size: bounds.size, radius: playgroundRadius, start: resolvedInitialPosition)
             accessibilityLabel = "Your \(name == "bokchoy" ? "bok choy" : name) agent"
             accessibilityHint = "Drag anywhere in the page. Release quickly to throw. Tap to spin or hold to bounce."
             accessibilityCustomActions = [
@@ -380,6 +397,7 @@ final class AgentDrawingView: UIView {
             elapsed = 0; nextBlink = .random(in: 0.5...2); nextGlance = .random(in: 0.5...2)
             nextHop = .random(in: p.hi); hy = 0; hv = 0; wind = 0; air = false
             squash = 0; velocity = 0; ex = 0; ey = 0; blink = -1; eyeScale = 1
+            dragStrain = 0; dragTilt = 0
             spinTime = -1
         }
         self.reduced = reduced; self.active = active
@@ -450,6 +468,7 @@ final class AgentDrawingView: UIView {
         switch gesture.state {
         case .began:
             dragging = true
+            dragStrain = 0.62
             dragOrigin = roaming ? flingMotion.position : dragOffset
             flingMotion.stop()
             dragVelocity = .zero
@@ -457,6 +476,9 @@ final class AgentDrawingView: UIView {
             UIImpactFeedbackGenerator(style: .soft).impactOccurred()
         case .changed:
             let translation = gesture.translation(in: self)
+            let pull = gesture.velocity(in: self)
+            dragStrain = min(1, 0.62 + Double(hypot(pull.x, pull.y)) / 1800)
+            dragTilt = Double(max(-12, min(12, -pull.x / 110)))
             if roaming {
                 flingMotion.move(to: CGPoint(x: dragOrigin.x + translation.x, y: dragOrigin.y + translation.y))
             } else {
@@ -564,6 +586,12 @@ final class AgentDrawingView: UIView {
         }
         let smoothing = 1 - exp(-dt * (following ? 14 : 9))
         ex += (tx - ex) * smoothing; ey += (ty - ey) * smoothing
+        if dragging {
+            eyeScale = min(eyeScale, 1 - dragStrain * 0.68)
+        } else {
+            dragStrain = max(0, dragStrain - dt * 2.4)
+            dragTilt += (0 - dragTilt) * (1 - exp(-dt * 7))
+        }
         setNeedsDisplay()
     }
     override func draw(_ rect: CGRect) {
@@ -592,10 +620,11 @@ final class AgentDrawingView: UIView {
         // Keep the large roaming avatar upright while idle so it doesn't appear
         // horizontally offset compared with its upright return position.
         let idleRotation = roaming ? 0 : sway * sin(t * p.bs * 0.6) + p.ln * ex
-        let rotation = still ? 0 : idleRotation + (state == .confused ? 9 : 0)
+        let rotation = still ? 0 : idleRotation + (state == .confused ? 9 : 0) + dragTilt
         ctx.translateBy(x: 512, y: 860 - hy)
         ctx.rotate(by: rotation * .pi / 180)
-        ctx.scaleBy(x: 1 + squash * 0.6 - breath * 0.5, y: 1 - squash + breath)
+        ctx.scaleBy(x: (1 + squash * 0.6 - breath * 0.5) * (1 + dragStrain * 0.045),
+                    y: (1 - squash + breath) * (1 - dragStrain * 0.1))
         ctx.translateBy(x: -512, y: -860)
         for (index, layer) in drawing.layers.enumerated() {
             ctx.saveGState()
@@ -617,5 +646,31 @@ final class AgentDrawingView: UIView {
             ctx.restoreGState()
         }
         ctx.restoreGState()
+        if roaming, let displayName, !displayName.isEmpty {
+            drawNameBadge(displayName, drawing: drawing, at: flingMotion.position, in: ctx)
+        }
+    }
+
+    private func drawNameBadge(_ name: String, drawing: AgentPaths.Drawing, at position: CGPoint, in context: CGContext) {
+        let font = UIFont.systemFont(ofSize: 13, weight: .semibold)
+        let attributes: [NSAttributedString.Key: Any] = [
+            .font: font,
+            .foregroundColor: UIColor(red: 0.16, green: 0.16, blue: 0.17, alpha: 1)
+        ]
+        let textSize = (name as NSString).size(withAttributes: attributes)
+        let badgeSize = CGSize(width: textSize.width + 18, height: 24)
+        let x = min(max(0, position.x - badgeSize.width / 2), max(0, bounds.width - badgeSize.width))
+        let artworkBottom = drawing.layers.map { $0.0.boundingBoxOfPath.maxY }.max() ?? 1024
+        let artworkBottomY = position.y - playgroundCharacterSize / 2
+            + playgroundCharacterSize * (artworkBottom - hy) / 1024
+        let y = min(max(2, artworkBottomY + 3), max(2, bounds.height - badgeSize.height - 2))
+        let badge = CGRect(origin: CGPoint(x: x, y: y), size: badgeSize)
+        let path = UIBezierPath(roundedRect: badge, cornerRadius: badgeSize.height / 2)
+        context.setFillColor(UIColor(red: 1, green: 0.96, blue: 0.86, alpha: 1).cgColor)
+        context.addPath(path.cgPath)
+        context.fillPath()
+        let textRect = CGRect(x: badge.minX + 9, y: badge.minY + 3,
+                              width: textSize.width, height: textSize.height)
+        (name as NSString).draw(in: textRect, withAttributes: attributes)
     }
 }
