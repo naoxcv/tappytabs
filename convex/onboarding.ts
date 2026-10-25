@@ -4,8 +4,7 @@ import { internal } from "./_generated/api";
 import type { Id } from "./_generated/dataModel";
 import { fail } from "./shared/errors";
 
-// Kept as a local escape hatch until Convex codegen runs in the deployment environment.
-// Runtime references still resolve through Convex's generated anyApi.
+// Avoid a TypeScript circular initializer: generated API types include this module.
 const onboardingApi: any = (internal as any).onboarding;
 
 const candidateV = v.object({
