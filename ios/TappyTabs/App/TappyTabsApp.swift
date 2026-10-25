@@ -31,17 +31,25 @@ struct TappyTabsApp: App {
 
     var body: some Scene {
         WindowGroup {
-            Group {
-                if app.mode == nil {
-                    ModeSelectView(isLaunching: showingLaunch)
-                } else if showingLaunch {
+            ZStack {
+                Group {
+                    if app.mode == nil {
+                        ModeSelectView(isLaunching: showingLaunch)
+                            .transition(AppPageTransition.transition(reduceMotion: reduceMotion))
+                    } else {
+                        RootView(pendingJoinCode: $pendingJoinCode)
+                    }
+                }
+                .opacity(showingLaunch && app.mode != nil ? 0 : 1)
+                .animation(reduceMotion ? .easeOut(duration: 0.15) : .easeInOut(duration: 0.6), value: showingLaunch)
+                .animation(AppPageTransition.animation(reduceMotion: reduceMotion), value: app.mode)
+
+                if showingLaunch && app.mode != nil {
                     LaunchBrandView()
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .background(Theme.background.ignoresSafeArea())
-                    .transition(.opacity)
-                } else {
-                    RootView(pendingJoinCode: $pendingJoinCode)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .background(Theme.background.ignoresSafeArea())
                         .transition(.opacity)
+                        .zIndex(1)
                 }
             }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -51,6 +59,7 @@ struct TappyTabsApp: App {
                 .foregroundStyle(Theme.accent, Theme.accent, Theme.accent)
                 .environment(app)
                 .onOpenURL { url in pendingJoinCode = JoinLink.joinCode(from: url) }
+                .allowsHitTesting(!showingLaunch)
                 .tint(Theme.accent)
                 .task {
                     guard showingLaunch else { return }
@@ -109,6 +118,7 @@ final class OrientationDelegate: NSObject, UIApplicationDelegate {
 
 struct RootView: View {
     @Environment(AppModel.self) private var app
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Binding var pendingJoinCode: String?
 
     var body: some View {
@@ -119,6 +129,9 @@ struct RootView: View {
             case .restaurant: RestaurantFlow()
             }
         }
+        .id(app.mode?.rawValue ?? "mode-select")
+        .transition(AppPageTransition.transition(reduceMotion: reduceMotion))
+        .animation(AppPageTransition.animation(reduceMotion: reduceMotion), value: app.mode)
         .font(AppTypography.body)
     }
 }
@@ -157,6 +170,8 @@ struct DebugMenu: View {
     @State private var identityRequestID = UUID()
     @State private var leavingTable = false
     @State private var leaveError: String?
+    @State private var creatingTestProfile = false
+    @State private var testProfileError: String?
 
     var body: some View {
         @Bindable var app = app
@@ -164,6 +179,13 @@ struct DebugMenu: View {
             Form {
                 if app.mode == .diner && app.partyId == nil {
                     Section(header: Text("Tap test").font(AppTypography.headline)) {
+                        if app.userId == nil {
+                            Button(creatingTestProfile ? "Creating test diner…" : "Skip onboarding for tap test") {
+                                Task { await createTestProfile() }
+                            }
+                            .disabled(creatingTestProfile || selectingDiner != nil)
+                            if let testProfileError { Text(testProfileError).foregroundStyle(Theme.accent) }
+                        }
                         Button("Restart tap search") {
                             app.leaveTable()
                             dismiss()
@@ -187,7 +209,7 @@ struct DebugMenu: View {
                     LabeledContent("userId", value: app.userId ?? "–")
                     ForEach(1...4, id: \.self) { n in
                         Button("Skip onboarding · diner \(n)") { selectDemoDiner(n) }
-                            .disabled(selectingDiner != nil)
+                            .disabled(selectingDiner != nil || creatingTestProfile)
                     }
                     if let selectingDiner { ProgressView("Loading demo diner \(selectingDiner)…") }
                     if let identityMessage { Text(identityMessage).font(AppTypography.footnote) }
@@ -226,6 +248,31 @@ struct DebugMenu: View {
             }
             .navigationTitle("Debug")
             .toolbar { Button("Done") { dismiss() } }
+        }
+    }
+
+    @MainActor private func createTestProfile() async {
+        guard !creatingTestProfile else { return }
+        creatingTestProfile = true
+        testProfileError = nil
+        defer { creatingTestProfile = false }
+        let backend = app.backend
+        let deviceId = app.deviceId
+        do {
+            let userId: String
+            if let existing = try await backend.me(deviceId: deviceId) {
+                userId = existing._id
+            } else {
+                var draft = DraftProfile()
+                draft.name = "Test \(deviceId.prefix(4))"
+                userId = try await backend.upsertUser(deviceId: deviceId, profile: draft)
+            }
+            guard app.backend === backend, app.deviceId == deviceId else { return }
+            app.userId = userId
+            dismiss()
+        } catch {
+            guard app.backend === backend, app.deviceId == deviceId else { return }
+            testProfileError = TTError.from(error).userMessage
         }
     }
 

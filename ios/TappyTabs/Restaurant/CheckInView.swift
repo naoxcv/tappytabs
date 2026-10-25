@@ -5,6 +5,7 @@ import SwiftUI
 struct CheckInView: View {
     @Environment(AppModel.self) private var app
     @Environment(\.verticalSizeClass) private var verticalSizeClass
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     let store: PartyStore
     @State private var proximity = Proximity.shared
 
@@ -23,13 +24,14 @@ struct CheckInView: View {
                     LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 3), spacing: 8) {
                         ForEach(members) { m in
                             VStack(spacing: 0) {
-                                AvatarView(avatarId: m.avatarId, size: 64, state: store.lastError == nil ? .happy : .confused)
                                 Text(m.name).font(AppTypography.style(.body, weight: .semibold))
+                                AvatarView(avatarId: m.avatarId, size: 104, state: store.lastError == nil ? .celebrating : .confused,
+                                           interactive: true)
                             }
-                            .transition(.scale.combined(with: .opacity))
+                            .transition(reduceMotion ? .opacity : .scale.combined(with: .opacity))
                         }
                     }
-                    .animation(.spring(duration: 0.4, bounce: 0.5), value: members.count)
+                    .animation(reduceMotion ? .easeOut(duration: 0.15) : .spring(duration: 0.4, bounce: 0.5), value: members.count)
                 }
                 .frame(maxWidth: .infinity)
                 VStack(spacing: 8) {

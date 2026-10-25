@@ -1,0 +1,10 @@
+{
+  "license": "https://www.pexels.com/license/",
+  "photos": [
+    { "cuisine": "Thai", "photographer": "Fauzia", "source": "https://www.pexels.com/photo/close-up-shot-of-pad-thai-on-a-plate-10756648/" },
+    { "cuisine": "Italian", "photographer": "Daniel Maurício Bertoli", "source": "https://www.pexels.com/photo/italian-pasta-with-tomato-and-pesto-sauce-overhead-31501714/" },
+    { "cuisine": "Japanese", "photographer": "Viridiana Rivera", "source": "https://www.pexels.com/photo/delicious-bowl-of-traditional-japanese-ramen-30856693/" },
+    { "cuisine": "Mexican", "photographer": "Jackie Jabson", "source": "https://www.pexels.com/photo/close-up-shot-of-tacos-on-the-plate-5904430/" },
+    { "cuisine": "Mediterranean", "photographer": "Nadin Sh", "source": "https://www.pexels.com/photo/pita-bread-and-falafels-on-tray-with-vegetables-12814859/" }
+  ]
+}

@@ -3,6 +3,7 @@ import SwiftUI
 
 struct RestaurantFlow: View {
     @Environment(AppModel.self) private var app
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @AppStorage("tt.debugOverlay") private var debugOverlay = false
 
     var body: some View {
@@ -15,6 +16,9 @@ struct RestaurantFlow: View {
                     PartySetupView()
                 }
             }
+            .id(app.partyId == nil ? "setup" : "party")
+            .transition(AppPageTransition.transition(reduceMotion: reduceMotion))
+            .animation(AppPageTransition.animation(reduceMotion: reduceMotion), value: app.partyId)
             .frame(maxHeight: .infinity)
         }
         .overlay(alignment: .bottom) { if debugOverlay { ProximityDebugOverlay() } }
@@ -32,6 +36,7 @@ struct RestaurantFlow: View {
 }
 
 struct RestaurantRootView: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     let store: PartyStore
 
     var body: some View {
@@ -45,6 +50,8 @@ struct RestaurantRootView: View {
             case .placed: OrderReceivedView(store: store)
             }
         }
-        .animation(.easeInOut, value: store.party?.status)
+        .id(store.party?.status.rawValue ?? "loading")
+        .transition(AppPageTransition.transition(reduceMotion: reduceMotion))
+        .animation(AppPageTransition.animation(reduceMotion: reduceMotion), value: store.party?.status)
     }
 }

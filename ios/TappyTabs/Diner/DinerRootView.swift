@@ -5,6 +5,7 @@ import SwiftUI
 
 struct DinerFlow: View {
     @Environment(AppModel.self) private var app
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Binding var pendingJoinCode: String?
     @AppStorage("tt.debugOverlay") private var debugOverlay = false
     @State private var resumeWatch: AnyCancellable?
@@ -32,6 +33,9 @@ struct DinerFlow: View {
                     TapInView(pendingJoinCode: $pendingJoinCode)  // Role 2 → sets app.partyId
                 }
             }
+            .id(flowKey)
+            .transition(AppPageTransition.transition(reduceMotion: reduceMotion))
+            .animation(AppPageTransition.animation(reduceMotion: reduceMotion), value: flowKey)
             .frame(maxHeight: .infinity)
         }
         .overlay(alignment: .bottom) { if debugOverlay { ProximityDebugOverlay() } }
@@ -45,6 +49,12 @@ struct DinerFlow: View {
             else if app.partyId == nil { watchForExistingTable() }
         }
         .onDisappear { resumeWatch = nil }
+    }
+
+    private var flowKey: String {
+        if app.userId == nil { return "onboarding" }
+        if app.partyId != nil { return "party" }
+        return checkedUserId == app.userId ? "tap-in" : "resume-check"
     }
 
     private func watchForExistingTable() {
@@ -76,6 +86,7 @@ struct DinerFlow: View {
 
 struct DinerRootView: View {
     @Environment(AppModel.self) private var app
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     let store: PartyStore
 
     var body: some View {
@@ -94,10 +105,33 @@ struct DinerRootView: View {
             case .placed: OrderPlacedView(store: store)
             }
         }
-        .animation(.easeInOut, value: store.party?.status)
+        .id(pageKey)
+        .transition(AppPageTransition.transition(direction: transitionDirection, reduceMotion: reduceMotion))
+        .animation(AppPageTransition.animation(reduceMotion: reduceMotion), value: pageKey)
         .onChange(of: store.party) { _, party in
             if let party, app.partyId == store.partyId, app.userId == store.userId,
                party.member(app.userId) == nil { app.leaveTable() }
+        }
+    }
+
+    private var pageKey: String {
+        guard let status = store.party?.status else { return "loading" }
+        switch status {
+        case .hunger: return store.me?.hunger == nil ? "hunger" : "hunger-wait"
+        case .pick: return store.me?.picked == true ? "pick-wait" : "pick"
+        default: return status.rawValue
+        }
+    }
+
+    private var transitionDirection: CGFloat {
+        guard let status = store.party?.status else { return 1 }
+        switch status {
+        case .checkin: return -1
+        case .hunger: return 1
+        case .negotiating: return 1
+        case .pick: return 1
+        case .confirm: return 1
+        case .placed: return 1
         }
     }
 }

@@ -16,6 +16,7 @@ struct ModeSelectView: View {
                     .offset(y: reduceMotion || !isLaunching ? 0 : (104 + bottomPadding) / 2)
                     .animation(reduceMotion ? nil : .smooth(duration: 0.6), value: isLaunching)
                 Spacer(minLength: 40)
+                
                 VStack(spacing: 10) {
                     Button { app.mode = .diner } label: {
                         Text("I am a diner")

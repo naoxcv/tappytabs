@@ -19,6 +19,7 @@ final class OnboardingModel {
     var draft = DraftProfile()
     var questions: [FollowUpQuestion] = []
     var answers: [String: String] = [:]
+    var remainingCards: [OnboardingCard] = Fixtures.load("OnboardingCards")
     var summary: ProfileSummary?
     var error: String?
 
@@ -28,7 +29,8 @@ final class OnboardingModel {
     }
     func back() {
         isMovingBackward = true
-        step = Step(rawValue: step.rawValue - 1) ?? .basics
+        let previous = Step(rawValue: step.rawValue - 1) ?? .basics
+        step = previous == .followups && questions.isEmpty ? .swipe : previous
     }
 
     func swipe(_ card: OnboardingCard, liked: Bool) {
@@ -51,17 +53,27 @@ final class OnboardingModel {
 }
 
 struct OnboardingFlow: View {
-    @Environment(AppModel.self) private var app
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var model = OnboardingModel()
-    @State private var creatingTestProfile = false
-    @State private var testProfileError: String?
 
     var body: some View {
         VStack(spacing: 0) {
-            ProgressView(value: Double(model.step.rawValue + 1), total: Double(OnboardingModel.Step.allCases.count))
-                .padding(.horizontal)
-                .animation(reduceMotion ? nil : .easeInOut(duration: 0.35), value: model.step)
+            HStack(spacing: 16) {
+                Button(action: model.back) {
+                    Label("Back", systemImage: "chevron.left")
+                        .font(AppTypography.style(.body, weight: .semibold))
+                        .frame(minHeight: 44)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(Theme.accent)
+                .opacity(model.step == .basics ? 0 : 1)
+                .disabled(model.step == .basics)
+                .accessibilityHidden(model.step == .basics)
+                ProgressView(value: Double(model.step.rawValue + 1), total: Double(OnboardingModel.Step.allCases.count))
+                    .animation(reduceMotion ? nil : .easeInOut(duration: 0.35), value: model.step)
+            }
+            .padding(.horizontal)
             ZStack {
                 Group {
                     switch model.step {
@@ -82,15 +94,6 @@ struct OnboardingFlow: View {
             .frame(maxHeight: .infinity)
             .clipped()
             .animation(.easeInOut(duration: reduceMotion ? 0.15 : 0.35), value: model.step)
-            if let testProfileError {
-                Text(testProfileError).font(AppTypography.footnote).foregroundStyle(Theme.accent).padding(.horizontal)
-            }
-            Button(creatingTestProfile ? "Creating test diner…" : "Skip onboarding for tap test") {
-                Task { await createTestProfile() }
-            }
-            .font(AppTypography.footnote)
-            .disabled(creatingTestProfile)
-            .padding(.bottom)
         }
     }
 
@@ -103,29 +106,6 @@ struct OnboardingFlow: View {
         )
     }
 
-    private func createTestProfile() async {
-        guard !creatingTestProfile else { return }
-        creatingTestProfile = true
-        testProfileError = nil
-        defer { creatingTestProfile = false }
-        let backend = app.backend
-        let deviceId = app.deviceId
-        do {
-            let userId: String
-            if let existing = try await backend.me(deviceId: deviceId) {
-                userId = existing._id
-            } else {
-                var draft = DraftProfile()
-                draft.name = "Test \(deviceId.prefix(4))"
-                userId = try await backend.upsertUser(deviceId: deviceId, profile: draft)
-            }
-            guard app.backend === backend, app.deviceId == deviceId else { return }
-            app.userId = userId
-        } catch {
-            guard app.backend === backend, app.deviceId == deviceId else { return }
-            testProfileError = TTError.from(error).userMessage
-        }
-    }
 }
 
 private struct StepScaffold<Content: View>: View {
@@ -148,11 +128,70 @@ private struct StepScaffold<Content: View>: View {
 
 struct BasicsStep: View {
     @Bindable var model: OnboardingModel
+    @FocusState private var nameFocused: Bool
+
+    private var canContinue: Bool {
+        !model.draft.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
     var body: some View {
-        StepScaffold(title: "Hi! What's your name?", canContinue: !model.draft.name.trimmingCharacters(in: .whitespaces).isEmpty, onNext: model.next) {
-            TextField("First name", text: $model.draft.name, prompt: Text("First name").foregroundStyle(Theme.accent))
-                .font(AppTypography.custom(22)).textFieldStyle(.roundedBorder).textContentType(.givenName)
+        GeometryReader { geometry in
+            ScrollView {
+                VStack(alignment: .leading, spacing: 28) {
+                    HStack(spacing: 0) {
+                        ForEach(AvatarCatalog.ids, id: \.self) { id in
+                            AvatarView(avatarId: id, size: 72)
+                                .frame(maxWidth: .infinity)
+                        }
+                    }
+                    .accessibilityHidden(true)
+
+                    Text("What should we\ncall you?")
+                        .font(AppTypography.custom(36, relativeTo: .largeTitle, weight: .bold))
+                        .fixedSize(horizontal: false, vertical: true)
+                        .accessibilityAddTraits(.isHeader)
+
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text("First name")
+                            .font(AppTypography.style(.subheadline, weight: .semibold))
+                        TextField("First name", text: $model.draft.name,
+                                  prompt: Text("e.g. Amy").foregroundStyle(Theme.accent.opacity(0.45)))
+                            .font(AppTypography.custom(22))
+                            .foregroundStyle(Theme.accent)
+                            .padding(.horizontal, 18)
+                            .padding(.vertical, 18)
+                            .background(Color.white.opacity(0.045), in: RoundedRectangle(cornerRadius: 18))
+                            .overlay {
+                                RoundedRectangle(cornerRadius: 18)
+                                    .strokeBorder(Theme.accent.opacity(nameFocused ? 1 : 0.25), lineWidth: nameFocused ? 2 : 1)
+                            }
+                            .focused($nameFocused)
+                            .textContentType(.givenName)
+                            .textInputAutocapitalization(.words)
+                            .autocorrectionDisabled()
+                            .submitLabel(.continue)
+                            .onSubmit(continueOnboarding)
+                    }
+                }
+                .padding(.vertical, 24)
+                .frame(maxWidth: 480, alignment: .leading)
+                .frame(maxWidth: .infinity, minHeight: geometry.size.height, alignment: .center)
+            }
+            .scrollDismissesKeyboard(.interactively)
         }
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            Button("Continue", action: continueOnboarding)
+                .buttonStyle(BigButtonStyle())
+                .disabled(!canContinue)
+                .padding(.top, 16)
+                .background(Theme.background)
+        }
+    }
+
+    private func continueOnboarding() {
+        guard canContinue else { return }
+        nameFocused = false
+        model.next()
     }
 }
 
@@ -192,68 +231,213 @@ struct FlowChips<T: Hashable & Identifiable>: View {
 
 struct SpiceStep: View {
     @Bindable var model: OnboardingModel
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
     var body: some View {
+        let level = Int(model.draft.spice)
+        let labels = ["None", "Mild", "Medium", "Hot", "Bring it"]
         StepScaffold(title: "How much spice?", onNext: model.next) {
             VStack(spacing: 24) {
-                Text(String(repeating: "🌶️", count: Int(model.draft.spice) + 1)).font(.system(size: 44))
+                ZStack {
+                    ZStack {
+                        ForEach(0...4, id: \.self) { index in
+                            Image("spice_layer_\(index)")
+                                .renderingMode(.original)
+                                .resizable()
+                                .scaledToFit()
+                                .blendMode(.plusLighter)
+                                .opacity(index == level ? 1 : 0)
+                        }
+                    }
+                    .drawingGroup()
+                    Image("spice_hat")
+                        .renderingMode(.original)
+                        .resizable()
+                        .scaledToFit()
+                }
+                .frame(width: 180, height: 180)
+                .animation(.easeInOut(duration: reduceMotion ? 0.1 : 0.18), value: level)
+                .phaseAnimator([false, true], trigger: level) { content, lifted in
+                    content.offset(y: !reduceMotion && lifted ? -4 : 0)
+                } animation: { _ in
+                    reduceMotion ? nil : .spring(duration: 0.12, bounce: 0.15)
+                }
+                .accessibilityHidden(true)
                 Slider(value: $model.draft.spice, in: 0...4, step: 1)
-                Text(["None", "Mild", "Medium", "Hot", "Bring it"][Int(model.draft.spice)]).font(AppTypography.custom(20))
+                    .accessibilityLabel("Spice tolerance")
+                    .accessibilityValue(labels[level])
+                Text(labels[level]).font(AppTypography.custom(20))
             }.padding(.top, 40)
         }
     }
 }
 
 struct SwipeDeckStep: View {
-    var model: OnboardingModel
-    @State private var cards: [OnboardingCard] = Fixtures.load("OnboardingCards")
+    @Bindable var model: OnboardingModel
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var offset: CGSize = .zero
+    @State private var deciding = false
+    @State private var decisionTask: Task<Void, Never>?
+
+    private var cards: [OnboardingCard] { model.remainingCards }
+    private static let totalCount: Int = {
+        let allCards: [OnboardingCard] = Fixtures.load("OnboardingCards")
+        return allCards.count
+    }()
 
     var body: some View {
-        StepScaffold(title: "Which cuisines do you enjoy?", subtitle: "Right = like, left = skip", nextTitle: cards.isEmpty ? "Next" : "Skip the rest", onNext: model.next) {
-            ZStack {
-                if cards.isEmpty { Text("All done!").font(AppTypography.title) }
-                ForEach(cards.reversed()) { card in
-                    let top = card == cards.first
-                    VStack(spacing: 8) {
-                        Text(card.emoji).font(.system(size: 90))
-                        Text(card.name).font(AppTypography.style(.title, weight: .bold))
-                        if !card.tags.isEmpty {
-                            Text(card.tags.joined(separator: " · ")).foregroundStyle(Theme.accent)
+        StepScaffold(title: "Which cuisines do you enjoy?",
+                     nextTitle: cards.isEmpty ? "Next" : "Skip the rest", canContinue: !deciding, onNext: model.next) {
+            GeometryReader { geometry in
+                let photoHeight = max(140, min(240, geometry.size.height - 220))
+                ScrollView {
+                    VStack(spacing: 16) {
+                        Text("\(min(Self.totalCount, Self.totalCount - cards.count + 1)) of \(Self.totalCount) cuisines")
+                            .font(AppTypography.caption)
+                        ZStack {
+                            if cards.isEmpty {
+                                VStack(spacing: 12) {
+                                    Image(systemName: "checkmark.circle").font(.system(size: 40))
+                                    Text("Your tastes are saved").font(AppTypography.headline)
+                                }
+                                .frame(maxWidth: .infinity, minHeight: photoHeight + 110)
+                                .background(Theme.card, in: RoundedRectangle(cornerRadius: 24))
+                            }
+                            ForEach(Array(cards.prefix(2).reversed())) { card in
+                                let top = card == cards.first
+                                CuisineSwipeCard(card: card, photoHeight: photoHeight)
+                                    .overlay(alignment: offset.width > 0 ? .topLeading : .topTrailing) {
+                                        if top && abs(offset.width) > 35 {
+                                            Text(offset.width > 0 ? "SOUNDS GOOD" : "SKIP")
+                                                .font(AppTypography.style(.caption, weight: .bold))
+                                                .padding(.horizontal, 12).padding(.vertical, 8)
+                                                .foregroundStyle(Theme.accentForeground)
+                                                .background(Theme.accent, in: Capsule())
+                                                .padding(16)
+                                        }
+                                    }
+                                    .scaleEffect(top ? 1 : 0.97, anchor: .bottom)
+                                    .offset(top ? offset : CGSize(width: 0, height: 8))
+                                    .rotationEffect(.degrees(top && !reduceMotion ? max(-12, min(12, Double(offset.width / 30))) : 0))
+                                    .zIndex(top ? 1 : 0)
+                                    .accessibilityHidden(!top)
+                                    .allowsHitTesting(top && !deciding)
+                                    .simultaneousGesture(top ? DragGesture(minimumDistance: 15)
+                                        .onChanged { gesture in
+                                            guard !deciding, abs(gesture.translation.width) > abs(gesture.translation.height) else { return }
+                                            offset = CGSize(width: gesture.translation.width, height: gesture.translation.height * 0.12)
+                                        }
+                                        .onEnded { gesture in
+                                            if abs(gesture.translation.width) > 100 && abs(gesture.translation.width) > abs(gesture.translation.height) {
+                                                decide(card, liked: gesture.translation.width > 0, travel: geometry.size.width + 80)
+                                            } else {
+                                                withAnimation(reduceMotion ? nil : .spring(duration: 0.3)) { offset = .zero }
+                                            }
+                                        } : nil)
+                            }
                         }
+                        .padding(.bottom, 8)
+                        HStack(spacing: 32) {
+                            Button {
+                                if let card = cards.first { decide(card, liked: false, travel: geometry.size.width + 80) }
+                            } label: {
+                                Image(systemName: "xmark")
+                                    .font(.system(size: 22, weight: .semibold))
+                                    .foregroundStyle(Theme.accent)
+                                    .frame(width: 60, height: 60)
+                                    .background(Theme.card, in: Circle())
+                                    .overlay(Circle().strokeBorder(Theme.accent.opacity(0.35)))
+                                    .contentShape(Circle())
+                            }
+                            .accessibilityLabel("Skip cuisine")
+                            Button {
+                                if let card = cards.first { decide(card, liked: true, travel: geometry.size.width + 80) }
+                            } label: {
+                                Image(systemName: "heart.fill")
+                                    .font(.system(size: 24))
+                                    .foregroundStyle(Theme.accentForeground)
+                                    .frame(width: 60, height: 60)
+                                    .background(Theme.accent, in: Circle())
+                                    .contentShape(Circle())
+                            }
+                            .accessibilityLabel("Like cuisine")
+                        }
+                        .buttonStyle(.plain)
+                        .disabled(cards.isEmpty || deciding)
                     }
-                    .frame(maxWidth: .infinity, minHeight: 320)
-                    .background(Theme.card, in: RoundedRectangle(cornerRadius: 24))
-                    .overlay(alignment: .topLeading) {
-                        if top && offset.width > 40 { Text("YUM").font(AppTypography.style(.title, weight: .bold)).foregroundStyle(Theme.accent).padding() }
-                    }
-                    .overlay(alignment: .topTrailing) {
-                        if top && offset.width < -40 { Text("NOPE").font(AppTypography.style(.title, weight: .bold)).foregroundStyle(Theme.accent).padding() }
-                    }
-                    .offset(top ? offset : .zero)
-                    .rotationEffect(.degrees(top ? Double(offset.width / 20) : 0))
-                    .gesture(top ? DragGesture()
-                        .onChanged { offset = $0.translation }
-                        .onEnded { g in
-                            if abs(g.translation.width) > 100 { decide(card, liked: g.translation.width > 0) }
-                            else { withAnimation(.spring) { offset = .zero } }
-                        } : nil)
+                    .frame(maxWidth: 480)
+                    .frame(maxWidth: .infinity)
+                    .padding(.bottom, 8)
                 }
+                .scrollBounceBehavior(.basedOnSize)
             }
-            HStack {
-                Button { if let c = cards.first { decide(c, liked: false) } } label: { Image(systemName: "xmark.circle.fill").font(.system(size: 52)) }.tint(.red)
-                Spacer()
-                Button { if let c = cards.first { decide(c, liked: true) } } label: { Image(systemName: "heart.circle.fill").font(.system(size: 52)) }.tint(.green)
-            }.padding(.horizontal, 40).disabled(cards.isEmpty)
+        }
+        .onDisappear { decisionTask?.cancel() }
+    }
+
+    private func decide(_ card: OnboardingCard, liked: Bool, travel: CGFloat) {
+        guard !deciding, cards.first?.id == card.id else { return }
+        deciding = true
+        withAnimation(reduceMotion ? nil : .easeIn(duration: 0.18)) {
+            offset = reduceMotion ? .zero : CGSize(width: liked ? travel : -travel, height: -16)
+        }
+        decisionTask = Task { @MainActor in
+            if !reduceMotion {
+                do { try await Task.sleep(for: .milliseconds(180)) }
+                catch { deciding = false; return }
+            }
+            guard !Task.isCancelled, model.step == .swipe, cards.first?.id == card.id else { deciding = false; return }
+            model.swipe(card, liked: liked)
+            var transaction = Transaction(animation: nil)
+            transaction.disablesAnimations = true
+            withTransaction(transaction) {
+                model.remainingCards.removeFirst()
+                offset = .zero
+                deciding = false
+            }
+            if cards.isEmpty { model.next() }
+        }
+    }
+}
+
+private struct CuisineSwipeCard: View {
+    let card: OnboardingCard
+    let photoHeight: CGFloat
+
+    private var caption: String {
+        switch card.cuisine {
+        case "Thai": "Pad Thai, curries, fragrant herbs"
+        case "Italian": "Pasta, pizza, rich tomato sauces"
+        case "Japanese": "Ramen, sushi, comforting bowls"
+        case "Mexican": "Tacos, salsas, bold flavors"
+        case "Mediterranean": "Falafel, pita, fresh vegetables"
+        default: card.tags.joined(separator: " · ")
         }
     }
 
-    private func decide(_ card: OnboardingCard, liked: Bool) {
-        model.swipe(card, liked: liked)
-        withAnimation(.spring) {
-            offset = .zero
-            cards.removeFirst()
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            GeometryReader { geometry in
+                Image("cuisine_\(card.cuisine.lowercased())")
+                    .renderingMode(.original)
+                    .resizable()
+                    .scaledToFill()
+                    .frame(width: geometry.size.width, height: photoHeight)
+                    .clipped()
+            }
+            .frame(height: photoHeight)
+            .accessibilityHidden(true)
+            VStack(alignment: .leading, spacing: 8) {
+                Text(card.name).font(AppTypography.style(.title, weight: .bold))
+                Text(caption).font(AppTypography.subheadline)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .padding(18)
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
-        if cards.isEmpty { model.next() }
+        .foregroundStyle(Theme.accent)
+        .background(Theme.card)
+        .clipShape(RoundedRectangle(cornerRadius: 24))
     }
 }
 
@@ -276,6 +460,10 @@ struct FollowUpStep: View {
         }
         .task {
             // Skip the step if Claude takes longer than 4 s.
+            if model.isMovingBackward && !model.questions.isEmpty {
+                loading = false
+                return
+            }
             let draft = model.draft
             let backend = app.backend
             let result = await withTaskGroup(of: [FollowUpQuestion]?.self) { group in
@@ -328,6 +516,13 @@ struct AvatarPickerStep: View {
     }
 }
 
+private struct AgentStartAnchor: PreferenceKey {
+    static var defaultValue: Anchor<CGRect>? { nil }
+    static func reduce(value: inout Anchor<CGRect>?, nextValue: () -> Anchor<CGRect>?) {
+        value = nextValue() ?? value
+    }
+}
+
 struct ProfileSummaryStep: View {
     @Environment(AppModel.self) private var app
     @Bindable var model: OnboardingModel
@@ -337,7 +532,9 @@ struct ProfileSummaryStep: View {
     var body: some View {
         StepScaffold(title: "Meet your agent", nextTitle: "Let's eat", canContinue: userId != nil, onNext: { app.userId = userId }) {
             VStack(spacing: 16) {
-                AvatarView(avatarId: model.draft.avatarId, size: 110, highlighted: true)
+                Color.clear.frame(height: 328)
+                    .anchorPreference(key: AgentStartAnchor.self, value: .bounds) { $0 }
+                    .accessibilityHidden(true)
                 if saving { ProgressView("Saving your profile…") }
                 if let s = model.summary {
                     Text(s.personality.label).font(AppTypography.style(.caption, weight: .bold)).padding(6).background(Theme.accent.opacity(0.2), in: Capsule())
@@ -346,6 +543,17 @@ struct ProfileSummaryStep: View {
                 if let e = model.error { Text(e).foregroundStyle(Theme.accent) }
             }
             .frame(maxWidth: .infinity)
+        }
+        .overlayPreferenceValue(AgentStartAnchor.self) { anchor in
+            GeometryReader { geometry in
+                if let anchor {
+                    let frame = geometry[anchor]
+                    AgentPlayground(avatarId: model.draft.avatarId,
+                                    initialPosition: CGPoint(x: geometry.size.width / 2,
+                                                             y: frame.midY + 16))
+                }
+            }
+            .padding(.bottom, 70)
         }
         .task {
             do {

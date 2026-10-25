@@ -10,6 +10,24 @@ enum Theme {
     static let restaurantBubble = Color(.tertiarySystemFill)
 }
 
+/// A restrained transition for replacing a full-screen flow page. The small
+/// horizontal movement gives the user a sense of progress without making the
+/// app feel like it is pushing a long navigation stack.
+enum AppPageTransition {
+    static func transition(direction: CGFloat = 1, reduceMotion: Bool) -> AnyTransition {
+        guard !reduceMotion else { return .opacity }
+        let travel: CGFloat = 22 * direction
+        return .asymmetric(
+            insertion: .offset(x: travel).combined(with: .opacity),
+            removal: .offset(x: -travel).combined(with: .opacity)
+        )
+    }
+
+    static func animation(reduceMotion: Bool) -> Animation {
+        reduceMotion ? .easeOut(duration: 0.15) : .easeInOut(duration: 0.32)
+    }
+}
+
 /// Shared typography that preserves Dynamic Type and the app's existing hierarchy.
 enum AppTypography {
     static func custom(
@@ -210,11 +228,11 @@ struct MemberTicks: View {
         HStack(spacing: 14) {
             ForEach(members) { m in
                 VStack(spacing: 4) {
+                    Text(m.name).font(AppTypography.caption)
                     AvatarView(avatarId: m.avatarId, size: 44)
                         .overlay(alignment: .bottomTrailing) {
                             if done(m) { Image(systemName: "checkmark.circle.fill").foregroundStyle(.green).background(Circle().fill(.background)) }
                         }
-                    Text(m.name).font(AppTypography.caption)
                 }
             }
         }

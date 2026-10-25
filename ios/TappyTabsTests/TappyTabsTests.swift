@@ -97,6 +97,90 @@ final class PartyStoreTests: XCTestCase {
 }
 
 
+final class AgentFlingMotionTests: XCTestCase {
+    func testFlingSettlesThenHopsBackToItsStartingPosition() {
+        var motion = AgentFlingMotion()
+        let start = CGPoint(x: 160, y: 140)
+        motion.updateBounds(size: CGSize(width: 320, height: 480), radius: 40, start: start)
+        motion.move(to: CGPoint(x: 250, y: 350))
+        motion.fling(CGVector(dx: 500, dy: 500), reducedMotion: false)
+        var sawReturn = false
+        for _ in 0..<600 {
+            motion.advance(dt: 1.0 / 60)
+            sawReturn = sawReturn || motion.isReturning
+            XCTAssertTrue((40...280).contains(motion.position.x))
+            XCTAssertTrue((40...440).contains(motion.position.y))
+        }
+        XCTAssertTrue(sawReturn)
+        XCTAssertEqual(motion.position, start)
+        XCTAssertFalse(motion.isReturning)
+    }
+
+    func testCatchingTheAgentInterruptsItsReturn() {
+        var motion = AgentFlingMotion()
+        let start = CGPoint(x: 160, y: 140)
+        motion.updateBounds(size: CGSize(width: 320, height: 480), radius: 40, start: start)
+        motion.move(to: CGPoint(x: 250, y: 350))
+        motion.fling(.zero, reducedMotion: false)
+        for _ in 0..<30 { motion.advance(dt: 1.0 / 60) }
+        XCTAssertTrue(motion.isReturning)
+        motion.stop()
+        let caught = motion.position
+        for _ in 0..<120 { motion.advance(dt: 1.0 / 60) }
+        XCTAssertEqual(motion.position, caught)
+        motion.fling(.zero, reducedMotion: false)
+        for _ in 0..<180 { motion.advance(dt: 1.0 / 60) }
+        XCTAssertEqual(motion.position, start)
+    }
+
+    func testFlingReflectsAtWallsAndComesToRest() {
+        var motion = AgentFlingMotion()
+        motion.updateBounds(size: CGSize(width: 320, height: 480), radius: 40, start: CGPoint(x: 265, y: 420))
+        motion.fling(CGVector(dx: 1200, dy: 900), reducedMotion: false)
+        motion.advance(dt: 0.04)
+        XCTAssertLessThan(motion.velocity.dx, 0)
+        XCTAssertLessThan(motion.velocity.dy, 0)
+        for _ in 0..<600 {
+            motion.advance(dt: 1.0 / 60)
+            XCTAssertTrue((40...280).contains(motion.position.x))
+            XCTAssertTrue((40...440).contains(motion.position.y))
+        }
+        XCTAssertEqual(motion.velocity.dx, 0)
+        XCTAssertEqual(motion.velocity.dy, 0)
+    }
+
+    func testReducedMotionKeepsDraggedPositionWithoutMomentum() {
+        var motion = AgentFlingMotion()
+        motion.updateBounds(size: CGSize(width: 320, height: 480), radius: 40, start: CGPoint(x: 160, y: 150))
+        motion.move(to: CGPoint(x: 220, y: 300))
+        motion.fling(CGVector(dx: 900, dy: -700), reducedMotion: true)
+        motion.advance(dt: 0.05)
+        XCTAssertEqual(motion.position, CGPoint(x: 220, y: 300))
+    }
+
+    func testLargeThrowsAndResizingNeverEscapeThePlayArea() {
+        var motion = AgentFlingMotion()
+        motion.updateBounds(size: CGSize(width: 320, height: 480), radius: 60, start: CGPoint(x: 160, y: 240))
+        motion.fling(CGVector(dx: 100_000, dy: -100_000), reducedMotion: false)
+        XCTAssertEqual(hypot(motion.velocity.dx, motion.velocity.dy), 1600, accuracy: 0.001)
+        motion.updateBounds(size: CGSize(width: 140, height: 130), radius: 60, start: .zero)
+        for _ in 0..<240 {
+            motion.advance(dt: 1.0 / 30)
+            XCTAssertTrue((60...80).contains(motion.position.x))
+            XCTAssertTrue((60...70).contains(motion.position.y))
+        }
+    }
+
+    @MainActor
+    func testPlaygroundPassesTouchesOutsideTheCharacter() {
+        let view = AgentDrawingView(frame: CGRect(x: 0, y: 0, width: 320, height: 480))
+        view.configure(name: "tomato", state: .idle, reduced: false, active: true, interactive: true,
+                       roaming: true, initialPosition: CGPoint(x: 160, y: 150))
+        XCTAssertTrue(view.point(inside: CGPoint(x: 160, y: 150), with: nil))
+        XCTAssertFalse(view.point(inside: CGPoint(x: 10, y: 460), with: nil))
+    }
+}
+
 final class AgentAvatarTests: XCTestCase {
     @MainActor
     func testLaunchAnimationCompletesOnceAndCanReplay() {
@@ -126,7 +210,7 @@ final class AgentAvatarTests: XCTestCase {
     }
 
     @MainActor
-    func testHappyHopAndReducedMotion() throws {
+    func testHappyAndCelebratingHopsRespectReducedMotion() throws {
         func topEdge(_ view: AgentDrawingView) throws -> Int {
             let format = UIGraphicsImageRendererFormat()
             format.scale = 1; format.opaque = false
@@ -141,14 +225,17 @@ final class AgentAvatarTests: XCTestCase {
             let first = try XCTUnwrap(stride(from: 3, to: pixels.count, by: 4).first { pixels[$0] > 128 })
             return first / 4096
         }
-        for reduced in [false, true] {
-            let view = AgentDrawingView(frame: CGRect(x: 0, y: 0, width: 1024, height: 1024))
-            view.configure(name: "tomato", state: .happy, reduced: reduced, active: true)
-            let before = try topEdge(view)
-            for _ in 0..<9 { view.advance(dt: 1.0 / 30, pointer: nil) }
-            let after = try topEdge(view)
-            if reduced { XCTAssertEqual(after, before, "Reduce Motion must suppress the success hop and sway") }
-            else { XCTAssertLessThan(after, before - 40, "Success should launch the mascot upward") }
+        for state in [AgentAvatarState.happy, .celebrating] {
+            for reduced in [false, true] {
+                let view = AgentDrawingView(frame: CGRect(x: 0, y: 0, width: 1024, height: 1024))
+                view.configure(name: "tomato", state: state, reduced: reduced, active: true, interactive: true)
+                if reduced { view.spin(); view.bounce() }
+                let before = try topEdge(view)
+                for _ in 0..<9 { view.advance(dt: 1.0 / 30, pointer: nil) }
+                let after = try topEdge(view)
+                if reduced { XCTAssertEqual(after, before, "Reduce Motion must suppress the hop and sway") }
+                else { XCTAssertLessThan(after, before - 40, "Celebration should launch the mascot upward") }
+            }
         }
     }
 
