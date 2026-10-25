@@ -45,6 +45,7 @@ struct Party: Decodable, Equatable {
     let status: PartyStatus
     let size: Double
     let joinCode: String
+    let autoMode: Bool?
     let pickDeadline: Double?
     let confirmDeadline: Double?
     let members: [Member]

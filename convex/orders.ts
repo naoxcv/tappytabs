@@ -3,14 +3,16 @@
 import { v } from "convex/values";
 import { internal } from "./_generated/api";
 import type { Doc, Id } from "./_generated/dataModel";
-import { internalMutation, mutation, query, type MutationCtx, type QueryCtx } from "./_generated/server";
+import { internalAction, internalMutation, mutation, query, type MutationCtx, type QueryCtx } from "./_generated/server";
 import { TIMING } from "./shared/enums";
 import { fail } from "./shared/errors";
 import {
   getParty, linesOf, membersOf, menuOf, requireMember, requireStatus, requireUser, usersOf,
 } from "./lib/guards";
-import { addableSet, isSafeFor, modeForSharers } from "./agents/safety";
+import { addableSet, isSafeFor, modeForSharers, safeSet } from "./agents/safety";
 import { substituteFor } from "./agents/substitute";
+import { poolForParty, sharedTarget } from "./agents/rules";
+import { agentDraftV, type AgentDraft, type UserLite } from "./shared/types";
 
 async function candidateRows(ctx: QueryCtx, partyId: Id<"parties">, userId: Id<"users">) {
   return ctx.db.query("candidates").withIndex("by_party_user", (q) => q.eq("partyId", partyId).eq("userId", userId)).collect();
@@ -127,6 +129,10 @@ export const autoPick = internalMutation({
       if (m.pickedItemId) continue;
       const top = (await candidateRows(ctx, partyId, m.userId)).filter((c) => !c.isDrink).sort((a, b) => a.rank - b.rank)[0];
       if (top) await writePick(ctx, partyId, m, top.itemId);
+    }
+    if (party.autoMode) {
+      await place(ctx, party);
+      return;
     }
     await toConfirm(ctx, party);
   },
@@ -256,6 +262,75 @@ export const autoConfirm = internalMutation({
     if (!party || party.epoch !== epoch || party.status !== "confirm") return;
     const now = Date.now();
     for (const m of await membersOf(ctx, partyId)) if (!m.confirmedAt) await ctx.db.patch(m._id, { confirmedAt: now });
+    await place(ctx, party);
+  },
+});
+
+/** Auto mode runs each diner's personalized draft model, then immediately places its #1 picks. */
+export const autoPlace = internalAction({
+  args: { partyId: v.id("parties"), epoch: v.number() },
+  handler: async (ctx, { partyId, epoch }): Promise<void> => {
+    const { userIds } = await ctx.runQuery(internal.negotiation.load, { partyId });
+    const drafts: AgentDraft[] = await Promise.all(
+      userIds.map((userId) => ctx.runAction(internal.agents.steps.draftStep, { partyId, userId })),
+    );
+    await ctx.runMutation(internal.orders.autoPlaceDrafts, { partyId, epoch, drafts });
+  },
+});
+
+export const autoPlaceDrafts = internalMutation({
+  args: { partyId: v.id("parties"), epoch: v.number(), drafts: v.array(agentDraftV) },
+  handler: async (ctx, { partyId, epoch, drafts }): Promise<void> => {
+    const party = await ctx.db.get(partyId);
+    if (!party || party.epoch !== epoch || party.status !== "negotiating" || !party.autoMode) return;
+    const members = await membersOf(ctx, partyId);
+    const users = await usersOf(ctx, members);
+    const menu = await menuOf(ctx, party.restaurantId);
+    const draftsByUser = new Map(drafts.map((draft) => [draft.userId, draft]));
+    for (const member of members) {
+      const user = users.find((u) => u._id === member.userId);
+      const draft = draftsByUser.get(member.userId);
+      if (!user || !draft) continue;
+      const allowed = new Map(safeSet(menu, user).map((item) => [String(item._id), item]));
+      let rank = 1;
+      for (const candidate of draft.mains.slice(0, 3)) {
+        const item = allowed.get(candidate.itemId);
+        if (!item) continue;
+        await ctx.db.insert("candidates", {
+          partyId, userId: member.userId, itemId: item._id, rank: rank++, reason: candidate.reason,
+          isDrink: false, askServer: item.askServer,
+        });
+      }
+      const drinkCandidate = draft.drink;
+      const drink = drinkCandidate ? allowed.get(drinkCandidate.itemId) : undefined;
+      if (drink) {
+        await ctx.db.insert("candidates", {
+          partyId, userId: member.userId, itemId: drink._id, rank: 0, reason: drinkCandidate!.reason,
+          isDrink: true, askServer: drink.askServer,
+        });
+      }
+      const main = draft.mains.map((candidate) => allowed.get(candidate.itemId)).find((item) => item != null);
+      if (!main) continue;
+      await ctx.db.insert("orderLines", {
+        partyId, itemId: main._id, qty: 1, kind: "main", sharedBy: [user._id], addedBy: "agent",
+      });
+      await ctx.db.patch(member._id, { pickedItemId: main._id, confirmedAt: Date.now() });
+      if (drink) {
+        await ctx.db.insert("orderLines", {
+          partyId, itemId: drink._id, qty: 1, kind: "drink", sharedBy: [user._id], addedBy: "agent",
+        });
+      }
+    }
+    const pooled = poolForParty(drafts, menu, users as UserLite[]).pooled;
+    const shared = pooled.slice(0, sharedTarget(members.map((member) => member.hunger ?? "normal")));
+    for (const itemId of shared) {
+      const item = menu.find((entry) => entry._id === itemId);
+      if (!item) continue;
+      const sharedBy = users.filter((user) => isSafeFor(item, [user], "shared").safe).map((user) => user._id);
+      if (sharedBy.length) await ctx.db.insert("orderLines", {
+        partyId, itemId: item._id, qty: 1, kind: "shared", sharedBy, addedBy: "agent",
+      });
+    }
     await place(ctx, party);
   },
 });

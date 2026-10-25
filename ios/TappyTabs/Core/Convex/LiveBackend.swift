@@ -179,8 +179,10 @@ final class LiveBackend: Backend {
         try await act(API.menuIngest, ["restaurantId": restaurantId])
     }
 
-    func createParty(restaurantId: String, size: Int, hostDeviceId: String) async throws -> CreatedParty {
-        try await mutate(API.partiesCreate, ["restaurantId": restaurantId, "size": Double(size), "hostDeviceId": hostDeviceId])
+    func createParty(restaurantId: String, size: Int, hostDeviceId: String, autoMode: Bool) async throws -> CreatedParty {
+        try await mutate(API.partiesCreate, [
+            "restaurantId": restaurantId, "size": Double(size), "hostDeviceId": hostDeviceId, "autoMode": autoMode,
+        ])
     }
 
     func startWithFewer(partyId: String, hostDeviceId: String) async throws {

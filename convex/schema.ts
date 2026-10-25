@@ -87,6 +87,7 @@ export default defineSchema({
     restaurantId: v.id("restaurants"),
     hostDeviceId: v.string(),
     size: v.number(),
+    autoMode: v.optional(v.boolean()),
     status: statusV,
     joinCode: v.string(),
     epoch: v.number(), // bumped by reset; scheduled jobs carry it and exit if it changed

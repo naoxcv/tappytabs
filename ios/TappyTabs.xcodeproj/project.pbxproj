@@ -50,6 +50,7 @@
 		BC2BC9D71DAF49B595F5C6B0 /* PartyStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34331FD12121DCB867EECBBA /* PartyStore.swift */; };
 		C280CA1045E74AA2960FA34E /* Raleway-Variable.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 9008DD017F774446A2D27687 /* Raleway-Variable.ttf */; };
 		CA83B7AF4B0CA7B949927DC4 /* OrderReceivedView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8FF1F8E7F3E713F3573D4106 /* OrderReceivedView.swift */; };
+		D49A2CC357FE4D0791D8FE8A /* DishCutoutImage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89F2A0E3C54047D48A913B221 /* DishCutoutImage.swift */; };
 		DEF305EF2322D535CDB3DD0A /* OrderPlacedView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63AE4B2FC8EF52651F4435DE /* OrderPlacedView.swift */; };
 		E11E444BE8BEBF2F1FDE0DFF /* AgentAvatarConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09516CED9F36421A8EDC1527 /* AgentAvatarConfig.swift */; };
 		E300BC49B76B34E2C65374FC /* candidates.json in Resources */ = {isa = PBXBuildFile; fileRef = 039EAAF1EDAEC3ACA06C0653 /* candidates.json */; };
@@ -104,6 +105,7 @@
 		6ACD7894DA5BF4789E4529E0 /* API.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = API.swift; sourceTree = "<group>"; };
 		8468ECF797AE164A8D0ADA0A /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		888D60115954865E6C827B00 /* CheckInView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CheckInView.swift; sourceTree = "<group>"; };
+		89F2A0E3C54047D48A913B221 /* DishCutoutImage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DishCutoutImage.swift; sourceTree = "<group>"; };
 		8B11B31391A866AC99A9FDF6 /* GroupOrderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupOrderView.swift; sourceTree = "<group>"; };
 		8E7D812828B60A585E89AEC4 /* ids.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = ids.json; sourceTree = "<group>"; };
 		8FC70C4ECFF627DB9BFE809C /* TappyTabsTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = TappyTabsTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };

@@ -39,7 +39,7 @@ protocol Backend: AnyObject {
 
     // Restaurant
     func ingestMenu(restaurantId: String) async throws -> IngestResult
-    func createParty(restaurantId: String, size: Int, hostDeviceId: String) async throws -> CreatedParty
+    func createParty(restaurantId: String, size: Int, hostDeviceId: String, autoMode: Bool) async throws -> CreatedParty
     func startWithFewer(partyId: String, hostDeviceId: String) async throws
     func reset(partyId: String, hostDeviceId: String) async throws
     func announceTap(partyId: String, userId: String, deviceId: String, attemptId: String, token: String) async throws

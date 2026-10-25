@@ -40,17 +40,23 @@ async function clearPartyRun(ctx: MutationCtx, party: Doc<"parties">, preserveEx
   for (const message of messages) await ctx.db.delete(message._id);
   await ctx.db.replace(partyId, {
     restaurantId: party.restaurantId, hostDeviceId: party.hostDeviceId, size: party.size,
-    status: "checkin", joinCode: await newJoinCode(ctx), epoch: party.epoch + 1,
+    autoMode: party.autoMode ?? false, status: "checkin", joinCode: await newJoinCode(ctx), epoch: party.epoch + 1,
   });
 }
 
 export const create = mutation({
-  args: { restaurantId: v.id("restaurants"), size: v.number(), hostDeviceId: v.string() },
-  handler: async (ctx, { restaurantId, size, hostDeviceId }): Promise<{ partyId: Id<"parties">; joinCode: string }> => {
+  args: {
+    restaurantId: v.id("restaurants"), size: v.number(), hostDeviceId: v.string(),
+    autoMode: v.optional(v.boolean()),
+  },
+  returns: v.object({ partyId: v.id("parties"), joinCode: v.string() }),
+  handler: async (ctx, { restaurantId, size, hostDeviceId, autoMode }): Promise<{ partyId: Id<"parties">; joinCode: string }> => {
     if (!(await ctx.db.get(restaurantId))) fail("NOT_FOUND", "Restaurant not found");
     if (!Number.isInteger(size) || size < 2 || size > 6) fail("INVALID", "Party size must be 2–6");
     const joinCode = await newJoinCode(ctx);
-    const partyId = await ctx.db.insert("parties", { restaurantId, hostDeviceId, size, status: "checkin", joinCode, epoch: 0 });
+    const partyId = await ctx.db.insert("parties", {
+      restaurantId, hostDeviceId, size, autoMode: autoMode ?? false, status: "checkin", joinCode, epoch: 0,
+    });
     return { partyId, joinCode };
   },
 });
@@ -112,8 +118,18 @@ export const join = mutation({
     }
     for (const claim of claims) await ctx.db.delete(claim._id);
     await ctx.db.insert("tapClaims", { userId: a.userId, partyId: party._id, expiresAt: Date.now() + 300_000 });
-    await ctx.db.insert("members", { partyId: party._id, userId: a.userId, joinedVia: a.via, joinedAt: Date.now() });
-    if (members.length + 1 === party.size) await ctx.db.patch(party._id, { status: "hunger" });
+    await ctx.db.insert("members", {
+      partyId: party._id, userId: a.userId, joinedVia: a.via, joinedAt: Date.now(),
+      ...(party.autoMode ? { hunger: "normal" as const } : {}),
+    });
+    if (members.length + 1 === party.size) {
+      if (party.autoMode) {
+        await ctx.db.patch(party._id, { status: "negotiating", negotiationStartedAt: Date.now() });
+        await ctx.scheduler.runAfter(0, internal.orders.autoPlace, { partyId: party._id, epoch: party.epoch });
+      } else {
+        await ctx.db.patch(party._id, { status: "hunger" });
+      }
+    }
     return { result: "joined", partyId: party._id };
   },
 });
@@ -207,6 +223,7 @@ export const current = query({
       joinCode: party.joinCode,
       pickDeadline: party.pickDeadline ?? null,
       confirmDeadline: party.confirmDeadline ?? null,
+      autoMode: party.autoMode ?? false,
       members: rows,
     };
   },
@@ -259,7 +276,15 @@ export const startWithFewer = mutation({
     requireStatus(party, "checkin");
     const members = await membersOf(ctx, partyId);
     if (members.length < 2) fail("INVALID", "Need at least 2 diners");
-    await ctx.db.patch(partyId, { size: members.length, status: "hunger" });
+    if (party.autoMode) {
+      for (const member of members) {
+        if (!member.hunger) await ctx.db.patch(member._id, { hunger: "normal" });
+      }
+      await ctx.db.patch(partyId, { size: members.length, status: "negotiating", negotiationStartedAt: Date.now() });
+      await ctx.scheduler.runAfter(0, internal.orders.autoPlace, { partyId, epoch: party.epoch });
+    } else {
+      await ctx.db.patch(partyId, { size: members.length, status: "hunger" });
+    }
   },
 });
 
@@ -279,6 +304,11 @@ export const advance = internalMutation({
   handler: async (ctx, { partyId, epoch }) => {
     const party = await ctx.db.get(partyId);
     if (!party || party.epoch !== epoch || party.status !== "negotiating") return;
+    if (party.autoMode) {
+      await ctx.db.patch(partyId, { status: "pick", pickDeadline: undefined });
+      await ctx.scheduler.runAfter(0, internal.orders.autoPick, { partyId, epoch });
+      return;
+    }
     const pickDeadline = Date.now() + TIMING.pickWindowMs;
     await ctx.db.patch(partyId, { status: "pick", pickDeadline });
     await ctx.scheduler.runAt(pickDeadline, internal.orders.autoPick, { partyId, epoch });
