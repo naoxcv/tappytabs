@@ -172,6 +172,7 @@ struct DebugMenu: View {
     @State private var leaveError: String?
     @State private var creatingTestProfile = false
     @State private var testProfileError: String?
+    @State private var showingRestaurantResetConfirmation = false
 
     var body: some View {
         @Bindable var app = app
@@ -224,6 +225,16 @@ struct DebugMenu: View {
                     Button("Sign out (re-run onboarding)", role: .destructive) { app.signOut() }
                         .foregroundStyle(Theme.accent)
                 }
+                if app.mode == .restaurant {
+                    Section(header: Text("Restaurant onboarding").font(AppTypography.headline)) {
+                        Button("Reset restaurant identity", role: .destructive) {
+                            showingRestaurantResetConfirmation = true
+                        }
+                        Text("Creates a fresh restaurant account on the next screen. The previous restaurant and menu stay stored in Convex.")
+                            .font(AppTypography.footnote)
+                            .foregroundStyle(.secondary)
+                    }
+                }
                 if let mock = app.mock {
                     Section(header: Text("Mock: jump to status").font(AppTypography.headline)) {
                         ForEach(PartyStatus.allCases, id: \.self) { s in
@@ -248,6 +259,17 @@ struct DebugMenu: View {
             }
             .navigationTitle("Debug")
             .toolbar { Button("Done") { dismiss() } }
+            .confirmationDialog("Reset this restaurant identity?", isPresented: $showingRestaurantResetConfirmation, titleVisibility: .visible) {
+                Button("Reset restaurant", role: .destructive) {
+                    app.deviceId = UUID().uuidString
+                    app.userId = nil
+                    app.leaveTable()
+                    dismiss()
+                }
+                Button("Cancel", role: .cancel) {}
+            } message: {
+                Text("This starts a fresh restaurant onboarding flow. Existing backend restaurant data is not deleted.")
+            }
         }
     }
 

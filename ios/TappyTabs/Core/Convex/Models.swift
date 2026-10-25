@@ -45,6 +45,7 @@ struct Party: Decodable, Equatable {
     let status: PartyStatus
     let size: Double
     let joinCode: String
+    let autoMode: Bool?
     let pickDeadline: Double?
     let confirmDeadline: Double?
     let members: [Member]
@@ -164,6 +165,11 @@ struct RestaurantOnboarding: Decodable, Equatable, Identifiable {
     let status: String
     let candidates: [RestaurantCandidate]
     let selectedCandidate: RestaurantCandidate?
+    let acquisitionMode: String?
+    let sourceUrl: String?
+    let searchQuery: String?
+    let searchLocation: String?
+    let actorRunId: String?
     let errorMessage: String?
     var id: String { _id }
 }
@@ -171,6 +177,9 @@ struct RestaurantOnboarding: Decodable, Equatable, Identifiable {
 struct RestaurantCandidate: Codable, Equatable, Identifiable {
     let name: String
     let address: String
+    let sourceUrl: String?
+    let confidence: String?
+    let extractionConfidence: String?
     let mapsUrl: String?
     let googlePlaceId: String?
     let websiteUrl: String?
@@ -179,7 +188,7 @@ struct RestaurantCandidate: Codable, Equatable, Identifiable {
     let rating: Double?
     let distance: Double?
     let matchScore: Double?
-    var id: String { googlePlaceId ?? mapsUrl ?? "\(name)-\(address)" }
+    var id: String { sourceUrl ?? googlePlaceId ?? mapsUrl ?? "\(name)-\(address)" }
 }
 
 struct RestaurantRawMenuItem: Codable, Equatable, Identifiable {
@@ -198,6 +207,7 @@ struct RestaurantMenuItem: Codable, Equatable, Identifiable {
     var tags: [String]
     var description: String
     var priceCents: Double
+    var priceVerified: Bool?
     var allergens: [[String: String]]
     var diet: [String]
     var spice: Double
@@ -230,6 +240,12 @@ struct RestaurantPublishResult: Decodable {
 
 struct RestaurantRef: Decodable, Equatable, Identifiable {
     let id: String
+    let name: String
+}
+
+/// onboarding:getOwned returns the stored restaurant document, whose Convex id is `_id`.
+struct OwnedRestaurantRecord: Decodable {
+    let _id: String
     let name: String
 }
 

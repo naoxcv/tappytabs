@@ -48,6 +48,18 @@ async function errorCode(promise: Promise<unknown>) {
 }
 
 describe("restaurant onboarding", () => {
+  test("can skip onboarding into the checked-in demo menu", async () => {
+    const t = testBackend();
+    await t.mutation(api.onboarding.createOrGet, { deviceId: "demo-owner", displayName: "Restaurant" });
+    const restaurantId = await t.mutation(api.onboarding.skipToDemo, { deviceId: "demo-owner" });
+    const restaurant = await t.query(api.onboarding.getOwned, { deviceId: "demo-owner" });
+    expect(restaurant?._id).toBe(restaurantId);
+    expect(restaurant?.menuSource).toBe("seed");
+    expect(restaurant?.onboardingStatus).toBe("ready");
+    expect((await t.query(api.menu.status, { restaurantId }))?.itemCount).toBeGreaterThan(0);
+    expect((await t.query(api.onboarding.me, { deviceId: "demo-owner" }))?.onboardingId).toBeTruthy();
+  });
+
   test("creates one account per device and one restaurant draft per account", async () => {
     const t = testBackend();
     const accountId = await t.mutation(api.onboarding.createOrGet, { deviceId: "restaurant-device", displayName: "Tappy Cafe" });
@@ -101,6 +113,36 @@ describe("restaurant onboarding", () => {
     expect(await errorCode(t.query(api.onboarding.getDraft, { deviceId: "other-device", onboardingId }))).toBe("NOT_HOST");
   });
 
+  test("converts a scraper result into an iOS-decodable review draft", async () => {
+    const t = testBackend();
+    await t.mutation(api.onboarding.createOrGet, { deviceId: "owner-device", displayName: "Owner" });
+    const onboardingId = await t.mutation(api.onboarding.createDraft, {
+      deviceId: "owner-device", name: "Tappy Cafe", address: candidate.address,
+    });
+    const rawItems = [
+      { name: "Rice Bowl", description: "Seasonal vegetables", price: 14.5, category: "Mains" },
+      { name: "Iced Tea", price: "$4.00", category: "Drinks" },
+    ];
+
+    await t.mutation(internal.onboarding.saveUrlResult, {
+      deviceId: "owner-device",
+      onboardingId,
+      actorRunId: "run-123",
+      result: { ...candidate, sourceUrl: "https://tappy.example/menu", rawItems },
+    });
+
+    const draft = await t.query(api.onboarding.getDraft, { deviceId: "owner-device", onboardingId });
+    expect(draft?.rawItems).toEqual([
+      { name: "Rice Bowl", description: "Seasonal vegetables", price: "14.5", category: "Mains" },
+      { name: "Iced Tea", description: "", price: "$4.00", category: "Drinks" },
+    ]);
+    expect(draft?.editedItems).toEqual([
+      expect.objectContaining({ name: "Rice Bowl", priceCents: 1450, tagStatus: "untagged", menuOrder: 0 }),
+      expect.objectContaining({ name: "Iced Tea", priceCents: 400, tagStatus: "untagged", menuOrder: 1 }),
+    ]);
+    expect((await t.query(api.onboarding.getStatus, { deviceId: "owner-device", onboardingId }))?.status).toBe("review_required");
+  });
+
   test("normalization failure preserves the previous active menu", async () => {
     const t = testBackend();
     const seeded = await t.mutation(internal.seed.base, {});
@@ -118,5 +160,6 @@ describe("restaurant onboarding", () => {
     expect((await t.query(api.onboarding.getStatus, { deviceId: "owner-device", onboardingId }))?.status).toBe("normalization_failed");
     expect((await t.query(api.menu.status, { restaurantId: seeded.restaurantId }))?.itemCount).toBeGreaterThan(0);
     expect((await t.query(api.onboarding.getDraft, { deviceId: "owner-device", onboardingId }))?.status).toBe("failed");
+    expect((await t.query(api.onboarding.getDraft, { deviceId: "owner-device", onboardingId }))?.errorMessage).toContain("Menu normalizer is not configured");
   });
 });

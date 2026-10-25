@@ -7,6 +7,7 @@
   "scripts": {
     "dev": "convex dev",
     "dev:local": "CONVEX_AGENT_MODE=anonymous convex dev",
+    "deploy:demo": "node scripts/deploy-demo.mjs",
     "seed": "convex run seedActions:baseAndIngest",
     "seed:negotiated": "convex run seed:scenario '{\"scenario\":\"negotiated\"}'",
     "seed:placed": "convex run seed:scenario '{\"scenario\":\"placed\"}'",

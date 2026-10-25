@@ -152,7 +152,7 @@ struct TapInView: View {
 
     private func simulatedJoin(_ mock: MockBackend) async {
         guard let userId = app.userId else { return }
-        _ = try? await mock.createParty(restaurantId: MockBackend.restaurantId, size: 4, hostDeviceId: mock.ids.hostDeviceId)
+        _ = try? await mock.createParty(restaurantId: MockBackend.restaurantId, size: 4, hostDeviceId: mock.ids.hostDeviceId, autoMode: false)
         _ = try? await mock.join(partyId: nil, joinCode: nil, userId: userId, via: .sim, hostDeviceId: mock.ids.hostDeviceId, deviceId: nil)
         for _ in 0..<3 { mock.simulateTap() }
         proximity.stop()

@@ -50,6 +50,10 @@ final class LiveBackend: Backend {
 
     func me(deviceId: String) async throws -> UserProfile? { try await once(API.usersMe, ["deviceId": deviceId]) }
     func restaurants() async throws -> [RestaurantRef] { try await once(API.menuRestaurants, [:]) }
+    func ownedRestaurant(deviceId: String) async throws -> RestaurantRef? {
+        let owned: OwnedRestaurantRecord? = try await once(API.restaurantGetOwned, ["deviceId": deviceId])
+        return owned.map { RestaurantRef(id: $0._id, name: $0.name) }
+    }
     func hosted(hostDeviceId: String) async throws -> HostedParty? { try await once(API.partiesHosted, ["hostDeviceId": hostDeviceId]) }
     func forUser(userId: String) async throws -> HostedParty? { try await once(API.partiesForUser, ["userId": userId]) }
 
@@ -115,16 +119,27 @@ final class LiveBackend: Backend {
         try await mutate(API.restaurantCreateDraft, ["deviceId": deviceId, "name": name, "address": address])
     }
 
+    func skipRestaurantOnboarding(deviceId: String) async throws {
+        let _: String = try await mutate(API.restaurantSkipToDemo, ["deviceId": deviceId])
+    }
+
     func restaurantOnboardingStatus(deviceId: String, onboardingId: String) -> AnyPublisher<RestaurantOnboarding?, TTError> {
         sub(API.restaurantGetStatus, ["deviceId": deviceId, "onboardingId": onboardingId])
     }
 
-    func resolveRestaurant(deviceId: String, onboardingId: String) async throws {
-        let _: String = try await act(API.restaurantResolveGoogleMaps, ["deviceId": deviceId, "onboardingId": onboardingId])
+    func startRestaurantUrlImport(deviceId: String, onboardingId: String, url: String, location: String?) async throws {
+        var args: [String: ConvexEncodable?] = ["deviceId": deviceId, "onboardingId": onboardingId, "url": url]
+        if let location { args["location"] = location }
+        let _: RestaurantScrapeResult = try await act(API.restaurantStartUrlImport, args)
+    }
+
+    func startRestaurantSearch(deviceId: String, onboardingId: String, query: String, location: String) async throws {
+        let _: RestaurantScrapeResult = try await act(API.restaurantStartSearch, ["deviceId": deviceId, "onboardingId": onboardingId, "query": query, "location": location])
     }
 
     private static func candidateArgs(_ c: RestaurantCandidate) -> [String: ConvexEncodable?] {
         var args: [String: ConvexEncodable?] = ["name": c.name, "address": c.address]
+        if let value = c.sourceUrl { args["sourceUrl"] = value }
         if let value = c.mapsUrl { args["mapsUrl"] = value }
         if let value = c.googlePlaceId { args["googlePlaceId"] = value }
         if let value = c.websiteUrl { args["websiteUrl"] = value }
@@ -138,12 +153,6 @@ final class LiveBackend: Backend {
 
     func selectRestaurantCandidate(deviceId: String, onboardingId: String, candidate: RestaurantCandidate) async throws {
         try await mutate(API.restaurantSelectCandidate, ["deviceId": deviceId, "onboardingId": onboardingId, "candidate": Self.candidateArgs(candidate)])
-    }
-
-    func scrapeRestaurantMenu(deviceId: String, onboardingId: String, menuUrl: String?) async throws {
-        var args: [String: ConvexEncodable?] = ["deviceId": deviceId, "onboardingId": onboardingId]
-        if let menuUrl { args["menuUrl"] = menuUrl }
-        let _: RestaurantScrapeResult = try await act(API.restaurantScrapeMenu, args)
     }
 
     func restaurantDraft(deviceId: String, onboardingId: String) async throws -> RestaurantMenuDraft? {
@@ -178,8 +187,10 @@ final class LiveBackend: Backend {
         try await act(API.menuIngest, ["restaurantId": restaurantId])
     }
 
-    func createParty(restaurantId: String, size: Int, hostDeviceId: String) async throws -> CreatedParty {
-        try await mutate(API.partiesCreate, ["restaurantId": restaurantId, "size": Double(size), "hostDeviceId": hostDeviceId])
+    func createParty(restaurantId: String, size: Int, hostDeviceId: String, autoMode: Bool) async throws -> CreatedParty {
+        try await mutate(API.partiesCreate, [
+            "restaurantId": restaurantId, "size": Double(size), "hostDeviceId": hostDeviceId, "autoMode": autoMode,
+        ])
     }
 
     func startWithFewer(partyId: String, hostDeviceId: String) async throws {
