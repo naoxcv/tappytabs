@@ -237,7 +237,10 @@ private struct MenuDraftEditor: View {
             }
             HStack {
                 Button("Save edits") { onSave(items) }.buttonStyle(.bordered)
-                Button("Publish menu") { publish(items) }.buttonStyle(.borderedProminent).disabled(items.isEmpty || saving)
+                Button("Publish menu") { publish(items) }
+                    .buttonStyle(.borderedProminent)
+                    .foregroundStyle(Theme.accentForeground)
+                    .disabled(items.isEmpty || saving)
             }
         }
     }
