@@ -155,7 +155,6 @@ struct RestaurantOnboardingView: View {
         guard let onboardingId else { return }; saving = true; defer { saving = false }
         do {
             try await app.backend.selectRestaurantCandidate(deviceId: app.deviceId, onboardingId: onboardingId, candidate: candidate)
-            try await app.backend.scrapeRestaurantMenu(deviceId: app.deviceId, onboardingId: onboardingId, menuUrl: candidate.websiteUrl)
         } catch let caught { self.error = TTError.from(caught).userMessage }
     }
 
