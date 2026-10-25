@@ -88,7 +88,18 @@ export const publish = action({
       const actor = process.env.APIFY_NORMALIZER_ACTOR;
       if (!actor || !process.env.APIFY_TOKEN) throw new Error("Menu normalizer is not configured");
       const response = await fetch(`${actorPath(actor, "run-sync-get-dataset-items")}?token=${encodeURIComponent(process.env.APIFY_TOKEN)}&timeout=60`, {
-        method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ items: args.items, batchSize: 8 }),
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          items: args.items.map((item: any) => ({
+            name: item.name,
+            description: item.description,
+            category: item.category,
+            ...(item.priceVerified === false && item.priceCents === 0 ? {} : { price: item.priceCents / 100 }),
+            ...(item.imageUrl ? { imageUrl: item.imageUrl } : {}),
+          })),
+          batchSize: 8,
+        }),
       });
       const runId = response.headers.get("x-apify-run-id") ?? undefined;
       if (!response.ok) throw new Error(`Normalizer diagnostics: httpStatus=${response.status}; runId=${runId ?? "unknown"}`);
@@ -96,7 +107,12 @@ export const publish = action({
       const returnedItems = Array.isArray(normalized) ? normalized : [];
       const rejectedReasons: string[] = [];
       const validItems = returnedItems.flatMap((item: any, index: number) => {
-        const parsed = normalizedItem.safeParse(item);
+        // Older Actor deployments emitted null for ambiguous prices. Keep the
+        // current numeric Convex contract compatible while marking the price
+        // as unverified instead of rejecting the whole dataset.
+        const priceCents = item?.priceCents === null || item?.priceCents === undefined ? 0 : item.priceCents;
+        const candidate = { ...item, priceCents, priceVerified: item?.priceVerified ?? priceCents > 0 };
+        const parsed = normalizedItem.safeParse(candidate);
         if (parsed.success) return [parsed.data];
         if (rejectedReasons.length < 3) rejectedReasons.push(`row ${index}: ${parsed.error.issues.map((issue) => issue.path.join(".") + " " + issue.message).join(", ")}`);
         return [];

@@ -55,6 +55,8 @@ struct RestaurantOnboardingView: View {
     @State private var error: String?
     @State private var statusSub: AnyCancellable?
     @State private var showingResetConfirmation = false
+    @State private var lastDraftLoadKey: String?
+    @State private var draftLoadInFlight = false
 
     private enum Acquisition: Hashable { case url, search }
 
@@ -127,7 +129,6 @@ struct RestaurantOnboardingView: View {
             MenuDraftEditor(draft: draft, saving: saving) { items in Task { await update(items) } } publish: { items in Task { await publish(items) } }
         } else {
             ProgressView(onboarding?.status == "normalizing" ? "Normalizing menu…" : "Preparing review…")
-                .task { await loadDraftIfNeeded() }
         }
     }
 
@@ -138,8 +139,6 @@ struct RestaurantOnboardingView: View {
             if let id = account.onboardingId {
                 onboardingId = id
                 subscribe(id)
-                name = onboarding?.submittedName ?? ""
-                address = onboarding?.submittedAddress ?? ""
             }
         } catch let caught { self.error = TTError.from(caught).userMessage }
     }
@@ -176,7 +175,12 @@ struct RestaurantOnboardingView: View {
         statusSub = app.backend.restaurantOnboardingStatus(deviceId: app.deviceId, onboardingId: id)
             .sink(receiveCompletion: { completion in if case .failure(let e) = completion { self.error = e.userMessage } }, receiveValue: { value in
                 onboarding = value
-                if let value, ["review_required", "manual_review", "normalization_failed"].contains(value.status) { Task { await loadDraftIfNeeded() } }
+                if let value, ["review_required", "manual_review", "normalization_failed"].contains(value.status) {
+                    let loadKey = "\(id):\(value.status)"
+                    guard lastDraftLoadKey != loadKey else { return }
+                    lastDraftLoadKey = loadKey
+                    Task { await loadDraftIfNeeded() }
+                }
             })
     }
 
@@ -190,7 +194,9 @@ struct RestaurantOnboardingView: View {
     private func resetToSourceEntry() { acquisition = .url; sourceURL = ""; showSourceEntry = true; draft = nil; error = nil }
 
     private func loadDraftIfNeeded() async {
-        guard let onboardingId else { return }
+        guard let onboardingId, !draftLoadInFlight else { return }
+        draftLoadInFlight = true
+        defer { draftLoadInFlight = false }
         do { draft = try await app.backend.restaurantDraft(deviceId: app.deviceId, onboardingId: onboardingId) }
         catch let caught { self.error = TTError.from(caught).userMessage }
     }
