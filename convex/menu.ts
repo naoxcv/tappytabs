@@ -137,7 +137,9 @@ export const ingest = action({
       } else if (!suppliedItems && !restaurantId) {
         return keep("a menuUrl or items array is required to create a restaurant menu");
       }
-      const run = await runActor(normalizer, { items: raw }, token, Math.max(3_000, deadline - Date.now()));
+      // Pass this explicitly: Apify may apply the deployed Actor schema's
+      // default when the field is omitted, even if the Actor source default changed.
+      const run = await runActor(normalizer, { items: raw, batchSize: 8 }, token, Math.max(3_000, deadline - Date.now()));
       const items: NormalizedItem[] = [];
       for (const row of run.items) {
         const parsed = normalizedItem.safeParse(row);

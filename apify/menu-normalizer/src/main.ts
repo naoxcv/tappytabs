@@ -1,7 +1,7 @@
 // Owner: Role 4. TappyTabs menu-normalizer Actor (published to the Apify Store).
 // Input:  { items: [{ name, description?, ingredients?, price?, category? }] }
 // Output: one dataset row per item, exactly convex/menu.ts `normalizedItem`.
-// Pipeline: keyword pass (deterministic) → Bitdeer tag pass in batches of 20 (add/raise only) → push.
+// Pipeline: keyword pass (deterministic) → Bitdeer tag pass in batches of 8 by default (add/raise only) → push.
 import { Actor, log } from "apify";
 import OpenAI from "openai";
 import { keywordPass, mergeLlm, type LlmTags, type RawItem } from "./normalize.js";
@@ -22,22 +22,35 @@ if (!client) log.warning("BITDEER_API_KEY/BITDEER_MODEL not set: keyword-only ta
 async function tagBatch(batch: { index: number; item: RawItem }[]): Promise<Map<number, LlmTags>> {
   const out = new Map<number, LlmTags>();
   if (!client) return out;
-  try {
-    const res = await client.chat.completions.create({
-      model: model!,
-      temperature: 0,
-      response_format: { type: "json_object" },
-      messages: [{ role: "system", content: TAG_SYSTEM }, { role: "user", content: tagUser(batch) }],
-    }, { timeout: 45_000, maxRetries: 0 });
-    const parsed = JSON.parse(res.choices[0]?.message?.content ?? "{}") as { items?: (LlmTags & { index: number })[] };
-    for (const row of parsed.items ?? []) if (typeof row.index === "number") out.set(row.index, row);
-  } catch (e) {
-    log.warning(`tag batch failed: ${String(e)}`);
+  // Give the model batch-local indexes, then translate them back to source indexes.
+  // Models commonly restart numbering at zero for each independent batch.
+  const requestBatch = batch.map(({ item }, index) => ({ index, item }));
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    try {
+      const res = await client.chat.completions.create({
+        model: model!,
+        temperature: 0,
+        response_format: { type: "json_object" },
+        messages: [{ role: "system", content: TAG_SYSTEM }, { role: "user", content: tagUser(requestBatch) }],
+      }, { timeout: 20_000, maxRetries: 0 });
+      const parsed = JSON.parse(res.choices[0]?.message?.content ?? "{}") as { items?: (LlmTags & { index: number })[] };
+      for (const row of parsed.items ?? []) {
+        if (!Number.isInteger(row.index)) continue;
+        const sourceIndex = batch[row.index]?.index ?? (batch.some((entry) => entry.index === row.index) ? row.index : undefined);
+        if (sourceIndex !== undefined) out.set(sourceIndex, row);
+      }
+      const missing = batch.filter(({ index }) => !out.has(index)).map(({ index }) => index);
+      if (missing.length) log.warning(`tag response missing ${missing.length}/${batch.length} item(s), source indices: ${missing.join(", ")}`);
+      return out;
+    } catch (e) {
+      log.warning(`tag batch attempt ${attempt}/2 failed: ${String(e)}`);
+      if (attempt === 2) return out;
+    }
   }
   return out;
 }
 
-const size = Math.max(1, Math.min(50, Math.floor(input.batchSize ?? 20)));
+const size = Math.max(1, Math.min(50, Math.floor(input.batchSize ?? 8)));
 const batches: { index: number; item: RawItem }[][] = [];
 for (let i = 0; i < items.length; i += size) batches.push(items.slice(i, i + size).map((item, j) => ({ index: i + j, item })));
 const tagged = await Promise.all(batches.map(tagBatch));

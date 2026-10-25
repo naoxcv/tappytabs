@@ -15,7 +15,7 @@ This Actor accepts hand-written or scraped menu items and writes one normalized 
       "category": "Mains"
     }
   ],
-  "batchSize": 20
+  "batchSize": 8
 }
 ```
 
