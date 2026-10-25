@@ -161,7 +161,7 @@ final class MockBackend: Backend {
 
     func leave(partyId: String, userId: String, deviceId: String) async throws {
         guard let party = partySubject.value, party.id == partyId else { throw TTError(code: .NOT_FOUND, message: "Table not found") }
-        guard party.status == .checkin else { throw TTError(code: .BAD_STATUS, message: "Table is no longer checking in") }
+        if party.status == .placed { return }
         setParty(party.with(members: party.members.filter { $0.userId != userId }))
     }
 
@@ -197,6 +197,7 @@ final class MockBackend: Backend {
             linesSubject.send(linesConfirm)
         }
     }
+    func cacheDishCutout(partyId: String, userId: String, deviceId: String, itemId: String, sourceImageUrl: String, pngData: Data) async throws {}
 
     func add(partyId: String, userId: String, deviceId: String, itemId: String, shared: Bool) async throws {
         try requireStatus(.confirm)
@@ -247,17 +248,24 @@ final class MockBackend: Backend {
 
     private func rebased(spread: Bool) -> MessagesPayload {
         let start = now + 500
-        let msgs = fixtureMessages.messages.enumerated().map { i, m in
-            Bubble(id: m.id, fromUserId: m.fromUserId, text: m.text, showAt: spread ? start + Double(i) * 2500 : now - 1000)
+        var nextShowAt = start
+        let msgs = fixtureMessages.messages.map { m in
+            let showAt = spread ? nextShowAt : now - 1000
+            if spread { nextShowAt = showAt + Self.bubbleDisplayDurationMs(m.text) }
+            return Bubble(id: m.id, fromUserId: m.fromUserId, text: m.text, showAt: showAt)
         }
         return MessagesPayload(serverNow: now, messages: msgs)
+    }
+
+    private static func bubbleDisplayDurationMs(_ text: String) -> Double {
+        max(2500, 1200 + Double(text.trimmingCharacters(in: .whitespacesAndNewlines).count) * 15)
     }
 
     private func playMessages(thenAdvance: Bool) {
         let payload = rebased(spread: true)
         messagesSubject.send(payload)
         guard thenAdvance, let last = payload.messages.last else { return }
-        after((last.showAt - now) / 1000 + 1.5) { [self] in
+        after((last.showAt - now + Self.bubbleDisplayDurationMs(last.text)) / 1000) { [self] in
             guard partySubject.value?.status == .negotiating else { return }
             candidatesSubject.send(fixtureCandidates)
             linesSubject.send(linesPick)

@@ -8,6 +8,7 @@ import { hungerV, joinViaV, TIMING } from "./shared/enums";
 import { fail } from "./shared/errors";
 import { findMember, getParty, membersOf, requireHost, requireMember, requireStatus, requireUser } from "./lib/guards";
 import { startNegotiation } from "./negotiation";
+import { place, toConfirm } from "./orders";
 
 const CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // no 0/O/1/I
 
@@ -19,6 +20,28 @@ async function newJoinCode(ctx: MutationCtx): Promise<string> {
     if (!clash) return code;
   }
   fail("INVALID", "Could not allocate a join code");
+}
+
+async function clearPartyRun(ctx: MutationCtx, party: Doc<"parties">, preserveExits = false) {
+  const partyId = party._id;
+  for (const table of ["members", "orderLines", "tapSessions", "tapHosts"] as const) {
+    const rows = await ctx.db.query(table).withIndex("by_party", q => q.eq("partyId", partyId)).collect();
+    for (const row of rows) await ctx.db.delete(row._id);
+  }
+  if (!preserveExits) {
+    const exits = await ctx.db.query("tapExits").withIndex("by_party", q => q.eq("partyId", partyId)).collect();
+    for (const exit of exits) await ctx.db.delete(exit._id);
+  }
+  const claims = await ctx.db.query("tapClaims").withIndex("by_party", q => q.eq("partyId", partyId)).collect();
+  for (const claim of claims) await ctx.db.delete(claim._id);
+  const candidates = await ctx.db.query("candidates").withIndex("by_party_user", q => q.eq("partyId", partyId)).collect();
+  for (const candidate of candidates) await ctx.db.delete(candidate._id);
+  const messages = await ctx.db.query("messages").withIndex("by_party_showAt", q => q.eq("partyId", partyId)).collect();
+  for (const message of messages) await ctx.db.delete(message._id);
+  await ctx.db.replace(partyId, {
+    restaurantId: party.restaurantId, hostDeviceId: party.hostDeviceId, size: party.size,
+    status: "checkin", joinCode: await newJoinCode(ctx), epoch: party.epoch + 1,
+  });
 }
 
 export const create = mutation({
@@ -95,15 +118,17 @@ export const join = mutation({
   },
 });
 
-/** A diner can leave while the table is still collecting check-ins. */
+/** Remove a diner from any unfinished stage without keeping their order or blocking the remaining table. */
 export const leave = mutation({
   args: { partyId: v.id("parties"), userId: v.id("users"), deviceId: v.string() },
   handler: async (ctx, { partyId, userId, deviceId }): Promise<void> => {
     await requireUser(ctx, userId, deviceId);
     const party = await getParty(ctx, partyId);
-    requireStatus(party, "checkin");
+    // The ticket has already been sent. Leaving this screen must not rewrite that order.
+    if (party.status === "placed") return;
     const member = await findMember(ctx, partyId, userId);
-    if (member) await ctx.db.delete(member._id);
+    if (!member) return;
+    await ctx.db.delete(member._id);
     const sessions = await ctx.db.query("tapSessions")
       .withIndex("by_party_user", q => q.eq("partyId", partyId).eq("userId", userId)).collect();
     for (const session of sessions) await ctx.db.delete(session._id);
@@ -113,6 +138,43 @@ export const leave = mutation({
       .withIndex("by_party_user", q => q.eq("partyId", partyId).eq("userId", userId)).collect();
     for (const exit of oldExits) await ctx.db.delete(exit._id);
     await ctx.db.insert("tapExits", { partyId, userId, expiresAt: Date.now() + 300_000 });
+
+    const candidates = await ctx.db.query("candidates")
+      .withIndex("by_party_user", q => q.eq("partyId", partyId).eq("userId", userId)).collect();
+    for (const candidate of candidates) await ctx.db.delete(candidate._id);
+    const lines = await ctx.db.query("orderLines").withIndex("by_party", q => q.eq("partyId", partyId)).collect();
+    for (const line of lines) {
+      if (!line.sharedBy.includes(userId)) continue;
+      const remainingSharers = line.sharedBy.filter(id => id !== userId);
+      if (remainingSharers.length === 0) await ctx.db.delete(line._id);
+      else await ctx.db.patch(line._id, { sharedBy: remainingSharers });
+    }
+
+    const remaining = await membersOf(ctx, partyId);
+    if (remaining.length === 0) {
+      // An empty table is ready for another run. The epoch invalidates scheduled work.
+      await clearPartyRun(ctx, party, true);
+    } else if (party.status === "hunger" && remaining.every(m => m.hunger != null)) {
+      await ctx.db.patch(partyId, { status: "negotiating", negotiationStartedAt: Date.now() });
+      await startNegotiation(ctx, partyId, party.epoch);
+    } else if (party.status === "negotiating") {
+      // In-flight drafts may include the departed diner; start a fresh generation.
+      const nextEpoch = party.epoch + 1;
+      for (const table of ["messages", "candidates", "orderLines"] as const) {
+        const rows = table === "messages"
+          ? await ctx.db.query("messages").withIndex("by_party_showAt", q => q.eq("partyId", partyId)).collect()
+          : table === "candidates"
+            ? await ctx.db.query("candidates").withIndex("by_party_user", q => q.eq("partyId", partyId)).collect()
+            : await ctx.db.query("orderLines").withIndex("by_party", q => q.eq("partyId", partyId)).collect();
+        for (const row of rows) await ctx.db.delete(row._id);
+      }
+      await ctx.db.patch(partyId, { epoch: nextEpoch, committedAt: undefined, negotiationStartedAt: Date.now() });
+      await startNegotiation(ctx, partyId, nextEpoch);
+    } else if (party.status === "pick" && remaining.every(m => m.pickedItemId != null)) {
+      await toConfirm(ctx, party);
+    } else if (party.status === "confirm" && remaining.every(m => m.confirmedAt != null)) {
+      await place(ctx, party);
+    }
   },
 });
 
@@ -207,20 +269,7 @@ export const reset = mutation({
   handler: async (ctx, { partyId, hostDeviceId }) => {
     const party = await getParty(ctx, partyId);
     requireHost(party, hostDeviceId);
-    for (const table of ["members", "orderLines", "tapSessions", "tapHosts", "tapExits"] as const) {
-      const rows = await ctx.db.query(table).withIndex("by_party", (q) => q.eq("partyId", partyId)).collect();
-      for (const r of rows) await ctx.db.delete(r._id);
-    }
-    const claims = await ctx.db.query("tapClaims").withIndex("by_party", q => q.eq("partyId", partyId)).collect();
-    for (const claim of claims) await ctx.db.delete(claim._id);
-    const cands = await ctx.db.query("candidates").withIndex("by_party_user", (q) => q.eq("partyId", partyId)).collect();
-    for (const r of cands) await ctx.db.delete(r._id);
-    const msgs = await ctx.db.query("messages").withIndex("by_party_showAt", (q) => q.eq("partyId", partyId)).collect();
-    for (const r of msgs) await ctx.db.delete(r._id);
-    await ctx.db.replace(partyId, {
-      restaurantId: party.restaurantId, hostDeviceId: party.hostDeviceId, size: party.size,
-      status: "checkin", joinCode: await newJoinCode(ctx), epoch: party.epoch + 1,
-    });
+    await clearPartyRun(ctx, party);
   },
 });
 

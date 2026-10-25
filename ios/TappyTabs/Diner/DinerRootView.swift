@@ -109,7 +109,7 @@ struct DinerRootView: View {
         .transition(AppPageTransition.transition(direction: transitionDirection, reduceMotion: reduceMotion))
         .animation(AppPageTransition.animation(reduceMotion: reduceMotion), value: pageKey)
         .onChange(of: store.party) { _, party in
-            if let party, app.partyId == store.partyId, app.userId == store.userId,
+            if let party, !app.tapSearchPaused, app.partyId == store.partyId, app.userId == store.userId,
                party.member(app.userId) == nil { app.leaveTable() }
         }
     }

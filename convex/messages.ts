@@ -5,7 +5,12 @@ import { internalMutation, query, type MutationCtx } from "./_generated/server";
 import { TIMING } from "./shared/enums";
 import { splitBubbleText } from "./agents/bubbles";
 
-/** Post one bubble, paced 1.8 s after the previous one. Dedupes on (party, speaker, text) so retries are harmless. */
+/** Match mock pacing: 2.5 s minimum, then add 15 ms per character above the minimum threshold. */
+export function bubbleDisplayDurationMs(text: string): number {
+  return Math.max(TIMING.bubbleGapMs, TIMING.bubbleBaseHoldMs + text.trim().length * TIMING.bubbleMsPerChar);
+}
+
+/** Pace each bubble by the previous bubble's display duration. Dedupes on (party, speaker, text). */
 export async function postBubble(
   ctx: MutationCtx,
   partyId: Id<"parties">,
@@ -27,7 +32,7 @@ export async function postBubble(
       continue;
     }
     const now = Date.now();
-    const showAt = last ? Math.max(now, last.showAt + TIMING.bubbleGapMs) : now + TIMING.firstBubbleDelayMs;
+    const showAt = last ? Math.max(now, last.showAt + bubbleDisplayDurationMs(last.text)) : now + TIMING.firstBubbleDelayMs;
     const _id = await ctx.db.insert("messages", { partyId, fromUserId, text: body, showAt });
     last = { _id, partyId, fromUserId, text: body, showAt, _creationTime: now };
     existing.push(last);

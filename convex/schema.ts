@@ -33,6 +33,8 @@ export default defineSchema({
 
   menuItems: defineTable({
     restaurantId: v.id("restaurants"),
+    imageUrl: v.optional(v.string()), // source photo URL exposed by the menu page
+    imageStorageId: v.optional(v.id("_storage")), // cached transparent PNG cutout
     name: v.string(),
     category: v.string(), // "mains" | "sides" | "drinks" | "desserts" | ... (free text from the menu)
     cuisine: v.optional(v.string()),

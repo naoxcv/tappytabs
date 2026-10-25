@@ -26,9 +26,49 @@ export const candidates = query({
       return item && {
         itemId: c.itemId, name: item.name, description: item.description, priceCents: item.priceCents,
         reason: c.reason, rank: c.rank, isDrink: c.isDrink, askServer: c.askServer,
+        imageUrl: item.imageStorageId ? await ctx.storage.getUrl(item.imageStorageId) : item.imageUrl ?? null,
+        imageIsCutout: !!item.imageStorageId,
       };
     }));
     return out.filter((x) => x !== null).sort((a, b) => (a.isDrink ? 1 : 0) - (b.isDrink ? 1 : 0) || a.rank - b.rank);
+  },
+});
+
+/** Allocate storage only for a current pick candidate with the exact source image URL. */
+export const prepareDishImageUpload = mutation({
+  args: { partyId: v.id("parties"), userId: v.id("users"), deviceId: v.string(), itemId: v.id("menuItems"), imageUrl: v.string() },
+  returns: v.union(v.string(), v.null()),
+  handler: async (ctx, { partyId, userId, deviceId, itemId, imageUrl }) => {
+    await requireUser(ctx, userId, deviceId);
+    const party = await getParty(ctx, partyId);
+    requireStatus(party, "pick");
+    await requireMember(ctx, partyId, userId);
+    const candidate = (await candidateRows(ctx, partyId, userId)).find((row) => row.itemId === itemId && !row.isDrink);
+    if (!candidate) fail("INVALID", "That dish is not one of your agent's picks");
+    const item = await ctx.db.get(itemId);
+    if (!item || item.imageUrl !== imageUrl) fail("INVALID", "Dish photo changed");
+    if (item.imageStorageId) return null;
+    return await ctx.storage.generateUploadUrl();
+  },
+});
+
+/** Save the processed PNG in shared storage; first successful cutout wins. */
+export const saveDishImage = mutation({
+  args: { partyId: v.id("parties"), userId: v.id("users"), deviceId: v.string(), itemId: v.id("menuItems"), imageUrl: v.string(), storageId: v.id("_storage") },
+  returns: v.boolean(),
+  handler: async (ctx, { partyId, userId, deviceId, itemId, imageUrl, storageId }) => {
+    await requireUser(ctx, userId, deviceId);
+    const party = await getParty(ctx, partyId);
+    requireStatus(party, "pick");
+    await requireMember(ctx, partyId, userId);
+    const candidate = (await candidateRows(ctx, partyId, userId)).find((row) => row.itemId === itemId && !row.isDrink);
+    const item = await ctx.db.get(itemId);
+    if (!candidate || !item || item.imageUrl !== imageUrl || item.imageStorageId) {
+      await ctx.storage.delete(storageId);
+      return false;
+    }
+    await ctx.db.patch(itemId, { imageStorageId: storageId });
+    return true;
   },
 });
 
@@ -60,7 +100,7 @@ async function learnFromPick(ctx: MutationCtx, user: Doc<"users">, item: Doc<"me
   await ctx.db.patch(user._id, { likes, cuisines, dislikedCuisines });
 }
 
-async function toConfirm(ctx: MutationCtx, party: Doc<"parties">) {
+export async function toConfirm(ctx: MutationCtx, party: Doc<"parties">) {
   const confirmDeadline = Date.now() + TIMING.confirmWindowMs;
   await ctx.db.patch(party._id, { status: "confirm", confirmDeadline });
   await ctx.scheduler.runAt(confirmDeadline, internal.orders.autoConfirm, { partyId: party._id, epoch: party.epoch });
@@ -192,7 +232,7 @@ export const remove = mutation({
   },
 });
 
-async function place(ctx: MutationCtx, party: Doc<"parties">) {
+export async function place(ctx: MutationCtx, party: Doc<"parties">) {
   // Final gate: drop any line that no longer passes (e.g. menu re-tagged mid-party). Logged for the README.
   for (const l of await linesOf(ctx, party._id)) {
     const item = await ctx.db.get(l.itemId);

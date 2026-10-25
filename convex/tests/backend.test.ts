@@ -96,6 +96,26 @@ describe("parties:join", () => {
     expect((await t.query(api.parties.current, { partyId }))!.status).toBe("checkin");
     expect((await t.query(api.orders.lines, { partyId })).lines).toHaveLength(0);
   });
+
+  test("leaving during negotiation restarts the workflow without the departed diner", async () => {
+    const { t, partyId, userIds, hostDeviceId } = await setup();
+    for (const userId of userIds.slice(0, 2)) {
+      await t.mutation(api.parties.join, { partyId, userId, via: "uwb", hostDeviceId });
+    }
+    await t.mutation(api.parties.startWithFewer, { partyId, hostDeviceId });
+    for (const [index, userId] of userIds.slice(0, 2).entries()) {
+      await t.mutation(api.parties.setHunger, { partyId, userId, deviceId: `demo-diner-${index + 1}`, hunger: "normal" });
+    }
+    const before = await t.run(ctx => ctx.db.get(partyId));
+    expect(before?.status).toBe("negotiating");
+    await t.mutation(api.parties.leave, { partyId, userId: userIds[0], deviceId: "demo-diner-1" });
+    const after = await t.run(ctx => ctx.db.get(partyId));
+    expect(after?.status).toBe("negotiating");
+    expect(after?.epoch).toBe((before?.epoch ?? 0) + 1);
+    expect((await t.query(api.parties.current, { partyId }))?.members.map(m => m.userId)).toEqual([userIds[1]]);
+    await t.mutation(internal.parties.advance, { partyId, epoch: before!.epoch });
+    expect((await t.query(api.parties.current, { partyId }))?.status).toBe("negotiating");
+  });
 });
 
 describe("users", () => {
@@ -228,6 +248,31 @@ describe("orders", () => {
       await t.mutation(api.orders.confirm, { partyId, userId, deviceId: `demo-diner-${i + 1}` });
     }
     expect((await t.query(api.parties.current, { partyId }))!.status).toBe("placed");
+  });
+
+  test("removing a drink during confirmation updates the order and returns a safe drink suggestion", async () => {
+    const t = convexTest(schema, modules);
+    workflowTest.register(t, "workflow");
+    const { partyId, userIds } = await t.mutation(internal.seed.scenario, { scenario: "negotiated" });
+    for (const [i, userId] of userIds.entries()) {
+      const candidates = await t.query(api.orders.candidates, { partyId, userId });
+      await t.mutation(api.orders.pick, {
+        partyId, userId, deviceId: `demo-diner-${i + 1}`,
+        itemId: candidates.find(candidate => !candidate.isDrink)!.itemId,
+      });
+    }
+    const before = await t.query(api.orders.lines, { partyId });
+    const drink = before.lines.find(line => line.kind === "drink" && line.sharedBy.includes(userIds[0]));
+    expect(drink).toBeDefined();
+    const result = await t.mutation(api.orders.remove, {
+      partyId, userId: userIds[0], deviceId: "demo-diner-1", lineId: drink!.lineId,
+    });
+    const after = await t.query(api.orders.lines, { partyId });
+    expect(after.lines.some(line => line.lineId === drink!.lineId)).toBe(false);
+    expect(after.totals.total).toBe(before.totals.total - drink!.priceCents * drink!.qty);
+    expect(result.substitute).not.toBeNull();
+    expect(result.substitute!.itemId).not.toBe(drink!.itemId);
+    expect((await t.run(ctx => ctx.db.get(result.substitute!.itemId)))?.isDrink).toBe(true);
   });
 
   test("diner calls are bound to their device", async () => {

@@ -12,6 +12,7 @@ struct NearbyTable: Identifiable, Equatable {
     let phase: Phase
     let distance: Float?
     var id: String { partyId }
+    var isInRange: Bool { phase == .measuring && distance != nil }
 }
 
 @Observable
@@ -26,6 +27,7 @@ final class Proximity: NSObject {
     private(set) var debugDistances: [String: Float] = [:]
     private(set) var debugTapCounts: [String: Int] = [:]
     private(set) var nearbyTables: [NearbyTable] = []
+    var inRangeTableCount: Int { nearbyTables.filter(\.isInRange).count }
     private(set) var tappedPartyId: String?
     var config = TapConfig()
     var supportsTap: Bool { NISession.deviceCapabilities.supportsPreciseDistanceMeasurement }
@@ -36,6 +38,8 @@ final class Proximity: NSObject {
     @ObservationIgnored private var peer: MCPeerID?
     @ObservationIgnored private var advertiser: MCNearbyServiceAdvertiser?
     @ObservationIgnored private var browser: MCNearbyServiceBrowser?
+    @ObservationIgnored private var distanceExpiryTimer: Timer?
+    @ObservationIgnored private var lastDistanceAt: [String: Date] = [:]
     @ObservationIgnored private var pendingWatch: AnyCancellable?
     @ObservationIgnored private var sessionWatches: [String: AnyCancellable] = [:]
     @ObservationIgnored private var generation = UUID()
@@ -81,6 +85,9 @@ final class Proximity: NSObject {
         state = .searching
         record("discovering nearby tables")
         browser.startBrowsingForPeers()
+        let timer = Timer(timeInterval: 1, repeats: true) { [weak self] _ in self?.expireStaleDistances() }
+        distanceExpiryTimer = timer
+        RunLoop.main.add(timer, forMode: .common)
     }
 
     func startHosting(partyId: String, hostDeviceId: String, backend: Backend,
@@ -157,6 +164,8 @@ final class Proximity: NSObject {
 
     func stop() {
         generation = UUID()
+        distanceExpiryTimer?.invalidate(); distanceExpiryTimer = nil
+        lastDistanceAt = [:]
         advertiser?.stopAdvertisingPeer(); advertiser = nil
         browser?.stopBrowsingForPeers(); browser = nil
         pendingWatch = nil; sessionWatches = [:]
@@ -203,6 +212,16 @@ final class Proximity: NSObject {
         detectors[key] = nil
         debugDistances[key] = nil; debugTapCounts[key] = nil
         hasDistance.remove(key)
+        lastDistanceAt[key] = nil
+    }
+
+    private func expireStaleDistances() {
+        let now = Date()
+        let staleKeys = lastDistanceAt.filter { now.timeIntervalSince($0.value) >= 5 }.map(\.key)
+        for key in staleKeys {
+            record("UWB distance expired for \(key.suffix(6))")
+            distanceUpdate(nil, for: key)
+        }
     }
 
     private func foundTable(_ partyId: String, from peerID: MCPeerID) {
@@ -351,9 +370,9 @@ final class Proximity: NSObject {
             NearbyTable(partyId: $0, phase: phases[$0]!, distance: debugDistances[$0])
         }
         guard !isHost, state != .idle, state != .tapped else { return }
-        if nearbyTables.contains(where: { $0.phase == .ranging || $0.phase == .measuring }) {
+        if nearbyTables.contains(where: { $0.phase == .measuring }) {
             state = .connected
-        } else if nearbyTables.contains(where: { $0.phase == .exchanging || $0.phase == .tokenReady || $0.phase == .capacity }) {
+        } else if nearbyTables.contains(where: { $0.phase == .exchanging || $0.phase == .tokenReady || $0.phase == .ranging || $0.phase == .capacity }) {
             state = .preparing
         } else if nearbyTables.allSatisfy({ $0.phase == .rejected }), !nearbyTables.isEmpty {
             state = .rejected("Nearby tables are unavailable")
@@ -363,8 +382,13 @@ final class Proximity: NSObject {
     }
     private func distanceUpdate(_ distance: Float?, for key: String) {
         debugDistances[key] = distance
-        if distance != nil { hasDistance.insert(key) }
-        else { hasDistance.remove(key) }
+        if distance != nil {
+            hasDistance.insert(key)
+            lastDistanceAt[key] = Date()
+        } else {
+            hasDistance.remove(key)
+            lastDistanceAt[key] = nil
+        }
         if !isHost, phases[key] != nil {
             phases[key] = distance == nil ? .ranging : .measuring
             publishTables()

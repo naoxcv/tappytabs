@@ -147,6 +147,27 @@ final class LiveBackend: Backend {
         try await mutate(API.ordersPick, ["partyId": partyId, "userId": userId, "deviceId": deviceId, "itemId": itemId])
     }
 
+    func cacheDishCutout(partyId: String, userId: String, deviceId: String, itemId: String, sourceImageUrl: String, pngData: Data) async throws {
+        let uploadUrl: String? = try await mutate(API.ordersPrepareDishImageUpload, [
+            "partyId": partyId, "userId": userId, "deviceId": deviceId, "itemId": itemId, "imageUrl": sourceImageUrl,
+        ])
+        guard let uploadUrl, let url = URL(string: uploadUrl) else { return }
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("image/png", forHTTPHeaderField: "Content-Type")
+        request.httpBody = pngData
+        let (data, response) = try await URLSession.shared.data(for: request)
+        guard let response = response as? HTTPURLResponse, (200..<300).contains(response.statusCode) else {
+            throw TTError.network("Dish image upload failed")
+        }
+        struct UploadResponse: Decodable { let storageId: String }
+        let uploaded = try JSONDecoder().decode(UploadResponse.self, from: data)
+        let _: Bool = try await mutate(API.ordersSaveDishImage, [
+            "partyId": partyId, "userId": userId, "deviceId": deviceId, "itemId": itemId,
+            "imageUrl": sourceImageUrl, "storageId": uploaded.storageId,
+        ])
+    }
+
     func add(partyId: String, userId: String, deviceId: String, itemId: String, shared: Bool) async throws {
         let _: String = try await mutate(API.ordersAdd, ["partyId": partyId, "userId": userId, "deviceId": deviceId, "itemId": itemId, "shared": shared])
     }

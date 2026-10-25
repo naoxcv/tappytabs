@@ -45,16 +45,18 @@ const normalizedItem = z.object({
   shareable: z.boolean(),
   menuOrder: z.number(),
   tagStatus: z.enum(["tagged", "untagged"]),
+  imageUrl: z.string().url().optional(),
 });
 export type NormalizedItem = z.infer<typeof normalizedItem>;
 
-type RawItem = { name: string; description?: string; ingredients?: string[]; price?: string | number; category?: string };
+type RawItem = { name: string; description?: string; ingredients?: string[]; price?: string | number; category?: string; imageUrl?: string };
 const rawItemV = v.object({
   name: v.string(),
   description: v.optional(v.string()),
   ingredients: v.optional(v.array(v.string())),
   price: v.optional(v.union(v.string(), v.number())),
   category: v.optional(v.string()),
+  imageUrl: v.optional(v.string()),
 });
 
 async function runActor(actorId: string, input: unknown, token: string, timeoutMs: number) {
@@ -87,7 +89,9 @@ export function mapScraperOutput(rows: unknown[]): RawItem[] {
       const ingredients = Array.isArray(x.ingredients)
         ? x.ingredients.filter((value: unknown): value is string => typeof value === "string")
         : typeof x.ingredients === "string" ? x.ingredients.split(/[,;]/).map((value: string) => value.trim()).filter(Boolean) : undefined;
-      out.push({ name, description: x.description ?? "", ingredients, price: x.price ?? x.priceText, category: x.category ?? x.section ?? category });
+      const imageUrl = x.imageUrl ?? x.image ?? x.photoUrl;
+      out.push({ name, description: x.description ?? "", ingredients, price: x.price ?? x.priceText, category: x.category ?? x.section ?? category,
+        ...(typeof imageUrl === "string" && /^https:\/\//i.test(imageUrl) ? { imageUrl } : {}) });
       return;
     }
     for (const key of ["menu", "menuItems", "items", "sections", "categories", "dishes"]) {
@@ -141,9 +145,11 @@ export const ingest = action({
       // default when the field is omitted, even if the Actor source default changed.
       const run = await runActor(normalizer, { items: raw, batchSize: 8 }, token, Math.max(3_000, deadline - Date.now()));
       const items: NormalizedItem[] = [];
+      const imageByName = new Map(raw.filter((item) => item.imageUrl).map((item) => [item.name.trim().toLowerCase(), item.imageUrl!]));
       for (const row of run.items) {
         const parsed = normalizedItem.safeParse(row);
-        if (parsed.success) items.push(parsed.data);
+        if (parsed.success) items.push({ ...parsed.data, ...(imageByName.has(parsed.data.name.trim().toLowerCase())
+          ? { imageUrl: imageByName.get(parsed.data.name.trim().toLowerCase()) } : {}) });
       }
       if (items.length < 5) return keep(`normalizer returned ${items.length} valid items; kept existing menu`);
       const targetRestaurantId = restaurantId ?? await ctx.runMutation(internal.menu.createRestaurant, {
@@ -188,7 +194,15 @@ export const upsertItems = internalMutation({
         .query("menuItems")
         .withIndex("by_restaurant_name", (q) => q.eq("restaurantId", restaurantId).eq("name", item.name))
         .unique();
-      if (existing) await ctx.db.patch(existing._id, item);
+      if (existing) {
+        const changedPhoto = existing.imageUrl !== item.imageUrl && (!!existing.imageUrl || !!item.imageUrl);
+        if (changedPhoto && existing.imageStorageId) await ctx.storage.delete(existing.imageStorageId);
+        await ctx.db.patch(existing._id, {
+          ...item,
+          ...(!item.imageUrl && existing.imageUrl ? { imageUrl: existing.imageUrl } : {}),
+          ...(changedPhoto ? { imageStorageId: undefined } : existing.imageStorageId ? { imageStorageId: existing.imageStorageId } : {}),
+        });
+      }
       else await ctx.db.insert("menuItems", { restaurantId, ...item });
     }
     await ctx.db.patch(restaurantId, {

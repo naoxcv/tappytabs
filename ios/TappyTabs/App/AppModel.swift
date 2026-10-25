@@ -68,8 +68,13 @@ final class AppModel {
 
     func leaveJoinedTable() async throws {
         guard let partyId, let userId else { leaveTable(); return }
-        try await backend.leave(partyId: partyId, userId: userId, deviceId: deviceId)
         tapSearchPaused = true
+        do {
+            try await backend.leave(partyId: partyId, userId: userId, deviceId: deviceId)
+        } catch {
+            tapSearchPaused = false
+            throw error
+        }
         self.partyId = nil
         tapAttemptID = UUID()
     }

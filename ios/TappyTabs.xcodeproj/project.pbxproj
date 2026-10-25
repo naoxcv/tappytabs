@@ -31,6 +31,7 @@
 		545D10E3333B6F9C1C99D732 /* ids.json in Resources */ = {isa = PBXBuildFile; fileRef = 8E7D812828B60A585E89AEC4 /* ids.json */; };
 		60F563865BC2255A52D96E67 /* NegotiatingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8AB5E427FC15EF2C1013A04 /* NegotiatingView.swift */; };
 		6EC915153BDB6030AA2FE69D /* PickView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 537CEF4E533A1882FCB1C2C4 /* PickView.swift */; };
+		D49A2CC357FE4D0791D8FE8A /* DishCutoutImage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89F2A0E3C54047D48A913B221 /* DishCutoutImage.swift */; };
 		6FB294FAF1914ADC557C68DC /* TableTalkView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58B29E865741B0EDC0BA805E /* TableTalkView.swift */; };
 		7604E5FAD28DA6E9EFD5AA1F /* party_placed.json in Resources */ = {isa = PBXBuildFile; fileRef = DFF3A0CD77F3FB64AD23B9C6 /* party_placed.json */; };
 		7743F5A850FB48A8E20AE911 /* QRCode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 65D96B0366DA4E0C1805AFB4 /* QRCode.swift */; };
@@ -97,6 +98,7 @@
 		3D34315A745D984D0513B97B /* Components.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Components.swift; sourceTree = "<group>"; };
 		4368875093D5F18A901C158D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		537CEF4E533A1882FCB1C2C4 /* PickView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PickView.swift; sourceTree = "<group>"; };
+		89F2A0E3C54047D48A913B221 /* DishCutoutImage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DishCutoutImage.swift; sourceTree = "<group>"; };
 		58B29E865741B0EDC0BA805E /* TableTalkView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TableTalkView.swift; sourceTree = "<group>"; };
 		5D677E3548E8A7EFA74A066E /* Backend.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Backend.swift; sourceTree = "<group>"; };
 		63AE4B2FC8EF52651F4435DE /* OrderPlacedView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrderPlacedView.swift; sourceTree = "<group>"; };
@@ -314,6 +316,7 @@
 				E8AB5E427FC15EF2C1013A04 /* NegotiatingView.swift */,
 				63AE4B2FC8EF52651F4435DE /* OrderPlacedView.swift */,
 				537CEF4E533A1882FCB1C2C4 /* PickView.swift */,
+				89F2A0E3C54047D48A913B221 /* DishCutoutImage.swift */,
 				AD44F0FA209F27A88E79C902 /* TapInView.swift */,
 			);
 			path = Diner;
@@ -465,6 +468,7 @@
 				4C1578C12E0A56FCBD97637E /* PartySetupView.swift in Sources */,
 				BC2BC9D71DAF49B595F5C6B0 /* PartyStore.swift in Sources */,
 				6EC915153BDB6030AA2FE69D /* PickView.swift in Sources */,
+				D49A2CC357FE4D0791D8FE8A /* DishCutoutImage.swift in Sources */,
 				27360CFC65C6D5F6958BB570 /* Proximity.swift in Sources */,
 				1AECEF8A6EB1D1CF22FF5F31 /* ProximityDebugOverlay.swift in Sources */,
 				7743F5A850FB48A8E20AE911 /* QRCode.swift in Sources */,

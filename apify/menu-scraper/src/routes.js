@@ -11,6 +11,31 @@ function priceFrom(text) {
     return match ? match[0].replace(/\s/g, '').replace(/\+$/, '') : undefined;
 }
 
+function imageUrlFrom(value, baseUrl) {
+    if (Array.isArray(value)) return imageUrlFrom(value[0], baseUrl);
+    if (value && typeof value === 'object') return imageUrlFrom(value.url ?? value.contentUrl, baseUrl);
+    if (typeof value !== 'string' || !value.trim()) return undefined;
+    try {
+        const url = new URL(value.trim(), baseUrl);
+        return url.protocol === 'https:' ? url.toString() : undefined;
+    } catch {
+        return undefined;
+    }
+}
+
+function imageUrlInNode($, node, baseUrl) {
+    const image = $(node).find('img').first();
+    const source = [
+        image.attr('data-src'),
+        image.attr('data-lazy-src'),
+        image.attr('data-original'),
+        image.attr('src'),
+    ].find((value) => value?.trim());
+    const srcset = image.attr('srcset') ?? image.attr('data-srcset');
+    const firstSrcsetUrl = srcset?.split(',')[0]?.trim().split(/\s+/)[0];
+    return imageUrlFrom(source ?? firstSrcsetUrl, baseUrl);
+}
+
 function categoryFor($, node) {
     const headingSelector = 'h1, h2, h3, h4, [role="heading"]';
     let current = $(node);
@@ -42,7 +67,7 @@ function cleanName(text) {
         .trim();
 }
 
-function parseStructuredData($) {
+function parseStructuredData($, sourceUrl) {
     const rows = [];
     $('script[type="application/ld+json"]').each((_, script) => {
         try {
@@ -57,6 +82,7 @@ function parseStructuredData($) {
                 const name = typeof value.name === 'string' ? value.name.trim() : '';
                 const offer = Array.isArray(value.offers) ? value.offers[0] : value.offers;
                 const price = value.price ?? offer?.price;
+                const imageUrl = imageUrlFrom(value.image, sourceUrl);
                 if (
                     name &&
                     !/^\s*[A-Z][A-Z &-]{2,}\s*$/.test(name) &&
@@ -67,6 +93,7 @@ function parseStructuredData($) {
                         ...(price !== undefined ? { price: String(price) } : {}),
                         description: typeof value.description === 'string' ? value.description : '',
                         category,
+                        ...(imageUrl ? { imageUrl } : {}),
                     });
                     return null;
                 }
@@ -84,7 +111,7 @@ function parseStructuredData($) {
     return rows;
 }
 
-function visibleRows($) {
+function visibleRows($, sourceUrl) {
     const selectors = [
         '[itemtype*="MenuItem"]',
         '[itemtype*="Product"]',
@@ -127,7 +154,14 @@ function visibleRows($) {
         const price =
             priceFrom(textOf($, $(node).find('[itemprop="price"], [class*="price" i]').first())) || priceFrom(text);
         if (!price && !description) continue;
-        rows.push({ name, ...(price ? { price } : {}), description, category: categoryFor($, node) });
+        const imageUrl = imageUrlInNode($, node, sourceUrl);
+        rows.push({
+            name,
+            ...(price ? { price } : {}),
+            description,
+            category: categoryFor($, node),
+            ...(imageUrl ? { imageUrl } : {}),
+        });
     }
     return rows;
 }
@@ -140,8 +174,14 @@ router.addDefaultHandler(async ({ request, $, log, pushData }) => {
         throw new Error(`Menu URL must use HTTP or HTTPS: ${request.loadedUrl}`);
     }
 
-    const rows = [...parseStructuredData($), ...visibleRows($)];
-    const unique = [...new Map(rows.map((row) => [row.name.toLowerCase(), row])).values()];
+    const rows = [...parseStructuredData($, request.loadedUrl), ...visibleRows($, request.loadedUrl)];
+    const byName = new Map();
+    for (const row of rows) {
+        const key = row.name.toLowerCase();
+        const previous = byName.get(key);
+        byName.set(key, { ...previous, ...row, imageUrl: row.imageUrl ?? previous?.imageUrl });
+    }
+    const unique = [...byName.values()];
     if (unique.length < 3) {
         const title = textOf($, $('title'));
         throw new Error(

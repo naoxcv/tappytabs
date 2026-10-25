@@ -85,6 +85,8 @@ struct Candidate: Decodable, Equatable, Identifiable {
     let rank: Double          // 1 = agent's top pick; drink = 0
     let isDrink: Bool
     let askServer: Bool
+    let imageUrl: String?
+    let imageIsCutout: Bool?
     var id: String { itemId }
 }
 
