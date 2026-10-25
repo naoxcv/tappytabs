@@ -9,7 +9,6 @@ import { followUpAnswerV, type FollowUpQuestion } from "./shared/types";
 import { followupsFor, summarize as summarizeProfile } from "./agents/profile";
 import { personalityFrom } from "./agents/personalities";
 import { logTo } from "./agents/steps";
-import { tasteFromAnswers, CONTRASTS } from "./agents/taste";
 
 const profileFields = {
   name: v.string(),
@@ -18,17 +17,10 @@ const profileFields = {
   spice: v.number(),
   likes: v.array(v.string()),
   dislikes: v.array(v.string()),
-  ingredientLikes: v.optional(v.array(v.string())),
-  ingredientAvoids: v.optional(v.array(v.string())),
   cuisines: v.array(v.string()),
   dislikedCuisines: v.optional(v.array(v.string())),
   likedCategories: v.optional(v.array(v.string())),
   avatarId: v.string(),
-  pairAnswers: v.optional(v.array(v.object({ pairId: v.string(), choice: v.union(v.literal("a"), v.literal("b"), v.literal("both"), v.literal("neither")) }))),
-  tasteCorrections: v.optional(v.array(v.object({ contrast: v.string(), value: v.union(v.number(), v.null()) }))),
-  removedContrasts: v.optional(v.array(v.string())),
-  priceSensitivity: v.optional(v.union(v.literal("a_lot"), v.literal("somewhat"), v.literal("not_much"))),
-  familiarity: v.optional(v.union(v.literal("familiar"), v.literal("open"))),
 };
 
 /** Create or update the profile for this device. Returns the user id the app saves as `tt.userId`. */
@@ -37,11 +29,7 @@ export const upsert = mutation({
   handler: async (ctx, args): Promise<Id<"users">> => {
     if (!args.name.trim()) fail("INVALID", "Name is required");
     const existing = await ctx.db.query("users").withIndex("by_device", (q) => q.eq("deviceId", args.deviceId)).unique();
-    const corrections = (args.tasteCorrections ?? []).filter((c) => CONTRASTS.includes(c.contrast as typeof CONTRASTS[number]) && (c.value === null || [-1, 0, 1].includes(c.value)));
-    const removed = (args.removedContrasts ?? []).filter((c) => CONTRASTS.includes(c as typeof CONTRASTS[number]));
-    const allCorrections = [...corrections.filter((c) => !removed.includes(c.contrast)), ...removed.map((contrast) => ({ contrast, value: null }))];
-    const { removedContrasts: _, ...savedArgs } = args;
-    const fields = { ...savedArgs, tasteCorrections: allCorrections, taste: tasteFromAnswers(args.pairAnswers ?? [], allCorrections), name: args.name.trim(), spice: Math.max(0, Math.min(4, args.spice)) };
+    const fields = { ...args, name: args.name.trim(), spice: Math.max(0, Math.min(4, args.spice)) };
     if (existing) {
       await ctx.db.patch(existing._id, fields);
       return existing._id;

@@ -55,7 +55,7 @@ export const draftStep = internalAction({
         drinks: new Set(drinks.map((d) => d._id)),
         shared: new Set(shared.map((s) => s._id)),
       }, fb);
-      if (user.priceSensitivity !== "a_lot" && (user.priceSensitivity || user.personality !== "budget_minded")) return repaired;
+      if (user.personality !== "budget_minded") return repaired;
 
       // Keep the code-ranked value pick available and in first place for budget-minded diners.
       const preferred = fb.mains[0];

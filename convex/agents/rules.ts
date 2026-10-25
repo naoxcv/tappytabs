@@ -23,7 +23,7 @@ export function tally(pooled: string[], votes: AgentVote[], menu: MenuItemLite[]
   return pooled
     .filter((id) => byId.has(id))
     .map((id) => ({ id, n: votes.filter((v) => v.yes.includes(id)).length, item: byId.get(id)! }))
-    .sort((a, b) => b.n - a.n || (a.item.priceVerified && b.item.priceVerified ? a.item.priceCents - b.item.priceCents : 0) || a.item.menuOrder - b.item.menuOrder)
+    .sort((a, b) => b.n - a.n || a.item.priceCents - b.item.priceCents || a.item.menuOrder - b.item.menuOrder)
     .slice(0, Math.max(0, target))
     .map((x) => x.id);
 }
@@ -76,7 +76,7 @@ export function poolForParty(drafts: AgentDraft[], menu: MenuItemLite[], users: 
   // Allergy drops make the best (and most honest) story; then the bigger dish.
   const allergyHits = (d: Pooling["drops"][number]) =>
     d.failed.filter((f) => f.safety.reasons.some((r) => r.includes("allergic"))).length;
-  drops.sort((a, b) => allergyHits(b) - allergyHits(a) || (b.item.priceCents ?? 0) - (a.item.priceCents ?? 0));
+  drops.sort((a, b) => allergyHits(b) - allergyHits(a) || b.item.priceCents - a.item.priceCents);
   const topUps: MenuItemLite[] = [];
   if (pooled.length < MIN_POOL) {
     const ctx = scoreContext(menu);

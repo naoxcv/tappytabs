@@ -9,7 +9,6 @@ struct PartySetupView: View {
     @State private var restaurant: RestaurantRef?
     @State private var menu: MenuStatus?
     @State private var fetching = false
-    @State private var autoMode = false
     @State private var note: String?
     @State private var error: String?
     @State private var menuSub: AnyCancellable?
@@ -45,15 +44,6 @@ struct PartySetupView: View {
                     }
                     .frame(maxWidth: .infinity)
                 }
-                Toggle(isOn: $autoMode) {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("Auto mode").font(AppTypography.headline)
-                        Text("Skip the prompts. Use normal hunger, each diner's top main, and place the order automatically.")
-                            .font(AppTypography.footnote)
-                            .foregroundStyle(.secondary)
-                    }
-                }
-                .tint(Theme.accent)
                 if let error { Text(error).foregroundStyle(Theme.accent) }
                 if opening { ProgressView("Opening table…") }
             }
@@ -119,12 +109,7 @@ struct PartySetupView: View {
         let backend = app.backend
         let deviceId = app.deviceId
         do {
-            let created = try await backend.createParty(
-                restaurantId: restaurant.id,
-                size: size,
-                hostDeviceId: deviceId,
-                autoMode: autoMode
-            )
+            let created = try await backend.createParty(restaurantId: restaurant.id, size: size, hostDeviceId: deviceId)
             guard app.backend === backend, app.deviceId == deviceId, app.mode == .restaurant,
                   app.partyId == nil else { return }
             app.partyId = created.partyId

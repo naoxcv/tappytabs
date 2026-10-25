@@ -41,7 +41,7 @@ The MVP is the full happy path for one configured demo restaurant with a mock me
 
 ## User flow
 
-1. **Onboarding (once).** Diner enters a name, checks allergies and diet, sets spice tolerance, answers five fixed “This or That” comparisons (plus an optional sixth), chooses price and familiarity preferences, picks an avatar, and edits a cautious taste summary.
+1. **Onboarding (once, under 90 s).** Diner enters a name, checks allergies and diet, sets spice tolerance, swipes like/dislike on 15–20 dish cards, optionally answers 2–3 AI follow-ups, and gets a profile summary and avatar.
 2. **Check-in.** Host enters party size. Each diner holds their phone to the restaurant phone; a buzz and animation confirm the join, and the restaurant screen shows "2 of 4 checked in". The last tap starts everything; "Start with fewer" covers a no-show. Each diner picks a hunger level: snack, normal or starving.
 3. **Negotiation.** Each diner agent drafts 1–3 candidates plus a drink within its owner's allergies. Agents then negotiate a group plan (personal mains, shared dishes, how many). Avatars talk in speech bubbles on the restaurant screen, paced with a 1.5-second gap; diners can begin picking once the plan is ready while the conversation continues.
 4. **Personal pick (stage 1).** Each phone shows the agent's top pick plus 2 alternatives with a reason and price; the diner locks one in.
@@ -67,7 +67,7 @@ Must-haves define the demo; should-haves and stretch items are built only after 
 **Should-have**
 
 - Restaurant owner accounts and self-service restaurant profiles. An owner enters a Google Maps location; a separate Apify scraper Actor finds menu data to prefill the restaurant's editable menu profile. The owner can review and edit the results. This is a setup shortcut, not an MVP dependency.
-- One main is assumed sufficient for a normally hungry diner; hunger changes only the number of shared dishes considered.
+- Hunger level shapes portion count and number of shared dishes.
 - Agent personalities from the profile (adventurous, picky, budget-minded).
 - Per-person and total price on the confirmation screen.
 - A diner who never confirms defaults to their agent's pick after a timeout.
@@ -110,7 +110,7 @@ npm run seed
 
 The seed writes the checked menu snapshot first, then tries the configured normalizer Actor using the raw mock menu. If Apify is unavailable or unconfigured, the snapshot remains in place. `npm run seed:negotiated` and `npm run seed:placed` prepare screen fixtures. `npm run e2e` exercises the full backend flow and **wipes app data in the active Convex deployment**, so use a disposable local or personal deployment.
 
-To enable live model and menu processing, set Convex environment variables with `npx convex env set`: `ANTHROPIC_API_KEY`, `CLAUDE_MODEL`, `BITDEER_API_KEY`, `BITDEER_MODEL`, `APIFY_TOKEN`, `APIFY_NORMALIZER_ACTOR` (the demo currently uses `naoxcv/menu-normalizer`), `APIFY_SCRAPER_URL_TASK`, and `APIFY_SCRAPER_SEARCH_TASK`, plus optionally `DEMO_SEED`. Restaurant onboarding uses the URL Task by default, or the Search Task with at most three owner-selectable results. After a successful live ingest, refresh the checked fallback with `CONVEX_URL=<your-deployment-url> npm run menu:snapshot`. This exports the current normalized menu without reseeding.
+To enable live model and menu processing, set Convex environment variables with `npx convex env set`: `ANTHROPIC_API_KEY`, `CLAUDE_MODEL`, `BITDEER_API_KEY`, `BITDEER_MODEL`, `APIFY_TOKEN`, `APIFY_NORMALIZER_ACTOR` (the demo currently uses `naoxcv/menu-normalizer`), `APIFY_SCRAPER_ACTOR`, and `APIFY_GOOGLE_MAPS_ACTOR` for restaurant onboarding, plus optionally `DEMO_SEED`. The Maps Actor must return place candidates; TappyTabs always requires owner selection. After a successful live ingest, refresh the checked fallback with `CONVEX_URL=<your-deployment-url> npm run menu:snapshot`. This exports the current normalized menu without reseeding. The Actor's public Apify Store listing will be linked here after publication.
 
 To deploy and seed the shared demo deployment, first configure its Convex environment variables, then run:
 

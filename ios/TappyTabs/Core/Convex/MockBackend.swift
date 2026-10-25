@@ -139,9 +139,9 @@ final class MockBackend: Backend {
     func restaurantOnboardingStatus(deviceId: String, onboardingId: String) -> AnyPublisher<RestaurantOnboarding?, TTError> {
         onMain(Just(nil).setFailureType(to: TTError.self))
     }
-    func startRestaurantUrlImport(deviceId: String, onboardingId: String, url: String, location: String?) async throws {}
-    func startRestaurantSearch(deviceId: String, onboardingId: String, query: String, location: String) async throws {}
+    func resolveRestaurant(deviceId: String, onboardingId: String) async throws {}
     func selectRestaurantCandidate(deviceId: String, onboardingId: String, candidate: RestaurantCandidate) async throws {}
+    func scrapeRestaurantMenu(deviceId: String, onboardingId: String, menuUrl: String?) async throws {}
     func restaurantDraft(deviceId: String, onboardingId: String) async throws -> RestaurantMenuDraft? { nil }
     func updateRestaurantDraft(deviceId: String, onboardingId: String, items: [RestaurantMenuItem]) async throws {}
     func publishRestaurant(deviceId: String, onboardingId: String, items: [RestaurantMenuItem]) async throws {}
@@ -151,8 +151,8 @@ final class MockBackend: Backend {
         return IngestResult(count: menu.itemCount, source: "seed", apifyRunId: nil, note: "mock")
     }
 
-    func createParty(restaurantId: String, size: Int, hostDeviceId: String, autoMode: Bool) async throws -> CreatedParty {
-        setParty(pickParty.with(status: .checkin, size: Double(size), autoMode: autoMode, members: []))
+    func createParty(restaurantId: String, size: Int, hostDeviceId: String) async throws -> CreatedParty {
+        setParty(pickParty.with(status: .checkin, size: Double(size), members: []))
         linesSubject.send(.empty); candidatesSubject.send([]); messagesSubject.send(MessagesPayload(serverNow: now, messages: []))
         return CreatedParty(partyId: pickParty.id, joinCode: pickParty.joinCode)
     }
@@ -161,24 +161,16 @@ final class MockBackend: Backend {
         guard let p = partySubject.value else { throw TTError(code: .NOT_FOUND, message: "No party") }
         guard p.status == .checkin else { throw TTError(code: .BAD_STATUS, message: "Not checking in") }
         guard p.members.count >= 2 else { throw TTError(code: .INVALID, message: "Need at least 2 diners") }
-        if p.autoMode == true {
-            let members = p.members.map { $0.with(hunger: .normal) }
-            setParty(p.with(status: .placed, size: Double(members.count), members: members.map { $0.with(picked: true, confirmed: true) }))
-            candidatesSubject.send(fixtureCandidates)
-            publishLines(linesPick.lines + autoPersonalLines(members))
-        } else {
-            setParty(p.with(status: .hunger, size: Double(p.members.count)))
-        }
+        setParty(p.with(status: .hunger, size: Double(p.members.count)))
     }
 
     func reset(partyId: String, hostDeviceId: String) async throws {
-        _ = try await createParty(restaurantId: Self.restaurantId, size: Int(partySubject.value?.size ?? 4), hostDeviceId: hostDeviceId,
-                                  autoMode: partySubject.value?.autoMode ?? false)
+        _ = try await createParty(restaurantId: Self.restaurantId, size: Int(partySubject.value?.size ?? 4), hostDeviceId: hostDeviceId)
     }
 
     func join(partyId: String?, joinCode: String?, userId: String, via: JoinVia,
               hostDeviceId: String?, deviceId: String?) async throws -> JoinResult {
-        if partySubject.value == nil { _ = try await createParty(restaurantId: Self.restaurantId, size: 4, hostDeviceId: ids.hostDeviceId, autoMode: false) }
+        if partySubject.value == nil { _ = try await createParty(restaurantId: Self.restaurantId, size: 4, hostDeviceId: ids.hostDeviceId) }
         return try joinSync(userId: userId)
     }
 
@@ -195,15 +187,8 @@ final class MockBackend: Backend {
         guard Double(p.members.count) < p.size else { throw TTError(code: .FULL, message: "Table is full") }
         let fixture = pickParty.members.first { $0.userId == userId }
             ?? Member(userId: userId, name: "You", avatarId: "avatar_5", hunger: nil, picked: false, confirmed: false)
-        let members = p.members + [fixture.with(hunger: p.autoMode == true ? .normal : nil)]
-        let isFull = Double(members.count) == p.size
-        setParty(p.with(status: isFull && p.autoMode == true ? .negotiating : (isFull ? .hunger : .checkin), members: members))
-        if isFull && p.autoMode == true {
-            let placed = partySubject.value ?? p
-            candidatesSubject.send(fixtureCandidates)
-            publishLines(linesPick.lines + autoPersonalLines(placed.members))
-            setParty(placed.with(status: .placed, members: placed.members.map { $0.with(picked: true, confirmed: true) }))
-        }
+        let members = p.members + [fixture.with(hunger: nil)]
+        setParty(p.with(status: Double(members.count) == p.size ? .hunger : .checkin, members: members))
         return JoinResult(result: "joined", partyId: p.id)
     }
 
@@ -227,7 +212,7 @@ final class MockBackend: Backend {
             linesSubject.send(linesConfirm)
         }
     }
-    func cacheDishImage(partyId: String, userId: String, deviceId: String, itemId: String, sourceImageUrl: String, pngData: Data) async throws {}
+    func cacheDishCutout(partyId: String, userId: String, deviceId: String, itemId: String, sourceImageUrl: String, pngData: Data) async throws {}
 
     func add(partyId: String, userId: String, deviceId: String, itemId: String, shared: Bool) async throws {
         try requireStatus(.confirm)
@@ -297,14 +282,6 @@ final class MockBackend: Backend {
         guard thenAdvance, let last = payload.messages.last else { return }
         after((last.showAt - now + Self.bubbleDisplayDurationMs(last.text)) / 1000) { [self] in
             guard partySubject.value?.status == .negotiating else { return }
-            if partySubject.value?.autoMode == true {
-                candidatesSubject.send(fixtureCandidates)
-                guard let current = partySubject.value else { return }
-                publishLines(linesPick.lines + autoPersonalLines(current.members))
-                let members = current.members.map { $0.with(picked: true, confirmed: true) }
-                setParty(current.with(status: .placed, members: members))
-                return
-            }
             candidatesSubject.send(fixtureCandidates)
             linesSubject.send(linesPick)
             setParty(pickParty.with(pickDeadline: now + 45_000))
@@ -325,19 +302,6 @@ final class MockBackend: Backend {
         linesSubject.send(LinesPayload(lines: lines, totals: Totals(perUser: perUser, total: total)))
     }
 
-    private func autoPersonalLines(_ members: [Member]) -> [Line] {
-        return members.enumerated().flatMap { pair -> [Line] in
-            let (index, member) = pair
-            guard placedParty.members.indices.contains(index) else { return [Line]() }
-            let fixtureUserId = placedParty.members[index].userId
-            return linesPlaced.lines.filter { !$0.isShared && $0.sharedBy.contains(fixtureUserId) }.map { line in
-                Line(lineId: UUID().uuidString, itemId: line.itemId, name: line.name, qty: line.qty,
-                     priceCents: line.priceCents, kind: line.kind, sharedBy: [member.userId],
-                     addedBy: "agent", askServer: line.askServer)
-            }
-        }
-    }
-
     private func after(_ seconds: Double, _ f: @escaping () -> Void) {
         DispatchQueue.main.asyncAfter(deadline: .now() + seconds, execute: f)
     }
@@ -354,10 +318,9 @@ enum Fixtures {
 
 // Copy-with helpers so mocks and previews can tweak immutable models.
 extension Party {
-    func with(status: PartyStatus? = nil, size: Double? = nil, autoMode: Bool? = nil, members: [Member]? = nil,
+    func with(status: PartyStatus? = nil, size: Double? = nil, members: [Member]? = nil,
               pickDeadline: Double? = nil, confirmDeadline: Double? = nil) -> Party {
         Party(id: id, restaurantName: restaurantName, status: status ?? self.status, size: size ?? self.size, joinCode: joinCode,
-              autoMode: autoMode ?? self.autoMode,
               pickDeadline: pickDeadline ?? self.pickDeadline, confirmDeadline: confirmDeadline ?? self.confirmDeadline,
               members: members ?? self.members)
     }

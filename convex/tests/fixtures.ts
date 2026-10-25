@@ -11,7 +11,6 @@ export function item(p: Partial<MenuItemLite> & { name: string; contains?: Aller
     tags: [],
     description: "",
     priceCents: 1500,
-    priceVerified: true,
     diet: [],
     spice: 0,
     isDrink: false,

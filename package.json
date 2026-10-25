@@ -7,13 +7,10 @@
   "scripts": {
     "dev": "convex dev",
     "dev:local": "CONVEX_AGENT_MODE=anonymous convex dev",
-    "deploy:demo": "node scripts/deploy-demo.mjs",
     "seed": "convex run seedActions:baseAndIngest",
     "seed:negotiated": "convex run seed:scenario '{\"scenario\":\"negotiated\"}'",
     "seed:placed": "convex run seed:scenario '{\"scenario\":\"placed\"}'",
     "menu:snapshot": "node scripts/refresh-menu-snapshot.mjs",
-    "menu:backfill-taste": "npm --prefix apify/menu-normalizer run build && node scripts/backfill-menu-taste.mjs",
-    "menu:verify-prices": "npm --prefix apify/menu-normalizer run build && node scripts/verify-menu-prices.mjs",
     "e2e": "convex run e2e:happyPath",
     "typecheck": "tsc --noEmit -p convex",
     "test": "vitest run",

@@ -4,7 +4,6 @@ import type { Hunger } from "../../shared/enums";
 import type { AgentVote, MenuItemLite, UserLite } from "../../shared/types";
 import { COMMON_RULES, tag } from "../models/provider";
 import { PERSONALITY_TONE } from "../personalities";
-import { strongestTaste } from "../taste";
 
 export const voteSchema = z.object({
   yes: z.array(z.string()),
@@ -17,12 +16,11 @@ export function votePrompt(args: {
     `You are ${args.user.name}'s dining agent, negotiating which dishes the table will share.`,
     PERSONALITY_TONE[args.user.personality ?? "adventurous"],
     "Vote yes on any pooled dishes your diner would happily share. You may vote for several. Return only the votes; conversation is generated after the plan is settled.",
-    "Use the diner's strongest supported taste preferences and dish evidence. Never infer portion size or treat an unverified price as a bargain.",
     COMMON_RULES,
   ].join("\n");
   const user = [
-    tag("profile", { name: args.user.name, likes: args.user.likes, dislikes: args.user.dislikes, ingredientLikes: args.user.ingredientLikes, ingredientAvoids: args.user.ingredientAvoids, taste: strongestTaste(args.user.taste), corrections: args.user.tasteCorrections, priceSensitivity: args.user.priceSensitivity, hunger: args.hunger }),
-    tag("pooled", args.pooled.map((p) => ({ id: p._id, name: p.name, description: p.description, price: p.priceCents === null ? null : p.priceCents / 100, priceVerified: p.priceVerified ?? false, tags: p.tags, taste: p.taste ?? [] }))),
+    tag("profile", { name: args.user.name, likes: args.user.likes, dislikes: args.user.dislikes, hunger: args.hunger }),
+    tag("pooled", args.pooled.map((p) => ({ id: p._id, name: p.name, price: p.priceCents / 100, tags: p.tags }))),
   ].join("\n");
   return { system, user };
 }

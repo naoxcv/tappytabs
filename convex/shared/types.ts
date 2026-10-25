@@ -3,7 +3,6 @@
 // so it stays unit-testable. Convex docs satisfy them structurally (Id<...> is a string).
 import { v } from "convex/values";
 import type { Allergen, AllergenLevel, Diet, Personality, TagStatus } from "./enums";
-import type { DishContrast, PairAnswer, TasteCorrection, TastePreference } from "../agents/taste";
 
 export type MenuItemLite = {
   _id: string;
@@ -20,9 +19,6 @@ export type MenuItemLite = {
   shareable: boolean;
   menuOrder: number;
   tagStatus: TagStatus;
-  taste?: DishContrast[];
-  priceVerified?: boolean;
-  currency?: string;
 };
 
 export type UserLite = {
@@ -33,16 +29,9 @@ export type UserLite = {
   spice: number;
   likes: string[];
   dislikes: string[];
-  ingredientLikes?: string[];
-  ingredientAvoids?: string[];
   cuisines: string[];
   dislikedCuisines?: string[];
   personality?: Personality;
-  pairAnswers?: PairAnswer[];
-  tasteCorrections?: TasteCorrection[];
-  taste?: TastePreference[];
-  priceSensitivity?: "a_lot" | "somewhat" | "not_much";
-  familiarity?: "familiar" | "open";
 };
 
 /** Role 3 returns these from draftStep; Role 4 pools and stores them. */
@@ -88,15 +77,9 @@ export type DraftProfile = {
   spice: number;
   likes: string[];
   dislikes: string[];
-  ingredientLikes?: string[];
-  ingredientAvoids?: string[];
   cuisines: string[];
   dislikedCuisines?: string[];
   likedCategories?: string[];
-  pairAnswers?: PairAnswer[];
-  tasteCorrections?: TasteCorrection[];
-  priceSensitivity?: "a_lot" | "somewhat" | "not_much";
-  familiarity?: "familiar" | "open";
 };
 
 // ---- Validators mirroring the types above (workflow step args/returns) ----

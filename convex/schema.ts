@@ -15,26 +15,18 @@ export default defineSchema({
     spice: v.number(), // 0–4 tolerance
     likes: v.array(v.string()), // tags
     dislikes: v.array(v.string()), // tags
-    ingredientLikes: v.optional(v.array(v.string())),
-    ingredientAvoids: v.optional(v.array(v.string())),
     cuisines: v.array(v.string()),
     dislikedCuisines: v.optional(v.array(v.string())),
     likedCategories: v.optional(v.array(v.string())),
     personality: v.optional(personalityV),
     avatarId: v.string(),
     profileSummary: v.optional(v.string()),
-    pairAnswers: v.optional(v.array(v.object({ pairId: v.string(), choice: v.union(v.literal("a"), v.literal("b"), v.literal("both"), v.literal("neither")) }))),
-    tasteCorrections: v.optional(v.array(v.object({ contrast: v.string(), value: v.union(v.number(), v.null()) }))),
-    taste: v.optional(v.array(v.object({ contrast: v.string(), value: v.number(), confidence: v.number() }))),
-    priceSensitivity: v.optional(v.union(v.literal("a_lot"), v.literal("somewhat"), v.literal("not_much"))),
-    familiarity: v.optional(v.union(v.literal("familiar"), v.literal("open"))),
   }).index("by_device", ["deviceId"]),
 
   restaurants: defineTable({
     name: v.string(),
     ownerAccountId: v.optional(v.id("restaurantAccounts")),
     address: v.optional(v.string()),
-    sourceUrl: v.optional(v.string()),
     mapsUrl: v.optional(v.string()),
     googlePlaceId: v.optional(v.string()),
     googleMapsName: v.optional(v.string()),
@@ -61,8 +53,7 @@ export default defineSchema({
     restaurantId: v.id("restaurants"),
     menuVersionId: v.optional(v.id("restaurantMenuVersions")),
     imageUrl: v.optional(v.string()), // source photo URL exposed by the menu page
-    imageStorageId: v.optional(v.id("_storage")), // cached normalized dish image
-    imageProcessingVersion: v.optional(v.number()), // normalized image format version
+    imageStorageId: v.optional(v.id("_storage")), // cached transparent PNG cutout
     name: v.string(),
     category: v.string(), // "mains" | "sides" | "drinks" | "desserts" | ... (free text from the menu)
     cuisine: v.optional(v.string()),
@@ -76,9 +67,6 @@ export default defineSchema({
     shareable: v.boolean(),
     menuOrder: v.number(),
     tagStatus: tagStatusV,
-    taste: v.optional(v.array(v.object({ contrast: v.string(), value: v.number(), evidence: v.union(v.literal("stated"), v.literal("inferred")), detail: v.string() }))),
-    priceVerified: v.optional(v.boolean()),
-    currency: v.optional(v.string()),
   })
     .index("by_restaurant", ["restaurantId"])
     .index("by_restaurant_name", ["restaurantId", "name"]),
@@ -87,7 +75,6 @@ export default defineSchema({
     restaurantId: v.id("restaurants"),
     hostDeviceId: v.string(),
     size: v.number(),
-    autoMode: v.optional(v.boolean()),
     status: statusV,
     joinCode: v.string(),
     epoch: v.number(), // bumped by reset; scheduled jobs carry it and exit if it changed
@@ -204,15 +191,8 @@ export default defineSchema({
       v.literal("candidates_ready"), v.literal("restaurant_confirmed"), v.literal("scraping_menu"),
       v.literal("review_required"), v.literal("normalizing"), v.literal("ready"),
       v.literal("manual_review"), v.literal("match_failed"), v.literal("scrape_failed"),
-      v.literal("normalization_failed"), v.literal("awaiting_source"),
-      v.literal("scraping_url"), v.literal("scraping_search"),
-      v.literal("search_results_ready"),
+      v.literal("normalization_failed"),
     ),
-    acquisitionMode: v.optional(v.union(v.literal("url"), v.literal("search"))),
-    sourceUrl: v.optional(v.string()),
-    searchQuery: v.optional(v.string()),
-    searchLocation: v.optional(v.string()),
-    actorRunId: v.optional(v.string()),
     scraperRunId: v.optional(v.string()),
     candidates: v.array(v.any()),
     selectedCandidate: v.optional(v.any()),

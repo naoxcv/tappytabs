@@ -4,49 +4,73 @@
       "fromUserId": "k1743dv6grdcbrtc3xcydqcbj98gx3zg",
       "id": "jn744t6t9r4r5b4ndes90sdpe98gw6h6",
       "showAt": 1792836472630,
-      "text": "Truffle fries to share?"
+      "text": "Maya is eyeing the Tofu Green Curry. Anyone up for sharing Korean Fried Chicken?"
     },
     {
       "fromUserId": "k17bxbx1wpbre701hrxzv0mmrn8gw524",
       "id": "jn7da9jdfqnnymxtb5kwjzt9x58gx67v",
       "showAt": 1792836474830,
-      "text": "Yum!"
+      "text": "Leo is eyeing the Falafel Wrap. Anyone up for sharing Truffle Fries?"
     },
     {
       "fromUserId": "k170t0731f4ep8z7qznxc6mrbs8gx3dj",
       "id": "jn7ew39f9kfedeezakkmm0kvcn8gwywp",
       "showAt": 1792836477030,
-      "text": "Salted edamame too?"
+      "text": "Priya is eyeing the Pesto Pasta. Anyone up for sharing Margherita Flatbread?"
     },
     {
       "fromUserId": "k17abfef5t0vqk79ps4e7chs158gwtja",
       "id": "jn7ccz2gmbbea0rbsf24q3htdd8gwk2v",
       "showAt": 1792836479230,
-      "text": "Ooh, yes!"
-    },
-    {
-      "fromUserId": "k1743dv6grdcbrtc3xcydqcbj98gx3zg",
-      "id": "jn7fdecnryrz0cs7wjq54z6bb18gxjsq",
-      "showAt": 1792836481430,
-      "text": "So crunchy!"
-    },
-    {
-      "fromUserId": "k17bxbx1wpbre701hrxzv0mmrn8gw524",
-      "id": "jn7f972es3cxpf70rbfz14136x8gwcxz",
-      "showAt": 1792836483630,
-      "text": "Both, please!"
-    },
-    {
-      "fromUserId": "k170t0731f4ep8z7qznxc6mrbs8gx3dj",
-      "id": "jn79ekjtcn58wn2x0cvese5z3x8gwamh",
-      "showAt": 1792836485830,
-      "text": "Sold!"
+      "text": "Sam is eyeing the Grilled Salmon Bowl. Anyone up for sharing Seafood Paella?"
     },
     {
       "fromUserId": null,
+      "id": "jn7fdecnryrz0cs7wjq54z6bb18gxjsq",
+      "showAt": 1792836481430,
+      "text": "Maya's allergic to shellfish, so no Seafood Paella for the table."
+    },
+    {
+      "fromUserId": null,
+      "id": "jn7f972es3cxpf70rbfz14136x8gwcxz",
+      "showAt": 1792836483630,
+      "text": "Sam's allergic to gluten, so no Korean Fried Chicken for the table."
+    },
+    {
+      "fromUserId": null,
+      "id": "jn79ekjtcn58wn2x0cvese5z3x8gwamh",
+      "showAt": 1792836485830,
+      "text": "How about the Salted Edamame for the table? It works for everyone."
+    },
+    {
+      "fromUserId": "k1743dv6grdcbrtc3xcydqcbj98gx3zg",
       "id": "jn72bk1cqajp2xaxagtwb77kad8gw8dp",
       "showAt": 1792836488030,
-      "text": "Edamame and truffle fries are set. Pick your main on your phone!"
+      "text": "Maya is happy with Salted Edamame and Truffle Fries."
+    },
+    {
+      "fromUserId": "k17bxbx1wpbre701hrxzv0mmrn8gw524",
+      "id": "jn78cc8vc9ty6r23cc9xh9fz358gwz4g",
+      "showAt": 1792836490230,
+      "text": "Leo is happy with Truffle Fries and Salted Edamame."
+    },
+    {
+      "fromUserId": "k170t0731f4ep8z7qznxc6mrbs8gx3dj",
+      "id": "jn73dm27pb9nwppr74f74erz2n8gxq06",
+      "showAt": 1792836492430,
+      "text": "Priya is happy with Salted Edamame and Truffle Fries."
+    },
+    {
+      "fromUserId": "k17abfef5t0vqk79ps4e7chs158gwtja",
+      "id": "jn74994zaw2p7hrznhc5e3vx698gx1tj",
+      "showAt": 1792836494630,
+      "text": "Sam is happy with Salted Edamame and Truffle Fries."
+    },
+    {
+      "fromUserId": null,
+      "id": "jn7ecejqhk6x8ajabdp32ysxz58gw0sa",
+      "showAt": 1792836496830,
+      "text": "Great, Salted Edamame and Truffle Fries for the table, plus everyone's mains. Check your phones!"
     }
   ],
   "serverNow": 1792836472272

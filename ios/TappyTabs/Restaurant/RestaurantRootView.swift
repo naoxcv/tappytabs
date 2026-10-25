@@ -44,9 +44,6 @@ struct RestaurantOnboardingView: View {
     @Environment(AppModel.self) private var app
     @State private var name = ""
     @State private var address = ""
-    @State private var sourceURL = ""
-    @State private var acquisition: Acquisition = .url
-    @State private var showSourceEntry = false
     @State private var onboardingId: String?
     @State private var onboarding: RestaurantOnboarding?
     @State private var draft: RestaurantMenuDraft?
@@ -54,8 +51,6 @@ struct RestaurantOnboardingView: View {
     @State private var saving = false
     @State private var error: String?
     @State private var statusSub: AnyCancellable?
-
-    private enum Acquisition: Hashable { case url, search }
 
     var body: some View {
         ScrollView {
@@ -74,28 +69,21 @@ struct RestaurantOnboardingView: View {
     }
 
     @ViewBuilder private var content: some View {
-        if onboardingId == nil || showSourceEntry {
-            Picker("How would you like to add your menu?", selection: $acquisition) {
-                Text("Paste a restaurant or menu URL").tag(Acquisition.url)
-                Text("Find it automatically").tag(Acquisition.search)
-            }
-            .pickerStyle(.segmented)
-            TextField(acquisition == .url ? "Restaurant or menu URL" : "Restaurant name", text: acquisition == .url ? $sourceURL : $name).textFieldStyle(.roundedBorder)
-            TextField(acquisition == .url ? "City or location (optional)" : "City or location", text: $address).textFieldStyle(.roundedBorder)
-            if acquisition == .search { Text("This may take several minutes. You’ll choose a result before reviewing its menu.").font(AppTypography.footnote).foregroundStyle(Theme.accent) }
-            Button(acquisition == .url ? "Import menu" : "Find it automatically") { Task { await submitDetails() } }
-                .buttonStyle(.borderedProminent).disabled((acquisition == .url ? sourceURL : name).trimmed.isEmpty || (acquisition == .search && address.trimmed.isEmpty) || saving)
-        } else if let onboarding, ["awaiting_source", "created", "details_submitted", "scraping_url", "scraping_search", "finding_restaurant"].contains(onboarding.status) {
-            ProgressView(onboarding.status == "scraping_search" ? "Searching menus…" : "Importing menu…")
-        } else if let onboarding, ["search_results_ready", "candidates_ready"].contains(onboarding.status) {
-            Text("Choose a menu to review").font(AppTypography.headline)
+        if onboardingId == nil {
+            TextField("Restaurant name", text: $name).textFieldStyle(.roundedBorder)
+            TextField("Street address", text: $address).textFieldStyle(.roundedBorder)
+            Button("Find my restaurant") { Task { await submitDetails() } }
+                .buttonStyle(.borderedProminent).disabled(name.trimmed.isEmpty || address.trimmed.isEmpty || saving)
+        } else if let onboarding, ["created", "details_submitted", "finding_restaurant"].contains(onboarding.status) {
+            ProgressView("Finding restaurants…")
+        } else if let onboarding, onboarding.status == "candidates_ready" {
+            Text("Choose the matching restaurant").font(AppTypography.headline)
             ForEach(onboarding.candidates) { candidate in
                 Button { Task { await select(candidate) } } label: {
                     VStack(alignment: .leading, spacing: 4) {
                         Text(candidate.name).font(AppTypography.headline)
                         Text(candidate.address).font(AppTypography.footnote)
-                        if let confidence = candidate.confidence { Text("Confidence: \(confidence)").font(AppTypography.caption) }
-                        if let url = candidate.sourceUrl { Text(url).font(AppTypography.caption).lineLimit(1) }
+                        if let rating = candidate.rating { Text("★ \(rating, specifier: "%.1f")").font(AppTypography.caption) }
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding()
@@ -103,10 +91,7 @@ struct RestaurantOnboardingView: View {
                 }
                 .buttonStyle(.plain)
             }
-            Button("I’ll enter a URL manually") { resetToSourceEntry() }
-        } else if let onboarding, ["scrape_failed", "manual_review", "match_failed"].contains(onboarding.status) {
-            Text(onboarding.errorMessage ?? "We couldn’t import a usable menu.").foregroundStyle(Theme.accent)
-            Button("Try another URL") { resetToSourceEntry() }.buttonStyle(.borderedProminent)
+            Button("I’ll enter it manually") { Task { await manualReview() } }
         } else if let draft {
             MenuDraftEditor(draft: draft, saving: saving) { items in Task { await update(items) } } publish: { items in Task { await publish(items) } }
         } else {
@@ -131,14 +116,10 @@ struct RestaurantOnboardingView: View {
     private func submitDetails() async {
         saving = true; defer { saving = false }
         do {
-            let id: String
-            if let onboardingId { id = onboardingId } else { id = try await app.backend.createRestaurantDraft(deviceId: app.deviceId, name: acquisition == .url ? "Restaurant" : name.trimmed, address: address.trimmed); self.onboardingId = id; subscribe(id) }
-            showSourceEntry = false
-            if acquisition == .url {
-                try await app.backend.startRestaurantUrlImport(deviceId: app.deviceId, onboardingId: id, url: sourceURL.trimmed, location: address.trimmed.isEmpty ? nil : address.trimmed)
-            } else {
-                try await app.backend.startRestaurantSearch(deviceId: app.deviceId, onboardingId: id, query: name.trimmed, location: address.trimmed)
-            }
+            let id = try await app.backend.createRestaurantDraft(deviceId: app.deviceId, name: name.trimmed, address: address.trimmed)
+            onboardingId = id
+            subscribe(id)
+            try await app.backend.resolveRestaurant(deviceId: app.deviceId, onboardingId: id)
         } catch let caught { self.error = TTError.from(caught).userMessage }
     }
 
@@ -155,10 +136,11 @@ struct RestaurantOnboardingView: View {
         guard let onboardingId else { return }; saving = true; defer { saving = false }
         do {
             try await app.backend.selectRestaurantCandidate(deviceId: app.deviceId, onboardingId: onboardingId, candidate: candidate)
+            try await app.backend.scrapeRestaurantMenu(deviceId: app.deviceId, onboardingId: onboardingId, menuUrl: candidate.websiteUrl)
         } catch let caught { self.error = TTError.from(caught).userMessage }
     }
 
-    private func resetToSourceEntry() { acquisition = .url; sourceURL = ""; showSourceEntry = true; draft = nil; error = nil }
+    private func manualReview() async { await loadDraftIfNeeded() }
 
     private func loadDraftIfNeeded() async {
         guard let onboardingId else { return }

@@ -3,9 +3,8 @@ import type { Hunger } from "../shared/enums";
 import type { AgentDraft, AgentVote, MenuItemLite, UserLite } from "../shared/types";
 import { safeSet, sharedSafeSet, type SafeItem } from "./safety";
 import { clipBubbleWords, openingBubble, reasonFor, voteBubble } from "./bubbles";
-import { tasteFit } from "./taste";
 
-export type ScoreContext = { medianByRole: Record<"main" | "drink" | "shared", number | null> };
+export type ScoreContext = { medianPriceCents: number };
 
 const NOT_MAIN = /(dessert|side|sauce|extra|add[- ]?on|kids|condiment)/i;
 export const isMainLike = (item: MenuItemLite) => !item.isDrink && !NOT_MAIN.test(item.category);
@@ -20,29 +19,9 @@ export function mainPool<T extends MenuItemLite>(items: T[]): T[] {
 }
 
 export function scoreContext(menu: MenuItemLite[]): ScoreContext {
-  const median = (items: MenuItemLite[]) => {
-    const prices = items.filter((m) => m.priceVerified && m.priceCents !== null).map((m) => m.priceCents!)
-      .sort((a, b) => a - b);
-    return prices.length ? prices[Math.floor(prices.length / 2)] : null;
-  };
-  return { medianByRole: {
-    main: median(menu.filter((m) => isMainLike(m) && !m.shareable)),
-    drink: median(menu.filter((m) => m.isDrink)),
-    shared: median(menu.filter(isSharePlate)),
-  } };
-}
-
-/** Estimate the diner's whole order: one main, optional drink, and half of each shared plate. */
-export function projectedOrderPriceScore(
-  main: MenuItemLite, drink: MenuItemLite | null, shared: MenuItemLite[], user: UserLite, ctx: ScoreContext,
-): number {
-  const sensitivity = user.priceSensitivity === "a_lot" ? 1 : user.priceSensitivity === "somewhat" || (!user.priceSensitivity && user.personality === "budget_minded") ? 0.5 : 0;
-  if (!sensitivity || ![main, ...(drink ? [drink] : []), ...shared].every((i) => i.priceVerified)) return 0;
-  const { main: mainMedian, drink: drinkMedian, shared: sharedMedian } = ctx.medianByRole;
-  if (mainMedian === null || (drink && drinkMedian === null) || (shared.length && sharedMedian === null)) return 0;
-  const actual = main.priceCents + (drink?.priceCents ?? 0) + shared.reduce((n, i) => n + i.priceCents / 2, 0);
-  const expected = mainMedian + (drink ? drinkMedian! : 0) + shared.length * (sharedMedian ?? 0) / 2;
-  return Math.max(-2, Math.min(2, (expected - actual) / 500 * sensitivity));
+  const prices = menu.filter((m) => !m.isDrink).map((m) => m.priceCents).sort((a, b) => a - b);
+  const medianPriceCents = prices.length ? prices[Math.floor(prices.length / 2)] : 0;
+  return { medianPriceCents };
 }
 
 /**
@@ -61,25 +40,17 @@ export function scoreItem(
   const tags = new Set(item.tags.map((t) => t.toLowerCase()));
   for (const like of user.likes) if (tags.has(like.toLowerCase())) s += 3;
   for (const dislike of user.dislikes) if (tags.has(dislike.toLowerCase())) s -= 4;
-  const dishWords = `${item.name} ${item.description} ${item.tags.join(" ")}`.toLowerCase();
-  for (const like of user.ingredientLikes ?? []) if (like.trim() && dishWords.includes(like.toLowerCase())) s += 2;
-  for (const avoid of user.ingredientAvoids ?? []) if (avoid.trim() && dishWords.includes(avoid.toLowerCase())) s -= 4;
   if (item.cuisine) {
     const cuisine = item.cuisine.toLowerCase();
     if (user.cuisines.some((liked) => liked.toLowerCase() === cuisine)) s += 2;
     if (user.dislikedCuisines?.some((disliked) => disliked.toLowerCase() === cuisine)) s -= 4;
   }
   if (item.spice > user.spice) s -= 2 * (item.spice - user.spice);
-  s += tasteFit(user.taste, item.taste);
-  const role = item.isDrink ? "drink" : isSharePlate(item) ? "shared" : "main";
-  const median = ctx.medianByRole[role];
-  if (item.priceVerified && item.priceCents !== null && median !== null) {
-    const sensitivity = user.priceSensitivity === "a_lot" ? 1 : user.priceSensitivity === "somewhat" || (!user.priceSensitivity && user.personality === "budget_minded") ? 0.5 : 0;
-    const participantCost = role === "shared" ? item.priceCents / 2 : item.priceCents;
-    const comparableMedian = role === "shared" ? median / 2 : median;
-    s += Math.max(-2, Math.min(2, (comparableMedian - participantCost) / 500 * sensitivity));
+  if (hunger === "starving" && item.shareable) s += 1;
+  if (user.personality === "budget_minded") {
+    s += Math.round(((ctx.medianPriceCents - item.priceCents) * 2) / 500);
   }
-  if (user.familiarity === "open" && !user.likes.some((l) => tags.has(l.toLowerCase()))) s += 0.5;
+  if (user.personality === "adventurous" && !user.likes.some((l) => tags.has(l.toLowerCase()))) s += 2;
   if (item.askServer) s -= user.personality === "picky" ? 7 : 5;
   return s;
 }
@@ -88,7 +59,7 @@ export function scoreItem(
 export function rankItems<T extends MenuItemLite>(items: T[], score: (i: T) => number): T[] {
   return items
     .map((item) => ({ item, s: score(item) }))
-    .sort((a, b) => b.s - a.s || (a.item.priceVerified && b.item.priceVerified ? a.item.priceCents - b.item.priceCents : 0) || a.item.menuOrder - b.item.menuOrder)
+    .sort((a, b) => b.s - a.s || a.item.priceCents - b.item.priceCents || a.item.menuOrder - b.item.menuOrder)
     .map((x) => x.item);
 }
 
@@ -101,11 +72,11 @@ export function fallbackDraft(
   const ctx = scoreContext(menu);
   const mine = safeSet(menu, user);
   const score = (i: SafeItem) => scoreItem(i, user, hunger, ctx);
+  const mains = rankItems(mainPool(mine), score).slice(0, 3);
   const drink = rankItems(mine.filter((i) => i.isDrink), score)[0];
   // Proposals only need to be clean for *this* diner; pooling then drops any that are unsafe for someone else,
   // which is what produces the "Maya's allergic to shellfish, so no paella" bubble.
   const shared = rankItems(sharedSafeSet(menu, [user]).filter(isSharePlate), score).slice(0, 2);
-  const mains = rankItems(mainPool(mine), (m) => score(m) + projectedOrderPriceScore(m, drink ?? null, shared, user, ctx)).slice(0, 3);
   return {
     userId: user._id,
     mains: mains.map((m) => ({ itemId: m._id, reason: reasonFor(m, user) })),

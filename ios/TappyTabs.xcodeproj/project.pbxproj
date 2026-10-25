@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		AA1122334455667788990022 /* OpenSans-Variable.ttf in Resources */ = {isa = PBXBuildFile; fileRef = AA1122334455667788990021 /* OpenSans-Variable.ttf */; };
+		AA1122334455667788990032 /* OpenSans-OFL.txt in Resources */ = {isa = PBXBuildFile; fileRef = AA1122334455667788990031 /* OpenSans-OFL.txt */; };
+		C280CA1045E74AA2960FA34E /* Raleway-Variable.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 9008DD017F774446A2D27687 /* Raleway-Variable.ttf */; };
 		14901C06AF6445A6C03BDCBE /* messages.json in Resources */ = {isa = PBXBuildFile; fileRef = D3DC698F30EFC43DA0663DDF /* messages.json */; };
 		168764815A98619FD290D2BE /* party_confirm.json in Resources */ = {isa = PBXBuildFile; fileRef = 0743084581CF6E250736C989 /* party_confirm.json */; };
 		189441F51475D159471DF4F6 /* DinerRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AF9C4C3AFDEC2068A83FA59 /* DinerRootView.swift */; };
@@ -28,7 +31,7 @@
 		545D10E3333B6F9C1C99D732 /* ids.json in Resources */ = {isa = PBXBuildFile; fileRef = 8E7D812828B60A585E89AEC4 /* ids.json */; };
 		60F563865BC2255A52D96E67 /* NegotiatingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8AB5E427FC15EF2C1013A04 /* NegotiatingView.swift */; };
 		6EC915153BDB6030AA2FE69D /* PickView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 537CEF4E533A1882FCB1C2C4 /* PickView.swift */; };
-		D49A2CC357FE4D0791D8FE8A /* DishImageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89F2A0E3C54047D48A913B221 /* DishImageView.swift */; };
+		D49A2CC357FE4D0791D8FE8A /* DishCutoutImage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89F2A0E3C54047D48A913B221 /* DishCutoutImage.swift */; };
 		6FB294FAF1914ADC557C68DC /* TableTalkView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58B29E865741B0EDC0BA805E /* TableTalkView.swift */; };
 		7604E5FAD28DA6E9EFD5AA1F /* party_placed.json in Resources */ = {isa = PBXBuildFile; fileRef = DFF3A0CD77F3FB64AD23B9C6 /* party_placed.json */; };
 		7743F5A850FB48A8E20AE911 /* QRCode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 65D96B0366DA4E0C1805AFB4 /* QRCode.swift */; };
@@ -44,13 +47,9 @@
 		9F811EE89CED9A596A3E7845 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 8468ECF797AE164A8D0ADA0A /* Assets.xcassets */; };
 		A27B9592DB110D5DD2BECC1C /* ModeSelectView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01C1F4CF26D4683E1B47FFBF /* ModeSelectView.swift */; };
 		A3CF453886A48CD6E7AE7E50 /* lines_confirm.json in Resources */ = {isa = PBXBuildFile; fileRef = 23AD0E5918800CC9DDFFEDDA /* lines_confirm.json */; };
-		AA1122334455667788990022 /* OpenSans-Variable.ttf in Resources */ = {isa = PBXBuildFile; fileRef = AA1122334455667788990021 /* OpenSans-Variable.ttf */; };
-		AA1122334455667788990032 /* OpenSans-OFL.txt in Resources */ = {isa = PBXBuildFile; fileRef = AA1122334455667788990031 /* OpenSans-OFL.txt */; };
 		BA7BE5629278A39405CE96CF /* party_pick.json in Resources */ = {isa = PBXBuildFile; fileRef = BE3B0A2974E205429510BFB4 /* party_pick.json */; };
 		BC2BC9D71DAF49B595F5C6B0 /* PartyStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34331FD12121DCB867EECBBA /* PartyStore.swift */; };
-		C280CA1045E74AA2960FA34E /* Raleway-Variable.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 9008DD017F774446A2D27687 /* Raleway-Variable.ttf */; };
 		CA83B7AF4B0CA7B949927DC4 /* OrderReceivedView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8FF1F8E7F3E713F3573D4106 /* OrderReceivedView.swift */; };
-		D49A2CC357FE4D0791D8FE8A /* DishCutoutImage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89F2A0E3C54047D48A913B221 /* DishCutoutImage.swift */; };
 		DEF305EF2322D535CDB3DD0A /* OrderPlacedView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63AE4B2FC8EF52651F4435DE /* OrderPlacedView.swift */; };
 		E11E444BE8BEBF2F1FDE0DFF /* AgentAvatarConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09516CED9F36421A8EDC1527 /* AgentAvatarConfig.swift */; };
 		E300BC49B76B34E2C65374FC /* candidates.json in Resources */ = {isa = PBXBuildFile; fileRef = 039EAAF1EDAEC3ACA06C0653 /* candidates.json */; };
@@ -73,6 +72,9 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		AA1122334455667788990021 /* OpenSans-Variable.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "OpenSans-Variable.ttf"; sourceTree = "<group>"; };
+		AA1122334455667788990031 /* OpenSans-OFL.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "OpenSans-OFL.txt"; sourceTree = "<group>"; };
+		9008DD017F774446A2D27687 /* Raleway-Variable.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Raleway-Variable.ttf"; sourceTree = "<group>"; };
 		01C1F4CF26D4683E1B47FFBF /* ModeSelectView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModeSelectView.swift; sourceTree = "<group>"; };
 		039C2B1D20CE333F61A98D39 /* MockBackend.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockBackend.swift; sourceTree = "<group>"; };
 		039EAAF1EDAEC3ACA06C0653 /* candidates.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = candidates.json; sourceTree = "<group>"; };
@@ -96,7 +98,7 @@
 		3D34315A745D984D0513B97B /* Components.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Components.swift; sourceTree = "<group>"; };
 		4368875093D5F18A901C158D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		537CEF4E533A1882FCB1C2C4 /* PickView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PickView.swift; sourceTree = "<group>"; };
-		89F2A0E3C54047D48A913B221 /* DishImageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DishImageView.swift; sourceTree = "<group>"; };
+		89F2A0E3C54047D48A913B221 /* DishCutoutImage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DishCutoutImage.swift; sourceTree = "<group>"; };
 		58B29E865741B0EDC0BA805E /* TableTalkView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TableTalkView.swift; sourceTree = "<group>"; };
 		5D677E3548E8A7EFA74A066E /* Backend.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Backend.swift; sourceTree = "<group>"; };
 		63AE4B2FC8EF52651F4435DE /* OrderPlacedView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrderPlacedView.swift; sourceTree = "<group>"; };
@@ -105,18 +107,14 @@
 		6ACD7894DA5BF4789E4529E0 /* API.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = API.swift; sourceTree = "<group>"; };
 		8468ECF797AE164A8D0ADA0A /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		888D60115954865E6C827B00 /* CheckInView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CheckInView.swift; sourceTree = "<group>"; };
-		89F2A0E3C54047D48A913B221 /* DishCutoutImage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DishCutoutImage.swift; sourceTree = "<group>"; };
 		8B11B31391A866AC99A9FDF6 /* GroupOrderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupOrderView.swift; sourceTree = "<group>"; };
 		8E7D812828B60A585E89AEC4 /* ids.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = ids.json; sourceTree = "<group>"; };
 		8FC70C4ECFF627DB9BFE809C /* TappyTabsTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = TappyTabsTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		8FF1F8E7F3E713F3573D4106 /* OrderReceivedView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrderReceivedView.swift; sourceTree = "<group>"; };
-		9008DD017F774446A2D27687 /* Raleway-Variable.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Raleway-Variable.ttf"; sourceTree = "<group>"; };
 		92E1913001A81FD2709E4953 /* remove_result.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = remove_result.json; sourceTree = "<group>"; };
 		97AC9926C975AEB944A8E216 /* AppModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppModel.swift; sourceTree = "<group>"; };
 		A6E86F4ED0A1B933678772FD /* ProximityDebugOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProximityDebugOverlay.swift; sourceTree = "<group>"; };
-		AA1122334455667788990021 /* OpenSans-Variable.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "OpenSans-Variable.ttf"; sourceTree = "<group>"; };
-		AA1122334455667788990031 /* OpenSans-OFL.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "OpenSans-OFL.txt"; sourceTree = "<group>"; };
-		ACF7EC6D8FE8C5BC12DDA62D /* TappyTabs.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TappyTabs.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		ACF7EC6D8FE8C5BC12DDA62D /* TappyTabs.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = TappyTabs.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		AD44F0FA209F27A88E79C902 /* TapInView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TapInView.swift; sourceTree = "<group>"; };
 		B4B2FF440BE7B2C50E7A7C2E /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
 		BE3B0A2974E205429510BFB4 /* party_pick.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = party_pick.json; sourceTree = "<group>"; };
@@ -259,6 +257,16 @@
 			path = Resources;
 			sourceTree = "<group>";
 		};
+		F4B19BEFC40A4C29B8BDAE5A /* Fonts */ = {
+			isa = PBXGroup;
+			children = (
+				9008DD017F774446A2D27687 /* Raleway-Variable.ttf */,
+				AA1122334455667788990021 /* OpenSans-Variable.ttf */,
+				AA1122334455667788990031 /* OpenSans-OFL.txt */,
+			);
+			path = Fonts;
+			sourceTree = "<group>";
+		};
 		B3767FFC4EC71F561627FD19 /* Restaurant */ = {
 			isa = PBXGroup;
 			children = (
@@ -308,20 +316,10 @@
 				E8AB5E427FC15EF2C1013A04 /* NegotiatingView.swift */,
 				63AE4B2FC8EF52651F4435DE /* OrderPlacedView.swift */,
 				537CEF4E533A1882FCB1C2C4 /* PickView.swift */,
-				89F2A0E3C54047D48A913B221 /* DishImageView.swift */,
+				89F2A0E3C54047D48A913B221 /* DishCutoutImage.swift */,
 				AD44F0FA209F27A88E79C902 /* TapInView.swift */,
 			);
 			path = Diner;
-			sourceTree = "<group>";
-		};
-		F4B19BEFC40A4C29B8BDAE5A /* Fonts */ = {
-			isa = PBXGroup;
-			children = (
-				9008DD017F774446A2D27687 /* Raleway-Variable.ttf */,
-				AA1122334455667788990021 /* OpenSans-Variable.ttf */,
-				AA1122334455667788990031 /* OpenSans-OFL.txt */,
-			);
-			path = Fonts;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -375,6 +373,7 @@
 				LastUpgradeCheck = 1430;
 				TargetAttributes = {
 					17CDC0576A885FC1C3DCA4C9 = {
+						DevelopmentTeam = "";
 						ProvisioningStyle = Automatic;
 					};
 					F65FAB64E6D413A47A826529 = {
@@ -469,7 +468,7 @@
 				4C1578C12E0A56FCBD97637E /* PartySetupView.swift in Sources */,
 				BC2BC9D71DAF49B595F5C6B0 /* PartyStore.swift in Sources */,
 				6EC915153BDB6030AA2FE69D /* PickView.swift in Sources */,
-				D49A2CC357FE4D0791D8FE8A /* DishImageView.swift in Sources */,
+				D49A2CC357FE4D0791D8FE8A /* DishCutoutImage.swift in Sources */,
 				27360CFC65C6D5F6958BB570 /* Proximity.swift in Sources */,
 				1AECEF8A6EB1D1CF22FF5F31 /* ProximityDebugOverlay.swift in Sources */,
 				7743F5A850FB48A8E20AE911 /* QRCode.swift in Sources */,
@@ -598,14 +597,12 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				DEVELOPMENT_TEAM = 4DM4YF6HH6;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = TappyTabs/Resources/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.yip.tappytabs.app;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = 1;
 			};
@@ -617,7 +614,6 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				DEVELOPMENT_TEAM = 4DM4YF6HH6;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = TappyTabs/Resources/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
