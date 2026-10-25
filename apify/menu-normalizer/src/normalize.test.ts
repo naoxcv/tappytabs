@@ -17,6 +17,16 @@ test("prices", () => {
   assert.equal(parsePriceCents("$12 / $16"), null);
 });
 
+test("normalized rows keep unknown prices schema-valid", () => {
+  const unknown = keywordPass({ name: "Market Fish", price: "market price" }, 0);
+  assert.equal(unknown.priceCents, 0);
+  assert.equal(unknown.priceVerified, false);
+
+  const known = keywordPass({ name: "House Tea", price: "$0.00" }, 1);
+  assert.equal(known.priceCents, 0);
+  assert.equal(known.priceVerified, true);
+});
+
 test("keyword pass finds allergens and fails diets closed", () => {
   const paella = keywordPass({ name: "Seafood Paella", description: "prawns, mussels" }, 0);
   assert.equal(level(paella, "shellfish"), "contains");

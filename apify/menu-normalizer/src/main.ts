@@ -1,7 +1,7 @@
 // Owner: Role 4. TappyTabs menu-normalizer Actor (published to the Apify Store).
 // Input:  { items: [{ name, description?, ingredients?, price?, category? }] }
 // Output: one dataset row per item, exactly convex/menu.ts `normalizedItem`.
-// Pipeline: keyword pass (deterministic) → Bitdeer tag pass in batches of 8 by default (add/raise only) → push.
+// Pipeline: keyword pass (deterministic) → bounded Bitdeer tag pass (add/raise only) → push.
 import { Actor, log } from "apify";
 import OpenAI from "openai";
 import { keywordPass, mergeLlm, type LlmTags, type RawItem } from "./normalize.js";
@@ -45,6 +45,7 @@ async function tagBatch(batch: { index: number; item: RawItem }[]): Promise<Map<
     } catch (e) {
       log.warning(`tag batch attempt ${attempt}/2 failed: ${String(e)}`);
       if (attempt === 2) return out;
+      await new Promise((resolve) => setTimeout(resolve, 250 * 2 ** (attempt - 1)));
     }
   }
   return out;
@@ -53,10 +54,26 @@ async function tagBatch(batch: { index: number; item: RawItem }[]): Promise<Map<
 const size = Math.max(1, Math.min(50, Math.floor(input.batchSize ?? 8)));
 const batches: { index: number; item: RawItem }[][] = [];
 for (let i = 0; i < items.length; i += size) batches.push(items.slice(i, i + size).map((item, j) => ({ index: i + j, item })));
-const tagged = await Promise.all(batches.map(tagBatch));
-const tags = new Map<number, LlmTags>(tagged.flatMap((m) => [...m.entries()]));
+// Keep concurrency below the provider rate limit and leave enough time for
+// the synchronous Apify request. Failed batches still produce keyword-only rows.
+const maxConcurrent = 3;
+const tagged = new Array<Map<number, LlmTags>>(batches.length);
+let nextBatch = 0;
+let failedBatches = 0;
+async function worker() {
+  while (true) {
+    const batchIndex = nextBatch++;
+    if (batchIndex >= batches.length) return;
+    const result = await tagBatch(batches[batchIndex]);
+    tagged[batchIndex] = result;
+    if (client && result.size === 0) failedBatches++;
+  }
+}
+await Promise.all(Array.from({ length: Math.min(maxConcurrent, batches.length) }, worker));
+const tags = new Map<number, LlmTags>(tagged.flatMap((m) => m ? [...m.entries()] : []));
 
 const rows = items.map((raw, i) => mergeLlm(keywordPass(raw, i), tags.get(i) ?? null));
 await Actor.pushData(rows);
 log.info(`Done: ${rows.filter((r) => r.tagStatus === "tagged").length}/${rows.length} tagged`);
+if (failedBatches) log.warning(`Completed with ${failedBatches}/${batches.length} failed or empty tagging batch(es); emitted keyword-only rows`);
 await Actor.exit();

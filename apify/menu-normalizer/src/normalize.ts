@@ -12,7 +12,8 @@ export type NormalizedItem = {
   cuisine?: string;
   tags: string[];
   description: string;
-  priceCents: number | null;
+  /** Unknown prices are 0; priceVerified distinguishes them from free items. */
+  priceCents: number;
   allergens: { allergen: Allergen; level: Level }[];
   diet: Diet[];
   spice: number;
@@ -91,14 +92,15 @@ export function keywordPass(raw: RawItem, index: number): NormalizedItem {
   if (!hasMeat && !hits.has("milk") && !hits.has("egg") && !/honey/.test(lower)) diet.push("vegan");
   if (!hasPork) diet.push("no_pork");
   // halal is never inferred from keywords (we can't know how meat was sourced); vegetarian implies it at check time.
+  const parsedPrice = parsePrice(raw.price);
   return {
     name: raw.name.trim(),
     category,
     tags: [],
     description: (raw.description ?? "").trim(),
-    priceCents: parsePriceCents(raw.price),
-    currency: parsePrice(raw.price).currency,
-    priceVerified: false,
+    priceCents: parsedPrice.cents ?? 0,
+    currency: parsedPrice.currency,
+    priceVerified: parsedPrice.cents !== null,
     taste: inferTaste(text),
     allergens: ALLERGENS.map((allergen) => ({ allergen, level: hits.has(allergen) ? "contains" : "not_detected" })),
     diet,

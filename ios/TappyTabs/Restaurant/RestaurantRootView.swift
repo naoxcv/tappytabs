@@ -200,7 +200,7 @@ private struct MenuDraftEditor: View {
                     TextField("Item name", text: $item.name).textFieldStyle(.roundedBorder)
                     TextField("Description", text: $item.description).textFieldStyle(.roundedBorder)
                     HStack {
-                        TextField("Price cents", value: $item.priceCents, format: .number).textFieldStyle(.roundedBorder)
+                        TextField(item.priceVerified == false ? "Price unavailable — enter cents" : "Price cents", value: $item.priceCents, format: .number).textFieldStyle(.roundedBorder)
                         Text(item.category).foregroundStyle(Theme.accent)
                     }
                 }

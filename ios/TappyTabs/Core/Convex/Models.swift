@@ -207,6 +207,7 @@ struct RestaurantMenuItem: Codable, Equatable, Identifiable {
     var tags: [String]
     var description: String
     var priceCents: Double
+    var priceVerified: Bool?
     var allergens: [[String: String]]
     var diet: [String]
     var spice: Double

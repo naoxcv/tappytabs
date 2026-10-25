@@ -23,7 +23,9 @@ This Actor accepts hand-written or scraped menu items and writes one normalized 
 
 ## Output
 
-Each dataset row matches the Convex menu item shape, excluding `restaurantId`: `name`, `category`, optional `cuisine`, `tags`, `description`, `priceCents`, `allergens`, `diet`, `spice`, `isDrink`, `shareable`, `menuOrder`, and `tagStatus`.
+Each dataset row matches the Convex menu item shape, excluding `restaurantId`: `name`, `category`, optional `cuisine`, `tags`, `description`, `priceCents`, `priceVerified`, `allergens`, `diet`, `spice`, `isDrink`, `shareable`, `menuOrder`, and `tagStatus`.
+
+Unknown or ambiguous prices use `priceCents: 0` and `priceVerified: false`. This keeps the MVP's numeric ordering contract while preventing an unknown price from being presented as a verified free item. A failed Bitdeer batch still produces conservative `tagStatus: "untagged"` rows.
 
 The keyword pass runs before model enrichment. Model output may only add or raise allergen warnings, and diet labels are intersected with the deterministic pass. If enrichment fails, unconfirmed allergens become `may_contain` and `tagStatus` is `untagged`; TappyTabs agents do not recommend untagged items.
 
