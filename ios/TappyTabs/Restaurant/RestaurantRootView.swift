@@ -265,8 +265,16 @@ private struct MenuDraftEditor: View {
                     TextField("Item name", text: $item.name).appFieldStyle()
                     TextField("Description", text: $item.description).appFieldStyle()
                     HStack {
-                        TextField(item.priceVerified == false ? "Price unavailable — enter cents" : "Price cents", value: $item.priceCents, format: .number).appFieldStyle()
+                        TextField(item.priceVerified == false ? "Estimated price in cents" : "Price cents", value: $item.priceCents, format: .number)
+                            .appFieldStyle()
+                            .onChange(of: item.priceCents) { _, newPrice in
+                                if newPrice > 0 { item.priceVerified = true }
+                            }
                         Text(item.category).foregroundStyle(Theme.accent)
+                    }
+                    if item.priceVerified == false && item.priceCents > 0 {
+                        Text("Estimated price — edit if needed before publishing.")
+                            .font(AppTypography.footnote).foregroundStyle(Theme.accent)
                     }
                 }
                 .padding(.vertical, 4)

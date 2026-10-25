@@ -112,6 +112,8 @@ The seed writes the checked menu snapshot first, then tries the configured norma
 
 To enable live model and menu processing, set Convex environment variables with `npx convex env set`: `ANTHROPIC_API_KEY`, `CLAUDE_MODEL`, `BITDEER_API_KEY`, `BITDEER_MODEL`, `APIFY_TOKEN`, `APIFY_NORMALIZER_ACTOR` (the demo currently uses `naoxcv/menu-normalizer`), `APIFY_SCRAPER_URL_TASK`, and `APIFY_SCRAPER_SEARCH_TASK`, plus optionally `DEMO_SEED`. Restaurant onboarding uses the URL Task by default, or the Search Task with at most three owner-selectable results. After a successful live ingest, refresh the checked fallback with `CONVEX_URL=<your-deployment-url> npm run menu:snapshot`. This exports the current normalized menu without reseeding.
 
+Restaurant onboarding also calls the published normalizer before showing the review draft, so scraped zero prices can be filled with unverified estimates. Publishing runs normalization again after owner edits. Merging source code does not update the Apify Actor or Convex deployment; publish the Actor and deploy the matching backend and iOS build for this behavior.
+
 To deploy and seed the shared demo deployment, first configure its Convex environment variables, then run:
 
 ```bash

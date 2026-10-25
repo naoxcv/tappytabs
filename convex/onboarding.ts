@@ -5,6 +5,7 @@ import type { Id } from "./_generated/dataModel";
 import { fail } from "./shared/errors";
 import { normalizedItem } from "./menu";
 import { SEED_MENU } from "./seedData";
+import { normalizerPrice, publishedPriceVerified, scrapedPriceCents, withEstimatedPrices } from "./lib/normalizerPrice";
 
 const api: any = (internal as any).onboarding;
 const candidateV = v.object({ name: v.string(), address: v.string(), sourceUrl: v.optional(v.string()), confidence: v.optional(v.string()), extractionConfidence: v.optional(v.string()), categories: v.optional(v.array(v.string())), rawItems: v.optional(v.array(v.any())), rawPayload: v.optional(v.any()), mapsUrl: v.optional(v.string()), googlePlaceId: v.optional(v.string()), websiteUrl: v.optional(v.string()), phone: v.optional(v.string()), hours: v.optional(v.array(v.string())), rating: v.optional(v.number()), distance: v.optional(v.number()), matchScore: v.optional(v.number()) });
@@ -59,31 +60,28 @@ function actorPath(actor: string, suffix: string) { return apifyPath(actor, "act
 function menuItems(payload: any): any[] { const menu = payload?.menu ?? payload?.data?.menu ?? payload; const categories = Array.isArray(menu?.categories) ? menu.categories : []; const direct = Array.isArray(menu?.items) ? menu.items.map((x: any) => ({ ...x, category: x.category ?? x.section })) : []; const nested = categories.flatMap((c: any) => Array.isArray(c.items) ? c.items.map((x: any) => ({ ...x, category: x.category ?? c.name })) : []); return [...direct, ...nested].map((x: any) => ({ name: x.name ?? x.title ?? x.itemName, description: x.description ?? "", price: x.price ?? x.priceText, category: x.category ?? x.section ?? "Other", imageUrl: x.imageUrl ?? x.image ?? x.photoUrl })).filter((x: any) => typeof x.name === "string" && x.name.trim()); }
 function mapResult(payload: any, fallbackUrl?: string) { const items = menuItems(payload); const restaurant = payload?.restaurant ?? payload?.business ?? payload; const extractionConfidence = typeof payload?.extractionConfidence === "string" ? payload.extractionConfidence : payload?.extractionConfidence?.confidence ?? payload?.menu?.extractionConfidence?.confidence; const categories = Array.isArray(payload?.menu?.categories) ? payload.menu.categories.map((x: any) => x.name).filter(Boolean) : []; return { name: restaurant?.name ?? restaurant?.title ?? payload?.restaurantName ?? payload?.name ?? "", address: restaurant?.address ?? payload?.serperAddress ?? payload?.address ?? payload?.requestLocation ?? "", sourceUrl: restaurant?.sourceUrl ?? restaurant?.url ?? restaurant?.website ?? payload?.url ?? payload?.menuUrl ?? fallbackUrl, confidence: payload?.confidence ?? restaurant?.confidence, extractionConfidence, categories, rawItems: items, rawPayload: payload }; }
 function usable(x: any) { return x && x.rawPayload?.success === true && x.name && x.sourceUrl && x.categories.length > 0 && x.rawItems.length >= 5 && x.confidence !== "low" && x.extractionConfidence !== "low"; }
-function priceCents(price: unknown): number {
-  if (typeof price === "number") return Number.isFinite(price) && price >= 0 && price < 1000 ? Math.round(price * 100) : 0;
-  if (typeof price !== "string") return 0;
-  const value = price.replace(/,/g, ".").match(/\d+(?:\.\d{1,2})?/);
-  if (!value) return 0;
-  const parsed = Number(value[0]);
-  return Number.isFinite(parsed) && parsed >= 0 ? Math.round(parsed * 100) : 0;
-}
 function editableItems(rawItems: any[]): any[] {
-  return rawItems.map((item, index) => ({
-    name: String(item.name),
-    category: String(item.category ?? "Other"),
-    tags: [],
-    description: String(item.description ?? ""),
-    priceCents: priceCents(item.price),
-    priceVerified: priceCents(item.price) > 0,
-    allergens: [],
-    diet: [],
-    spice: 0,
-    isDrink: false,
-    shareable: false,
-    menuOrder: index,
-    tagStatus: "untagged",
-    ...(typeof item.imageUrl === "string" && /^https?:\/\//i.test(item.imageUrl) ? { imageUrl: item.imageUrl } : {}),
-  }));
+  return rawItems.map((item, index) => {
+    const scraped = scrapedPriceCents(item.price);
+    const estimated = Number.isInteger(item.estimatedPriceCents) && item.estimatedPriceCents > 0 && item.estimatedPriceCents <= 20_000
+      ? item.estimatedPriceCents : 0;
+    return {
+      name: String(item.name),
+      category: String(item.category ?? "Other"),
+      tags: [],
+      description: String(item.description ?? ""),
+      priceCents: scraped || estimated,
+      priceVerified: scraped > 0,
+      allergens: [],
+      diet: [],
+      spice: 0,
+      isDrink: false,
+      shareable: false,
+      menuOrder: index,
+      tagStatus: "untagged",
+      ...(typeof item.imageUrl === "string" && /^https?:\/\//i.test(item.imageUrl) ? { imageUrl: item.imageUrl } : {}),
+    };
+  });
 }
 function rawItemsForClient(rawItems: any[]): any[] {
   return rawItems.map((item) => ({
@@ -94,18 +92,93 @@ function rawItemsForClient(rawItems: any[]): any[] {
     ...(typeof item.imageUrl === "string" ? { imageUrl: item.imageUrl } : {}),
   }));
 }
+async function estimateRawItems(rawItems: any[], token: string): Promise<any[]> {
+  const actor = process.env.APIFY_NORMALIZER_ACTOR;
+  if (!actor || !rawItems.some((item) => scrapedPriceCents(item.price) === 0)) return rawItems;
+  try {
+    const response = await fetch(`${actorPath(actor, "run-sync-get-dataset-items")}?token=${encodeURIComponent(token)}&timeout=60`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        items: rawItems.map((item) => ({
+          name: item.name, description: item.description, category: item.category,
+          ...(item.price === undefined || item.price === null ? {} : { price: String(item.price) }),
+        })),
+        batchSize: 8,
+      }),
+    });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    return withEstimatedPrices(rawItems, await response.json());
+  } catch (error) {
+    console.warn(`Could not prefill missing menu prices: ${String(error)}`);
+    return rawItems;
+  }
+}
 async function startActor(ctx: any, args: any) { const task = args.mode === "url" ? process.env.APIFY_SCRAPER_URL_TASK : process.env.APIFY_SCRAPER_SEARCH_TASK; const token = process.env.APIFY_TOKEN; if (!task || !token) throw new Error(`${args.mode === "url" ? "APIFY_SCRAPER_URL_TASK" : "APIFY_SCRAPER_SEARCH_TASK"} and APIFY_TOKEN are required`); const input = args.mode === "url" ? { mode: "url", url: args.url, location: args.location, freshness: "med_cache" } : { mode: "search", query: args.query, location: args.location, freshness: "med_cache", maxResults: 3 }; const response = await fetch(`${apifyPath(task, "actor-tasks", "runs")}?token=${encodeURIComponent(token)}`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(input) }); if (!response.ok) throw new Error(`Scraper Task HTTP ${response.status}`); const run: any = (await response.json()).data; if (!run?.id) throw new Error("Scraper Task did not return a run id"); await ctx.runMutation(api.recordActorRun, { deviceId: args.deviceId, onboardingId: args.onboardingId, mode: args.mode, actorRunId: run.id, sourceUrl: args.url, searchQuery: args.query, searchLocation: args.location }); await ctx.scheduler.runAfter(15000, api.pollActorRun, { onboardingId: args.onboardingId, deviceId: args.deviceId, actorRunId: run.id, mode: args.mode, deadline: Date.now() + (args.mode === "url" ? 4 : 8) * 60 * 1000 }); return { status: args.mode === "url" ? "scraping_url" : "scraping_search", actorRunId: run.id }; }
 export const startUrlImport = action({ args: { deviceId: v.string(), onboardingId: v.id("restaurantOnboardings"), url: v.string(), location: v.optional(v.string()) }, handler: async (ctx, args) => { try { return await startActor(ctx, { ...args, mode: "url" }); } catch (e) { await ctx.runMutation(api.failScrape, { onboardingId: args.onboardingId, errorMessage: String(e) }); return { status: "scrape_failed", errorMessage: String(e) }; } } });
 export const startSearch = action({ args: { deviceId: v.string(), onboardingId: v.id("restaurantOnboardings"), query: v.string(), location: v.string() }, handler: async (ctx, args) => { try { return await startActor(ctx, { ...args, mode: "search" }); } catch (e) { await ctx.runMutation(api.failScrape, { onboardingId: args.onboardingId, errorMessage: String(e) }); return { status: "scrape_failed", errorMessage: String(e) }; } } });
 export const recordActorRun = internalMutation({ args: { deviceId: v.string(), onboardingId: v.id("restaurantOnboardings"), mode: modeV, actorRunId: v.string(), sourceUrl: v.optional(v.string()), searchQuery: v.optional(v.string()), searchLocation: v.optional(v.string()) }, handler: async (ctx, args) => { await own(ctx, args.deviceId, args.onboardingId); await ctx.db.patch(args.onboardingId, { acquisitionMode: args.mode, actorRunId: args.actorRunId, sourceUrl: args.sourceUrl, searchQuery: args.searchQuery, searchLocation: args.searchLocation, status: args.mode === "url" ? "scraping_url" : "scraping_search", updatedAt: Date.now(), errorMessage: undefined }); } });
 export const failScrape = internalMutation({ args: { onboardingId: v.id("restaurantOnboardings"), errorMessage: v.string() }, handler: async (ctx, args) => { await ctx.db.patch(args.onboardingId, { status: "scrape_failed", errorMessage: args.errorMessage, updatedAt: Date.now() }); } });
-export const pollActorRun = internalAction({ args: { onboardingId: v.id("restaurantOnboardings"), deviceId: v.string(), actorRunId: v.string(), mode: modeV, deadline: v.number() }, handler: async (ctx, args) => { const token = process.env.APIFY_TOKEN; if (!token) return ctx.runMutation(api.failScrape, { onboardingId: args.onboardingId, errorMessage: "APIFY_TOKEN is not configured" }); try { const response = await fetch(`https://api.apify.com/v2/actor-runs/${encodeURIComponent(args.actorRunId)}?token=${encodeURIComponent(token)}`); if (!response.ok) throw new Error(`Scraper run HTTP ${response.status}`); const run: any = (await response.json()).data; const status = String(run.status ?? ""); if (!["SUCCEEDED", "FAILED", "ABORTED", "TIMED-OUT"].includes(status)) { if (Date.now() >= args.deadline) return ctx.runMutation(api.failScrape, { onboardingId: args.onboardingId, errorMessage: "Scraper Task timed out" }); await ctx.scheduler.runAfter(15000, api.pollActorRun, args); return; } if (status !== "SUCCEEDED" || !run.defaultDatasetId) return ctx.runMutation(api.failScrape, { onboardingId: args.onboardingId, errorMessage: `Scraper Task finished with ${status}` }); const data = await fetch(`https://api.apify.com/v2/datasets/${encodeURIComponent(run.defaultDatasetId)}/items?clean=true&token=${encodeURIComponent(token)}`); if (!data.ok) throw new Error(`Scraper dataset HTTP ${data.status}`); const payload: any = await data.json(); const onboarding: any = await ctx.runQuery(api.getForAction, { onboardingId: args.onboardingId }); const results = (Array.isArray(payload) ? payload : []).map((x: any) => mapResult(x, onboarding?.sourceUrl)).filter(usable); if (args.mode === "search") return ctx.runMutation(api.saveSearchResults, { onboardingId: args.onboardingId, deviceId: args.deviceId, candidates: results.slice(0, 3) }); const result = results[0]; if (!result) return ctx.runMutation(api.failScrape, { onboardingId: args.onboardingId, errorMessage: "No usable menu found. Enter a menu URL or request manual review." }); return ctx.runMutation(api.saveUrlResult, { onboardingId: args.onboardingId, deviceId: args.deviceId, result, actorRunId: args.actorRunId }); } catch (e) { return ctx.runMutation(api.failScrape, { onboardingId: args.onboardingId, errorMessage: String(e) }); } } });
+export const pollActorRun = internalAction({
+  args: { onboardingId: v.id("restaurantOnboardings"), deviceId: v.string(), actorRunId: v.string(), mode: modeV, deadline: v.number() },
+  handler: async (ctx, args) => {
+    const token = process.env.APIFY_TOKEN;
+    if (!token) return ctx.runMutation(api.failScrape, { onboardingId: args.onboardingId, errorMessage: "APIFY_TOKEN is not configured" });
+    try {
+      const response = await fetch(`https://api.apify.com/v2/actor-runs/${encodeURIComponent(args.actorRunId)}?token=${encodeURIComponent(token)}`);
+      if (!response.ok) throw new Error(`Scraper run HTTP ${response.status}`);
+      const run: any = (await response.json()).data;
+      const status = String(run.status ?? "");
+      if (!["SUCCEEDED", "FAILED", "ABORTED", "TIMED-OUT"].includes(status)) {
+        if (Date.now() >= args.deadline) return ctx.runMutation(api.failScrape, { onboardingId: args.onboardingId, errorMessage: "Scraper Task timed out" });
+        await ctx.scheduler.runAfter(15000, api.pollActorRun, args);
+        return;
+      }
+      if (status !== "SUCCEEDED" || !run.defaultDatasetId) return ctx.runMutation(api.failScrape, { onboardingId: args.onboardingId, errorMessage: `Scraper Task finished with ${status}` });
+      const data = await fetch(`https://api.apify.com/v2/datasets/${encodeURIComponent(run.defaultDatasetId)}/items?clean=true&token=${encodeURIComponent(token)}`);
+      if (!data.ok) throw new Error(`Scraper dataset HTTP ${data.status}`);
+      const payload: any = await data.json();
+      const onboarding: any = await ctx.runQuery(api.getForAction, { onboardingId: args.onboardingId });
+      const results = (Array.isArray(payload) ? payload : []).map((x: any) => mapResult(x, onboarding?.sourceUrl)).filter(usable);
+      if (args.mode === "search") {
+        const candidates = [];
+        for (const result of results.slice(0, 3)) {
+          candidates.push({ ...result, rawItems: await estimateRawItems(result.rawItems, token) });
+        }
+        return ctx.runMutation(api.saveSearchResults, { onboardingId: args.onboardingId, deviceId: args.deviceId, candidates });
+      }
+      const result = results[0];
+      if (!result) return ctx.runMutation(api.failScrape, { onboardingId: args.onboardingId, errorMessage: "No usable menu found. Enter a menu URL or request manual review." });
+      result.rawItems = await estimateRawItems(result.rawItems, token);
+      return ctx.runMutation(api.saveUrlResult, { onboardingId: args.onboardingId, deviceId: args.deviceId, result, actorRunId: args.actorRunId });
+    } catch (error) {
+      return ctx.runMutation(api.failScrape, { onboardingId: args.onboardingId, errorMessage: String(error) });
+    }
+  },
+});
 export const saveSearchResults = internalMutation({ args: { deviceId: v.string(), onboardingId: v.id("restaurantOnboardings"), candidates: v.array(candidateV) }, handler: async (ctx, args) => { await own(ctx, args.deviceId, args.onboardingId); await ctx.db.patch(args.onboardingId, { candidates: args.candidates, status: args.candidates.length ? "search_results_ready" : "match_failed", updatedAt: Date.now(), errorMessage: args.candidates.length ? undefined : "No usable menus found" }); return args.candidates; } });
 // Compatibility reader for pre-POC fixtures. New code uses saveSearchResults.
 export const saveCandidates = internalMutation({ args: { deviceId: v.string(), onboardingId: v.id("restaurantOnboardings"), candidates: v.array(candidateV) }, handler: async (ctx, args) => { await own(ctx, args.deviceId, args.onboardingId); await ctx.db.patch(args.onboardingId, { candidates: args.candidates, status: args.candidates.length ? "candidates_ready" : "match_failed", updatedAt: Date.now() }); return args.candidates; } });
 async function createDraftFromResult(ctx: any, onboardingId: Id<"restaurantOnboardings">, restaurantId: Id<"restaurants">, result: any, now: number, actorRunId?: string) { const existing = await ctx.db.query("menuDrafts").withIndex("by_onboarding", (q: any) => q.eq("onboardingId", onboardingId)).unique(); const values = { rawItems: rawItemsForClient(result.rawItems), editedItems: editableItems(result.rawItems), source: "scraped" as const, updatedAt: now, status: "draft" as const }; if (existing) await ctx.db.patch(existing._id, values); else await ctx.db.insert("menuDrafts", { onboardingId, restaurantId, createdAt: now, ...values }); await ctx.db.patch(onboardingId, { status: "review_required", sourceUrl: result.sourceUrl, actorRunId, updatedAt: now }); return { status: "review_required", itemCount: result.rawItems.length }; }
 export const saveUrlResult = internalMutation({ args: { deviceId: v.string(), onboardingId: v.id("restaurantOnboardings"), result: candidateV, actorRunId: v.string() }, handler: async (ctx, args) => { const { row } = await own(ctx, args.deviceId, args.onboardingId); if (!row.restaurantId) throw new Error("Restaurant has not been created"); const now = Date.now(); await ctx.db.patch(row.restaurantId, { name: args.result.name, address: args.result.address, sourceUrl: args.result.sourceUrl, onboardingStatus: "review_required", menuSource: "apify", scraperRunId: args.actorRunId }); return createDraftFromResult(ctx, args.onboardingId, row.restaurantId, args.result, now, args.actorRunId); } });
-export const selectCandidate = mutation({ args: { deviceId: v.string(), onboardingId: v.id("restaurantOnboardings"), candidate: candidateV }, handler: async (ctx, args) => { const { row } = await own(ctx, args.deviceId, args.onboardingId); if (!row.candidates.some((x: any) => x.name === args.candidate.name && (x.sourceUrl ?? x.mapsUrl) === (args.candidate.sourceUrl ?? args.candidate.mapsUrl))) fail("INVALID", "Candidate is not part of this onboarding"); if (!row.restaurantId) fail("INVALID", "Restaurant has not been created"); const now = Date.now(); const legacy = args.candidate.mapsUrl ? { mapsUrl: args.candidate.mapsUrl, googlePlaceId: args.candidate.googlePlaceId, googleMapsName: args.candidate.name } : {}; await ctx.db.patch(row.restaurantId, { name: args.candidate.name, address: args.candidate.address, sourceUrl: args.candidate.sourceUrl, onboardingStatus: args.candidate.rawItems?.length ? "review_required" : "restaurant_confirmed", menuSource: "apify", ...legacy }); await ctx.db.patch(args.onboardingId, { selectedCandidate: args.candidate, status: args.candidate.rawItems?.length ? "review_required" : "restaurant_confirmed", sourceUrl: args.candidate.sourceUrl, updatedAt: now }); if (args.candidate.rawItems?.length) return createDraftFromResult(ctx, args.onboardingId, row.restaurantId, args.candidate, now, row.actorRunId); return args.onboardingId; } });
+export const selectCandidate = mutation({
+  args: { deviceId: v.string(), onboardingId: v.id("restaurantOnboardings"), candidate: candidateV },
+  handler: async (ctx, args) => {
+    const { row } = await own(ctx, args.deviceId, args.onboardingId);
+    const selected = row.candidates.find((candidate: any) =>
+      candidate.name === args.candidate.name &&
+      (candidate.sourceUrl ?? candidate.mapsUrl) === (args.candidate.sourceUrl ?? args.candidate.mapsUrl));
+    if (!selected) fail("INVALID", "Candidate is not part of this onboarding");
+    if (!row.restaurantId) fail("INVALID", "Restaurant has not been created");
+    const now = Date.now();
+    const legacy = selected.mapsUrl ? { mapsUrl: selected.mapsUrl, googlePlaceId: selected.googlePlaceId, googleMapsName: selected.name } : {};
+    const hasMenu = !!selected.rawItems?.length;
+    await ctx.db.patch(row.restaurantId, { name: selected.name, address: selected.address, sourceUrl: selected.sourceUrl, onboardingStatus: hasMenu ? "review_required" : "restaurant_confirmed", menuSource: "apify", ...legacy });
+    await ctx.db.patch(args.onboardingId, { selectedCandidate: args.candidate, status: hasMenu ? "review_required" : "restaurant_confirmed", sourceUrl: selected.sourceUrl, updatedAt: now });
+    if (hasMenu) return createDraftFromResult(ctx, args.onboardingId, row.restaurantId, selected, now, row.actorRunId);
+    return args.onboardingId;
+  },
+});
 export const updateDraft = mutation({ args: { deviceId: v.string(), onboardingId: v.id("restaurantOnboardings"), items: v.array(editedItemV) }, handler: async (ctx, args) => { const { row } = await own(ctx, args.deviceId, args.onboardingId); if (!row.restaurantId) fail("INVALID", "Restaurant has not been created"); const draft = await ctx.db.query("menuDrafts").withIndex("by_onboarding", (q) => q.eq("onboardingId", args.onboardingId)).unique(); const now = Date.now(); if (draft) await ctx.db.patch(draft._id, { editedItems: args.items, updatedAt: now, status: "draft" }); else await ctx.db.insert("menuDrafts", { onboardingId: args.onboardingId, restaurantId: row.restaurantId, source: "manual", rawItems: args.items, editedItems: args.items, status: "draft", createdAt: now, updatedAt: now }); await ctx.db.patch(args.onboardingId, { status: "review_required", updatedAt: now }); return args.onboardingId; } });
 export const getDraft = query({ args: { deviceId: v.string(), onboardingId: v.id("restaurantOnboardings") }, handler: async (ctx, args) => { await own(ctx, args.deviceId, args.onboardingId); return ctx.db.query("menuDrafts").withIndex("by_onboarding", (q) => q.eq("onboardingId", args.onboardingId)).unique(); } });
 export const publish = action({
@@ -128,9 +201,7 @@ export const publish = action({
             category: item.category,
             // Match the published Actor input schema: prices are documented
             // as strings, and image URLs are restored from the draft locally.
-            ...(item.priceVerified === false && item.priceCents === 0
-              ? {}
-              : { price: `$${(item.priceCents / 100).toFixed(2)}` }),
+            ...normalizerPrice(item),
           })),
           batchSize: 8,
         }),
@@ -156,7 +227,10 @@ export const publish = action({
         const candidate = {
           ...item,
           priceCents,
-          priceVerified: item?.priceVerified ?? priceCents > 0,
+          priceVerified: publishedPriceVerified(
+            args.items[index]?.name.trim() === item?.name ? args.items[index] : undefined,
+            { priceCents, priceVerified: item?.priceVerified },
+          ),
           ...(typeof item?.name === "string" && imageByName.has(item.name.trim().toLowerCase())
             ? { imageUrl: imageByName.get(item.name.trim().toLowerCase()) }
             : {}),

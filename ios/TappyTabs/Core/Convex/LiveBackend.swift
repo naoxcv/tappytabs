@@ -169,6 +169,7 @@ final class LiveBackend: Backend {
             "isDrink": item.isDrink, "shareable": item.shareable, "menuOrder": item.menuOrder, "tagStatus": item.tagStatus,
         ]
         if let cuisine = item.cuisine { args["cuisine"] = cuisine }
+        if let priceVerified = item.priceVerified { args["priceVerified"] = priceVerified }
         if let imageUrl = item.imageUrl { args["imageUrl"] = imageUrl }
         return args
     }
