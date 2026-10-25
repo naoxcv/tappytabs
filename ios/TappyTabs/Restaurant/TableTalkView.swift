@@ -1,5 +1,6 @@
 // Owner: Role 2. Live restaurant conversation: animated agents and an updating chat log.
 import SwiftUI
+import UIKit
 
 struct TableTalkView: View {
     let store: PartyStore
@@ -205,17 +206,7 @@ private struct LiveChatRow: View {
                 Text(speakerName)
                     .font(AppTypography.style(.caption2, weight: .semibold))
                     .foregroundStyle(Theme.accent.opacity(0.72))
-                Text(message.text)
-                    .font(AppTypography.style(.caption))
-                    .foregroundStyle(Theme.background)
-                    .multilineTextAlignment(isRestaurant ? .trailing : .leading)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .frame(maxWidth: max(72, maxBubbleWidth - bubbleStyle.horizontalPadding * 2), alignment: isRestaurant ? .trailing : .leading)
-                    .padding(.horizontal, bubbleStyle.horizontalPadding)
-                    .padding(.top, bubbleStyle.verticalPadding)
-                    .padding(.bottom, bubbleStyle.verticalPadding + bubbleStyle.tailClearance)
-                    .background(ChatBubbleBackground(tailOnRight: isRestaurant, style: bubbleStyle))
-                    .frame(maxWidth: maxBubbleWidth, alignment: isRestaurant ? .trailing : .leading)
+                messageBubble
                 Text(timestamp)
                     .font(AppTypography.style(.caption2))
                     .foregroundStyle(Theme.accent.opacity(0.48))
@@ -225,33 +216,109 @@ private struct LiveChatRow: View {
         .frame(maxWidth: .infinity, alignment: isRestaurant ? .trailing : .leading)
         .accessibilityElement(children: .combine)
     }
-}
 
-/// Uses the SVG bubble asset directly. Cap insets protect the original corners and tail as the center stretches.
-private struct ChatBubbleBackground: View {
-    var tailOnRight: Bool
-    var style: ChatBubbleStyle = .standard
+    private var messageBubble: some View {
+        Text(message.text)
+            .font(AppTypography.style(.caption))
+            .foregroundStyle(Theme.background)
+            .multilineTextAlignment(isRestaurant ? .trailing : .leading)
+            .fixedSize(horizontal: false, vertical: true)
+            .frame(width: bubbleWidth - horizontalPadding * 2,
+                   alignment: isRestaurant ? .trailing : .leading)
+            .padding(.horizontal, horizontalPadding)
+            .padding(.top, verticalPadding)
+            .padding(.bottom, verticalPadding + tailClearance)
+            .frame(width: bubbleWidth, alignment: isRestaurant ? .trailing : .leading)
+            .background(ChatBubbleBackground(tailOnRight: isRestaurant))
+    }
 
-    var body: some View {
-        GeometryReader { geometry in
-            Image("MessageBubble")
-                .resizable(capInsets: style.capInsets, resizingMode: .stretch)
-                .frame(width: geometry.size.width, height: geometry.size.height)
-                .scaleEffect(x: tailOnRight ? -1 : 1, y: 1)
-        }
-        .accessibilityHidden(true)
+    private var fontForMeasurement: UIFont {
+        let name = AppTypography.postScriptName(for: .regular, style: .caption)
+        return UIFont(name: name, size: 12) ?? .systemFont(ofSize: 12)
+    }
+
+    private var naturalTextWidth: CGFloat {
+        ceil((message.text as NSString).size(withAttributes: [.font: fontForMeasurement]).width) + 4
+    }
+
+    private var compactBubble: Bool {
+        naturalTextWidth + 24 <= maxBubbleWidth
+    }
+
+    private var horizontalPadding: CGFloat { compactBubble ? 12 : bubbleStyle.horizontalPadding }
+    private var verticalPadding: CGFloat { compactBubble ? 9 : bubbleStyle.verticalPadding }
+    private var tailClearance: CGFloat { compactBubble ? 8 : bubbleStyle.tailClearance }
+
+    private var bubbleWidth: CGFloat {
+        let naturalBubbleWidth = naturalTextWidth + horizontalPadding * 2
+        return min(maxBubbleWidth, max(bubbleStyle.minimumWidth, naturalBubbleWidth))
     }
 }
 
-/// Text insets and the SVG's stretch regions can be tuned here. Edit the SVG to change the tail silhouette.
+/// Smooth capsule and round tail matched to the speaking indicator.
+private struct ChatBubbleBackground: View {
+    var tailOnRight: Bool
+
+    var body: some View {
+        SoftChatBubbleShape(tailOnRight: tailOnRight)
+            .fill(Theme.accent)
+            .accessibilityHidden(true)
+    }
+}
+
+private struct SoftChatBubbleShape: Shape {
+    var tailOnRight: Bool
+
+    func path(in rect: CGRect) -> Path {
+        let tailSize = min(16, max(10, rect.height * 0.32))
+        let bodyHeight = max(1, rect.height - tailSize * 0.4)
+        let radius = bodyHeight / 2
+        let bottom = rect.minY + bodyHeight
+        let left = rect.minX
+        let right = rect.maxX
+        let top = rect.minY
+        var path = Path()
+        path.move(to: CGPoint(x: left + radius, y: top))
+        path.addLine(to: CGPoint(x: right - radius, y: top))
+        path.addQuadCurve(to: CGPoint(x: right, y: top + radius), control: CGPoint(x: right, y: top))
+        path.addLine(to: CGPoint(x: right, y: bottom - radius))
+        path.addQuadCurve(to: CGPoint(x: right - radius, y: bottom), control: CGPoint(x: right, y: bottom))
+
+        if tailOnRight {
+            path.addLine(to: CGPoint(x: right - radius - tailSize * 0.15, y: bottom))
+            path.addCurve(to: CGPoint(x: right - radius + tailSize * 0.25, y: rect.maxY),
+                          control1: CGPoint(x: right - radius + tailSize * 0.2, y: bottom + tailSize * 0.4),
+                          control2: CGPoint(x: right - radius + tailSize * 0.42, y: rect.maxY))
+            path.addCurve(to: CGPoint(x: right - radius - tailSize * 1.15, y: bottom),
+                          control1: CGPoint(x: right - radius + tailSize * 0.04, y: rect.maxY),
+                          control2: CGPoint(x: right - radius - tailSize * 0.68, y: bottom + tailSize * 0.18))
+        } else {
+            path.addLine(to: CGPoint(x: left + radius + tailSize * 1.15, y: bottom))
+            path.addCurve(to: CGPoint(x: left + radius - tailSize * 0.2, y: rect.maxY),
+                          control1: CGPoint(x: left + radius + tailSize * 0.68, y: bottom + tailSize * 0.18),
+                          control2: CGPoint(x: left + radius - tailSize * 0.04, y: rect.maxY))
+            path.addCurve(to: CGPoint(x: left + radius, y: bottom),
+                          control1: CGPoint(x: left + radius - tailSize * 0.42, y: rect.maxY),
+                          control2: CGPoint(x: left + radius - tailSize * 0.2, y: bottom + tailSize * 0.4))
+        }
+
+        path.addLine(to: CGPoint(x: left + radius, y: bottom))
+        path.addQuadCurve(to: CGPoint(x: left, y: bottom - radius), control: CGPoint(x: left, y: bottom))
+        path.addLine(to: CGPoint(x: left, y: top + radius))
+        path.addQuadCurve(to: CGPoint(x: left + radius, y: top), control: CGPoint(x: left, y: top))
+        path.closeSubpath()
+        return path
+    }
+}
+
+/// Text insets and minimum width for restaurant chat bubbles.
 private struct ChatBubbleStyle {
     static let standard = ChatBubbleStyle(
-        capInsets: EdgeInsets(top: 28, leading: 34, bottom: 28, trailing: 29),
         horizontalPadding: 18,
         verticalPadding: 14,
         tailClearance: 14
     )
-    var capInsets: EdgeInsets
+    var minimumWidth: CGFloat = 64
     var horizontalPadding: CGFloat = 18
     var verticalPadding: CGFloat = 14
     var tailClearance: CGFloat
