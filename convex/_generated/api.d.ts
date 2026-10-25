@@ -28,6 +28,7 @@ import type * as agents_substitute from "../agents/substitute.js";
 import type * as e2e from "../e2e.js";
 import type * as lib_guards from "../lib/guards.js";
 import type * as menu from "../menu.js";
+import type * as onboarding from "../onboarding.js";
 import type * as messages from "../messages.js";
 import type * as negotiation from "../negotiation.js";
 import type * as orders from "../orders.js";
@@ -69,6 +70,7 @@ declare const fullApi: ApiFromModules<{
   e2e: typeof e2e;
   "lib/guards": typeof lib_guards;
   menu: typeof menu;
+  onboarding: typeof onboarding;
   messages: typeof messages;
   negotiation: typeof negotiation;
   orders: typeof orders;
