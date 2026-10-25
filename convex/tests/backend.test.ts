@@ -96,6 +96,26 @@ describe("parties:join", () => {
     expect((await t.query(api.parties.current, { partyId }))!.status).toBe("checkin");
     expect((await t.query(api.orders.lines, { partyId })).lines).toHaveLength(0);
   });
+
+  test("leaving during negotiation restarts the workflow without the departed diner", async () => {
+    const { t, partyId, userIds, hostDeviceId } = await setup();
+    for (const userId of userIds.slice(0, 2)) {
+      await t.mutation(api.parties.join, { partyId, userId, via: "uwb", hostDeviceId });
+    }
+    await t.mutation(api.parties.startWithFewer, { partyId, hostDeviceId });
+    for (const [index, userId] of userIds.slice(0, 2).entries()) {
+      await t.mutation(api.parties.setHunger, { partyId, userId, deviceId: `demo-diner-${index + 1}`, hunger: "normal" });
+    }
+    const before = await t.run(ctx => ctx.db.get(partyId));
+    expect(before?.status).toBe("negotiating");
+    await t.mutation(api.parties.leave, { partyId, userId: userIds[0], deviceId: "demo-diner-1" });
+    const after = await t.run(ctx => ctx.db.get(partyId));
+    expect(after?.status).toBe("negotiating");
+    expect(after?.epoch).toBe((before?.epoch ?? 0) + 1);
+    expect((await t.query(api.parties.current, { partyId }))?.members.map(m => m.userId)).toEqual([userIds[1]]);
+    await t.mutation(internal.parties.advance, { partyId, epoch: before!.epoch });
+    expect((await t.query(api.parties.current, { partyId }))?.status).toBe("negotiating");
+  });
 });
 
 describe("users", () => {

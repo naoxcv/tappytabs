@@ -60,7 +60,7 @@ async function learnFromPick(ctx: MutationCtx, user: Doc<"users">, item: Doc<"me
   await ctx.db.patch(user._id, { likes, cuisines, dislikedCuisines });
 }
 
-async function toConfirm(ctx: MutationCtx, party: Doc<"parties">) {
+export async function toConfirm(ctx: MutationCtx, party: Doc<"parties">) {
   const confirmDeadline = Date.now() + TIMING.confirmWindowMs;
   await ctx.db.patch(party._id, { status: "confirm", confirmDeadline });
   await ctx.scheduler.runAt(confirmDeadline, internal.orders.autoConfirm, { partyId: party._id, epoch: party.epoch });
@@ -192,7 +192,7 @@ export const remove = mutation({
   },
 });
 
-async function place(ctx: MutationCtx, party: Doc<"parties">) {
+export async function place(ctx: MutationCtx, party: Doc<"parties">) {
   // Final gate: drop any line that no longer passes (e.g. menu re-tagged mid-party). Logged for the README.
   for (const l of await linesOf(ctx, party._id)) {
     const item = await ctx.db.get(l.itemId);

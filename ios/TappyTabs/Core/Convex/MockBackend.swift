@@ -161,7 +161,7 @@ final class MockBackend: Backend {
 
     func leave(partyId: String, userId: String, deviceId: String) async throws {
         guard let party = partySubject.value, party.id == partyId else { throw TTError(code: .NOT_FOUND, message: "Table not found") }
-        guard party.status == .checkin else { throw TTError(code: .BAD_STATUS, message: "Table is no longer checking in") }
+        if party.status == .placed { return }
         setParty(party.with(members: party.members.filter { $0.userId != userId }))
     }
 

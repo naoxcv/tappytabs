@@ -87,13 +87,53 @@ describe("tap token exchange", () => {
     await t.mutation(api.tap.announce, { partyId, userId, deviceId, attemptId: "fresh", dinerToken: "token" });
     expect((await t.mutation(api.parties.join, { partyId, userId, via: "uwb", hostDeviceId })).result).toBe("joined");
   });
-  test("leaving after check-in has advanced does not silently remove a diner", async () => {
-    const { t, partyId, userId, deviceId, hostDeviceId, userIds } = await setup();
+  test("leaving during hunger removes membership and allows a different table", async () => {
+    const { t, partyId, userId, deviceId, hostDeviceId, userIds, restaurantId } = await setup();
     await t.mutation(api.parties.join, { partyId, userId, via: "uwb", hostDeviceId });
     await t.mutation(api.parties.join, { partyId, userId: userIds[1], via: "uwb", hostDeviceId });
     await t.mutation(api.parties.startWithFewer, { partyId, hostDeviceId });
-    expect(await errorCode(t.mutation(api.parties.leave, { partyId, userId, deviceId }))).toBe("BAD_STATUS");
-    expect((await t.query(api.parties.current, { partyId }))?.members.some(m => m.userId === userId)).toBe(true);
+    await t.mutation(api.parties.leave, { partyId, userId, deviceId });
+    expect((await t.query(api.parties.current, { partyId }))?.members.map(m => m.userId)).toEqual([userIds[1]]);
+    expect(await t.query(api.parties.forUser, { userId })).toBeNull();
+    const other = await t.mutation(api.parties.create, { restaurantId, size: 2, hostDeviceId: "other-host" });
+    expect((await t.mutation(api.parties.join, { partyId: other.partyId, userId, via: "uwb", hostDeviceId: "other-host" })).result).toBe("joined");
+  });
+
+  test("leaving during pick removes personal lines and the diner's share of shared lines", async () => {
+    const { t, partyId, userId, deviceId, hostDeviceId, userIds } = await setup();
+    for (const id of userIds.slice(0, 3)) await t.mutation(api.parties.join, { partyId, userId: id, via: "uwb", hostDeviceId });
+    await t.run(async ctx => {
+      await ctx.db.patch(partyId, { status: "pick" });
+      const itemId = (await ctx.db.query("menuItems").first())!._id;
+      await ctx.db.insert("orderLines", { partyId, itemId, qty: 1, kind: "main", sharedBy: [userId], addedBy: "agent" });
+      await ctx.db.insert("orderLines", { partyId, itemId, qty: 1, kind: "shared", sharedBy: [userId, userIds[1]], addedBy: "agent" });
+    });
+    await t.mutation(api.parties.leave, { partyId, userId, deviceId });
+    expect((await t.query(api.parties.current, { partyId }))?.status).toBe("pick");
+    expect((await t.query(api.orders.lines, { partyId })).lines.map(l => l.sharedBy)).toEqual([[userIds[1]]]);
+    expect(await t.query(api.parties.forUser, { userId })).toBeNull();
+  });
+
+  test("leaving during confirm lets the remaining confirmed diner place the order", async () => {
+    const { t, partyId, userId, deviceId, hostDeviceId, userIds } = await setup();
+    for (const id of userIds.slice(0, 2)) await t.mutation(api.parties.join, { partyId, userId: id, via: "uwb", hostDeviceId });
+    await t.run(async ctx => {
+      await ctx.db.patch(partyId, { status: "confirm" });
+      const member = (await ctx.db.query("members").withIndex("by_party_user", q => q.eq("partyId", partyId).eq("userId", userIds[1])).unique())!;
+      await ctx.db.patch(member._id, { confirmedAt: Date.now() });
+    });
+    await t.mutation(api.parties.leave, { partyId, userId, deviceId });
+    expect((await t.query(api.parties.current, { partyId }))?.status).toBe("placed");
+    expect(await t.query(api.parties.forUser, { userId })).toBeNull();
+  });
+
+  test("leaving after placement keeps the submitted ticket unchanged", async () => {
+    const { t, partyId, userId, deviceId, hostDeviceId } = await setup();
+    await t.mutation(api.parties.join, { partyId, userId, via: "uwb", hostDeviceId });
+    await t.run(async ctx => { await ctx.db.patch(partyId, { status: "placed", placedAt: Date.now() }); });
+    const before = await t.query(api.parties.current, { partyId });
+    await t.mutation(api.parties.leave, { partyId, userId, deviceId });
+    expect(await t.query(api.parties.current, { partyId })).toEqual(before);
   });
   test("only the diner's device can announce; only the host can read and respond", async () => {
     const { t, partyId, userId, deviceId, hostDeviceId } = await setup();
