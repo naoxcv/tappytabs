@@ -92,7 +92,9 @@ struct PartySetupView: View {
         error = nil
         do {
             let backend = app.backend
-            let nextRestaurant = try await backend.restaurants().first
+            let nextRestaurant = app.backendKind == .live
+                ? try await backend.ownedRestaurant(deviceId: app.deviceId)
+                : try await backend.restaurants().first
             try Task.checkCancellation()
             restaurant = nextRestaurant
             if let restaurant {

@@ -243,6 +243,12 @@ struct RestaurantRef: Decodable, Equatable, Identifiable {
     let name: String
 }
 
+/// onboarding:getOwned returns the stored restaurant document, whose Convex id is `_id`.
+struct OwnedRestaurantRecord: Decodable {
+    let _id: String
+    let name: String
+}
+
 struct IngestResult: Decodable, Equatable {
     let count: Double
     let source: String

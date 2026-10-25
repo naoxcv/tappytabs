@@ -50,6 +50,10 @@ final class LiveBackend: Backend {
 
     func me(deviceId: String) async throws -> UserProfile? { try await once(API.usersMe, ["deviceId": deviceId]) }
     func restaurants() async throws -> [RestaurantRef] { try await once(API.menuRestaurants, [:]) }
+    func ownedRestaurant(deviceId: String) async throws -> RestaurantRef? {
+        let owned: OwnedRestaurantRecord? = try await once(API.restaurantGetOwned, ["deviceId": deviceId])
+        return owned.map { RestaurantRef(id: $0._id, name: $0.name) }
+    }
     func hosted(hostDeviceId: String) async throws -> HostedParty? { try await once(API.partiesHosted, ["hostDeviceId": hostDeviceId]) }
     func forUser(userId: String) async throws -> HostedParty? { try await once(API.partiesForUser, ["userId": userId]) }
 

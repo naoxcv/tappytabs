@@ -18,6 +18,7 @@ protocol Backend: AnyObject {
     // One-shot reads
     func me(deviceId: String) async throws -> UserProfile?
     func restaurants() async throws -> [RestaurantRef]
+    func ownedRestaurant(deviceId: String) async throws -> RestaurantRef?
     func hosted(hostDeviceId: String) async throws -> HostedParty?
     func forUser(userId: String) async throws -> HostedParty?
 
