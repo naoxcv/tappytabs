@@ -86,7 +86,8 @@ struct Candidate: Decodable, Equatable, Identifiable {
     let isDrink: Bool
     let askServer: Bool
     let imageUrl: String?
-    let imageIsCutout: Bool?
+    let sourceImageUrl: String?
+    let imageIsProcessed: Bool?
     var id: String { itemId }
 }
 

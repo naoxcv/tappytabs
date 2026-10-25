@@ -200,7 +200,7 @@ export const upsertItems = internalMutation({
         await ctx.db.patch(existing._id, {
           ...item,
           ...(!item.imageUrl && existing.imageUrl ? { imageUrl: existing.imageUrl } : {}),
-          ...(changedPhoto ? { imageStorageId: undefined } : existing.imageStorageId ? { imageStorageId: existing.imageStorageId } : {}),
+          ...(changedPhoto ? { imageStorageId: undefined, imageProcessingVersion: undefined } : existing.imageStorageId ? { imageStorageId: existing.imageStorageId } : {}),
         });
       }
       else await ctx.db.insert("menuItems", { restaurantId, ...item });

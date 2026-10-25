@@ -43,7 +43,7 @@ protocol Backend: AnyObject {
     // Diner actions (bound to this device)
     func setHunger(partyId: String, userId: String, deviceId: String, hunger: Hunger) async throws
     func pick(partyId: String, userId: String, deviceId: String, itemId: String) async throws
-    func cacheDishCutout(partyId: String, userId: String, deviceId: String, itemId: String, sourceImageUrl: String, pngData: Data) async throws
+    func cacheDishImage(partyId: String, userId: String, deviceId: String, itemId: String, sourceImageUrl: String, pngData: Data) async throws
     func add(partyId: String, userId: String, deviceId: String, itemId: String, shared: Bool) async throws
     func remove(partyId: String, userId: String, deviceId: String, lineId: String) async throws -> RemoveResult
     func confirm(partyId: String, userId: String, deviceId: String) async throws

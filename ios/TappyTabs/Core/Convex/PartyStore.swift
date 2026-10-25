@@ -74,10 +74,10 @@ final class PartyStore {
 
     func setHunger(_ hunger: Hunger) async { await run { [self] in try await backend.setHunger(partyId: partyId, userId: userId!, deviceId: deviceId, hunger: hunger) } }
     func pick(_ itemId: String) async { await run { [self] in try await backend.pick(partyId: partyId, userId: userId!, deviceId: deviceId, itemId: itemId) } }
-    func cacheDishCutout(_ candidate: Candidate, pngData: Data) async {
-        guard let userId, let imageUrl = candidate.imageUrl else { return }
-        try? await backend.cacheDishCutout(partyId: partyId, userId: userId, deviceId: deviceId,
-                                           itemId: candidate.itemId, sourceImageUrl: imageUrl, pngData: pngData)
+    func cacheDishImage(_ candidate: Candidate, pngData: Data) async {
+        guard let userId, let imageUrl = candidate.sourceImageUrl ?? candidate.imageUrl else { return }
+        try? await backend.cacheDishImage(partyId: partyId, userId: userId, deviceId: deviceId,
+                                          itemId: candidate.itemId, sourceImageUrl: imageUrl, pngData: pngData)
     }
     func add(_ itemId: String, shared: Bool) async { await run { [self] in try await backend.add(partyId: partyId, userId: userId!, deviceId: deviceId, itemId: itemId, shared: shared) } }
     func confirm() async { await run { [self] in try await backend.confirm(partyId: partyId, userId: userId!, deviceId: deviceId) } }

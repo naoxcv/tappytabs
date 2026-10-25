@@ -147,7 +147,7 @@ final class LiveBackend: Backend {
         try await mutate(API.ordersPick, ["partyId": partyId, "userId": userId, "deviceId": deviceId, "itemId": itemId])
     }
 
-    func cacheDishCutout(partyId: String, userId: String, deviceId: String, itemId: String, sourceImageUrl: String, pngData: Data) async throws {
+    func cacheDishImage(partyId: String, userId: String, deviceId: String, itemId: String, sourceImageUrl: String, pngData: Data) async throws {
         let uploadUrl: String? = try await mutate(API.ordersPrepareDishImageUpload, [
             "partyId": partyId, "userId": userId, "deviceId": deviceId, "itemId": itemId, "imageUrl": sourceImageUrl,
         ])
