@@ -52,7 +52,8 @@ export const me = query({ args: { deviceId: v.string() }, handler: async (ctx, {
   const a = await ctx.db.query("restaurantAccounts").withIndex("by_device", (q) => q.eq("deviceId", deviceId)).unique();
   if (!a) return null;
   const restaurant = await ctx.db.query("restaurants").filter((q) => q.eq(q.field("ownerAccountId"), a._id)).first();
-  return { ...a, restaurantId: restaurant?._id ?? null };
+  const onboarding = await ctx.db.query("restaurantOnboardings").withIndex("by_owner", (q) => q.eq("ownerAccountId", a._id)).order("desc").first();
+  return { ...a, restaurantId: restaurant?._id ?? null, onboardingId: onboarding?._id ?? null };
 } });
 
 export const createDraft = mutation({
