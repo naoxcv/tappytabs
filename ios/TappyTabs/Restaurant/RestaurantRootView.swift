@@ -292,6 +292,7 @@ struct RestaurantRootView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     let store: PartyStore
     @State private var displayedStatus: PartyStatus?
+    @State private var pendingStatus: PartyStatus?
     @State private var statusTransition: Task<Void, Never>?
 
     var body: some View {
@@ -308,20 +309,35 @@ struct RestaurantRootView: View {
         .id(displayedStatus?.rawValue ?? "loading")
         .transition(AppPageTransition.transition(reduceMotion: reduceMotion))
         .animation(AppPageTransition.animation(reduceMotion: reduceMotion), value: displayedStatus)
-        .onChange(of: store.party?.status, initial: true) { _, newStatus in
-            guard let newStatus else { displayedStatus = nil; return }
-            if displayedStatus == .checkin && newStatus != .checkin {
-                statusTransition?.cancel()
-                statusTransition = Task {
-                    try? await Task.sleep(for: .seconds(AvatarFlight.duration))
-                    guard !Task.isCancelled else { return }
-                    displayedStatus = store.party?.status
-                }
+        .onChange(of: store.party, initial: true) { _, party in
+            guard let party else { displayedStatus = nil; pendingStatus = nil; return }
+            if displayedStatus == .checkin && party.status != .checkin {
+                pendingStatus = party.status
+                scheduleStatusTransitionWhenTapFlightsFinish()
+            } else if pendingStatus != nil && party.status != .checkin {
+                pendingStatus = party.status
+                scheduleStatusTransitionWhenTapFlightsFinish()
             } else {
                 statusTransition?.cancel()
-                displayedStatus = newStatus
+                statusTransition = nil
+                pendingStatus = nil
+                displayedStatus = party.status
             }
         }
         .onDisappear { statusTransition?.cancel() }
+    }
+
+    private func scheduleStatusTransitionWhenTapFlightsFinish() {
+        guard pendingStatus != nil,
+              let party = store.party,
+              party.members.allSatisfy(\.hasCompletedTapAnimation) else { return }
+        statusTransition?.cancel()
+        statusTransition = Task {
+            try? await Task.sleep(for: .seconds(AvatarFlight.duration))
+            guard !Task.isCancelled else { return }
+            displayedStatus = store.party?.status
+            pendingStatus = nil
+            statusTransition = nil
+        }
     }
 }

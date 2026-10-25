@@ -51,14 +51,15 @@ struct CheckInView: View {
             .padding()
         }
         .onChange(of: members.count) { old, new in if new > old { UINotificationFeedbackGenerator().notificationOccurred(.success) } }
-        .onChange(of: members.map(\.userId)) { old, new in
-            for userId in Set(old).subtracting(new) { proximity.forgetDiner(userId) }
+        .onChange(of: members) { old, new in
+            let oldMembers = Dictionary(uniqueKeysWithValues: old.map { ($0.userId, $0) })
+            let newIds = Set(new.map(\.userId))
+            for userId in Set(old.map(\.userId)).subtracting(newIds) { proximity.forgetDiner(userId) }
             guard hasMemberBaseline else {
                 hasMemberBaseline = true
                 return
             }
-            let added = Set(new).subtracting(old)
-            for member in members where added.contains(member.userId) {
+            for member in new where member.hasCompletedTapAnimation && oldMembers[member.userId]?.hasCompletedTapAnimation != true {
                 arrivals.append(IncomingAvatarFlight(userId: member.userId, avatarId: member.avatarId))
             }
         }

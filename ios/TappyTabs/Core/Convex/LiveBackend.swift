@@ -228,6 +228,10 @@ final class LiveBackend: Backend {
         try await mutate(API.partiesLeave, ["partyId": partyId, "userId": userId, "deviceId": deviceId])
     }
 
+    func completeTapAnimation(partyId: String, userId: String, deviceId: String) async throws {
+        try await mutate(API.partiesCompleteTapAnimation, ["partyId": partyId, "userId": userId, "deviceId": deviceId])
+    }
+
     func setHunger(partyId: String, userId: String, deviceId: String, hunger: Hunger) async throws {
         try await mutate(API.partiesSetHunger, ["partyId": partyId, "userId": userId, "deviceId": deviceId, "hunger": hunger.rawValue])
     }

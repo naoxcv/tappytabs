@@ -51,6 +51,7 @@ protocol Backend: AnyObject {
     // Join: restaurant phone after a tap (hostDeviceId), or diner after a QR scan (deviceId)
     func join(partyId: String?, joinCode: String?, userId: String, via: JoinVia,
               hostDeviceId: String?, deviceId: String?) async throws -> JoinResult
+    func completeTapAnimation(partyId: String, userId: String, deviceId: String) async throws
     func leave(partyId: String, userId: String, deviceId: String) async throws
 
     // Diner actions (bound to this device)

@@ -60,7 +60,35 @@ struct Member: Decodable, Equatable, Identifiable {
     let hunger: Hunger?
     let picked: Bool
     let confirmed: Bool
+    var tapAnimationComplete: Bool?
+    var hasCompletedTapAnimation: Bool { tapAnimationComplete ?? true }
     var id: String { userId }
+
+    init(userId: String, name: String, avatarId: String, hunger: Hunger?, picked: Bool, confirmed: Bool,
+         tapAnimationComplete: Bool? = nil) {
+        self.userId = userId
+        self.name = name
+        self.avatarId = avatarId
+        self.hunger = hunger
+        self.picked = picked
+        self.confirmed = confirmed
+        self.tapAnimationComplete = tapAnimationComplete
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case userId, name, avatarId, hunger, picked, confirmed, tapAnimationComplete
+    }
+
+    init(from decoder: Decoder) throws {
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        userId = try values.decode(String.self, forKey: .userId)
+        name = try values.decode(String.self, forKey: .name)
+        avatarId = try values.decode(String.self, forKey: .avatarId)
+        hunger = try values.decodeIfPresent(Hunger.self, forKey: .hunger)
+        picked = try values.decode(Bool.self, forKey: .picked)
+        confirmed = try values.decode(Bool.self, forKey: .confirmed)
+        tapAnimationComplete = try values.decodeIfPresent(Bool.self, forKey: .tapAnimationComplete)
+    }
 }
 
 /// messages:list

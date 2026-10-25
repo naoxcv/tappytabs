@@ -25,6 +25,7 @@ final class AppModel {
     var partyId: String? { didSet { defaults.set(partyId, forKey: Keys.partyId) } }
     /// Changes when the debug menu restarts an in-progress diner tap-in.
     var tapAttemptID = UUID()
+    var tapAnimationInProgress = false
     var tapSearchPaused = false
     var backendKind: BackendKind { didSet { defaults.set(backendKind.rawValue, forKey: Keys.backend); rebuild() } }
     var convexURL: String { didSet { defaults.set(convexURL, forKey: Keys.convexURL); rebuild() } }
@@ -61,6 +62,7 @@ final class AppModel {
     var mock: MockBackend? { backend as? MockBackend }
 
     func leaveTable() {
+        tapAnimationInProgress = false
         tapSearchPaused = false
         partyId = nil
         tapAttemptID = UUID()
@@ -85,7 +87,7 @@ final class AppModel {
     }
 
     /// Long-press the logo: back to mode select, keeping the profile.
-    func switchMode() { mode = nil; partyId = nil }
+    func switchMode() { tapAnimationInProgress = false; mode = nil; partyId = nil }
 
     func signOut() { userId = nil; partyId = nil }
 }
