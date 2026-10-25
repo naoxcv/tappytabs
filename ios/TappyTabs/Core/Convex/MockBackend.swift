@@ -258,7 +258,7 @@ final class MockBackend: Backend {
     }
 
     private static func bubbleDisplayDurationMs(_ text: String) -> Double {
-        max(2500, 1200 + Double(text.trimmingCharacters(in: .whitespacesAndNewlines).count) * 15)
+        max(1800, 1200 + Double(text.trimmingCharacters(in: .whitespacesAndNewlines).count) * 15)
     }
 
     private func playMessages(thenAdvance: Bool) {

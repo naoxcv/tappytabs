@@ -10,7 +10,8 @@ import { DEMO_HOST_DEVICE, DEMO_RESTAURANT, SEED_MENU, SEED_USERS } from "./seed
 import { postBubble } from "./messages";
 import { fallbackDraft, fallbackVote } from "./agents/ranking";
 import { buildPlan, poolForParty, sharedTarget, tally } from "./agents/rules";
-import { dropBubbleText, summaryTemplate, topUpBubble } from "./agents/bubbles";
+import { summaryTemplate } from "./agents/bubbles";
+import { fallbackConversation } from "./agents/prompts/summaryBubble";
 import { menuOf, usersOf, membersOf } from "./lib/guards";
 
 const TABLES = ["agentLogs", "messages", "candidates", "orderLines", "tapSessions", "tapHosts", "tapClaims", "tapExits", "members", "parties", "menuItems", "restaurants", "users"] as const;
@@ -46,15 +47,28 @@ async function negotiateInline(ctx: MutationCtx, partyId: Id<"parties">, restaur
   const users = await usersOf(ctx, await membersOf(ctx, partyId));
   const menu = await menuOf(ctx, restaurantId);
   const drafts = users.map((u) => fallbackDraft(menu, u, "normal"));
-  for (const d of drafts) await postBubble(ctx, partyId, d.userId as Id<"users">, d.bubble);
   const { pooled, drops, topUps } = poolForParty(drafts, menu, users);
-  for (const d of drops) await postBubble(ctx, partyId, undefined, dropBubbleText(d.item, d.failed));
-  for (const item of topUps) await postBubble(ctx, partyId, undefined, topUpBubble(item));
   const pooledItems = menu.filter((m) => pooled.includes(m._id));
   const votes = users.map((u) => fallbackVote(pooledItems, u, "normal", menu));
-  for (const vote of votes) await postBubble(ctx, partyId, vote.userId as Id<"users">, vote.bubble);
   const chosen = tally(pooled, votes, menu, sharedTarget(users.map(() => "normal" as const)));
   const plan = buildPlan(drafts, chosen, menu, users);
+  const names = plan.shared.map((s) => menu.find((m) => m._id === s.itemId)?.name ?? "a dish");
+  const transcriptContext = {
+    styleSeed: partyId,
+    restaurant: DEMO_RESTAURANT.name,
+    users,
+    menu,
+    drafts: drafts.map(({ userId, sharedProposals }) => ({ userId, sharedProposals })),
+    votes,
+    pooled,
+    plan,
+    drops,
+    topUps,
+  };
+  const conversation = fallbackConversation(
+    transcriptContext,
+    summaryTemplate(names, plan.mains.length),
+  );
   for (const d of drafts) {
     let rank = 1;
     for (const m of d.mains) {
@@ -67,8 +81,10 @@ async function negotiateInline(ctx: MutationCtx, partyId: Id<"parties">, restaur
   for (const s of plan.shared) {
     await ctx.db.insert("orderLines", { partyId, itemId: s.itemId as Id<"menuItems">, qty: 1, kind: "shared", sharedBy: s.sharedBy as Id<"users">[], addedBy: "agent" });
   }
-  const names = plan.shared.map((s) => menu.find((m) => m._id === s.itemId)!.name);
-  await postBubble(ctx, partyId, undefined, summaryTemplate(names, plan.mains.length));
+  for (const message of conversation.conversation) {
+    await postBubble(ctx, partyId, message.speakerId as Id<"users"> | undefined, message.text);
+  }
+  await postBubble(ctx, partyId, undefined, conversation.summaryBubble);
   return drafts;
 }
 

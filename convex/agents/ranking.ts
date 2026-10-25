@@ -2,7 +2,7 @@
 import type { Hunger } from "../shared/enums";
 import type { AgentDraft, AgentVote, MenuItemLite, UserLite } from "../shared/types";
 import { safeSet, sharedSafeSet, type SafeItem } from "./safety";
-import { clip, openingBubble, reasonFor, voteBubble } from "./bubbles";
+import { clipBubbleWords, openingBubble, reasonFor, voteBubble } from "./bubbles";
 
 export type ScoreContext = { medianPriceCents: number };
 
@@ -82,7 +82,7 @@ export function fallbackDraft(
     mains: mains.map((m) => ({ itemId: m._id, reason: reasonFor(m, user) })),
     drink: drink ? { itemId: drink._id, reason: reasonFor(drink, user) } : null,
     sharedProposals: shared.map((s) => s._id),
-    bubble: clip(openingBubble(user, mains[0]?.name, shared[0]?.name)),
+    bubble: clipBubbleWords(openingBubble(user, mains[0]?.name, shared[0]?.name), 6, 55),
     fallback: true,
   };
 }
@@ -94,5 +94,5 @@ export function fallbackVote(pooled: MenuItemLite[], user: UserLite, hunger: Hun
   const yes = ranked.filter((i) => scoreItem(i, user, hunger, ctx) >= 0).map((i) => i._id);
   if (yes.length === 0 && ranked[0]) yes.push(ranked[0]._id);
   const names = yes.map((id) => pooled.find((p) => p._id === id)!.name);
-  return { userId: user._id, yes, bubble: clip(voteBubble(user, names)), fallback: true };
+  return { userId: user._id, yes, bubble: clipBubbleWords(voteBubble(user, names), 6, 55), fallback: true };
 }

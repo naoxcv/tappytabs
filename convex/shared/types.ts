@@ -51,9 +51,17 @@ export type AgentVote = {
   fallback: boolean;
 };
 
+export type ConversationMessage = {
+  speakerId: string | null; // null = restaurant host
+  kind: "proposal" | "reaction" | "safety";
+  itemIds: string[];
+  text: string;
+};
+
 export type Plan = {
   mains: { userId: string; itemId: string }[]; // each agent's rank-1, for the summary card
   shared: { itemId: string; qty: number; sharedBy: string[] }[];
+  conversation: ConversationMessage[];
   summaryBubble: string;
   fallback: boolean;
 };
@@ -97,6 +105,12 @@ export const agentVoteV = v.object({
 export const planV = v.object({
   mains: v.array(v.object({ userId: v.string(), itemId: v.string() })),
   shared: v.array(v.object({ itemId: v.string(), qty: v.number(), sharedBy: v.array(v.string()) })),
+  conversation: v.array(v.object({
+    speakerId: v.union(v.string(), v.null()),
+    kind: v.union(v.literal("proposal"), v.literal("reaction"), v.literal("safety")),
+    itemIds: v.array(v.string()),
+    text: v.string(),
+  })),
   summaryBubble: v.string(),
   fallback: v.boolean(),
 });

@@ -26,11 +26,10 @@ export function draftPrompt(args: {
   const system = [
     `You are ${user.name}'s personal dining agent at a group dinner.`,
     PERSONALITY_TONE[user.personality ?? "adventurous"],
-    "Pick up to 3 ranked mains and 1 drink for your diner, and propose 0–2 dishes for the whole table to share.",
+    "Pick up to 3 ranked mains and 1 drink for your diner, and propose 0–1 dish for the whole table to share.",
     "Prefer items without askServer. Give a one-line reason per pick (max 60 chars).",
     "The candidate list is pre-sorted by a rough code score; treat its order as a weak tie-breaker, not a recommendation.",
     "Use the diner's liked and disliked cuisines plus the actual candidate descriptions and tags to infer taste fit, including reasonable similarities across cuisines. Do not assume an entire cuisine is identical to another; ground each pick in the listed dish details.",
-    "The server writes the opening bubble from your selected dishes, so focus on ranking candidates and concise reasons.",
     COMMON_RULES,
   ].join("\n");
   const user_ = [
@@ -65,13 +64,14 @@ export function repairDraft(
   const drink = raw.drink && allowed.drinks.has(raw.drink.itemId)
     ? { itemId: raw.drink.itemId, reason: clip(raw.drink.reason, 80) }
     : fallback.drink;
-  const shared = [...new Set(raw.sharedProposals.slice(0, 2).filter((id) => allowed.shared.has(id)))];
+  const modelShared = [...new Set(raw.sharedProposals.slice(0, 1).filter((id) => allowed.shared.has(id)))];
+  const shared = modelShared.length ? modelShared : fallback.sharedProposals.slice(0, 1);
   const usedModel = mains.some((m) => allowed.mains.has(m.itemId) && raw.mains.some((r) => r.itemId === m.itemId));
   return {
     userId: fallback.userId,
     mains: mains.slice(0, 3),
     drink,
-    sharedProposals: shared.length ? shared : fallback.sharedProposals,
+    sharedProposals: shared,
     bubble: fallback.bubble,
     fallback: !usedModel,
   };

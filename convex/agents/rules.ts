@@ -34,7 +34,7 @@ export function buildPlan(
   chosenShared: string[],
   menu: MenuItemLite[],
   users: UserLite[],
-): Omit<Plan, "summaryBubble" | "fallback"> {
+): Omit<Plan, "conversation" | "summaryBubble" | "fallback"> {
   const byId = new Map(menu.map((m) => [m._id, m]));
   const shared = chosenShared
     .map((itemId) => {

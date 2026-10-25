@@ -47,7 +47,6 @@ describe("randomized safety (500 runs)", () => {
           mains: menu.map((m) => ({ itemId: m._id, reason: "trust me" })).slice(0, 3),
           drink: { itemId: menu[0]._id, reason: "" },
           sharedProposals: menu.map((m) => m._id),
-          bubble: "x".repeat(300),
         };
         return repairDraft(hostile, {
           mains: new Set(mainPool(mine).map((m) => m._id)),
