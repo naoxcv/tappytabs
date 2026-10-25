@@ -147,6 +147,86 @@ struct MenuStatus: Decodable, Equatable {
     let itemCount: Double
 }
 
+struct RestaurantAccount: Decodable, Equatable {
+    let _id: String
+    let deviceId: String
+    let displayName: String
+    let restaurantId: String?
+    let onboardingId: String?
+}
+
+struct RestaurantOnboarding: Decodable, Equatable, Identifiable {
+    let _id: String
+    let restaurantId: String?
+    let submittedName: String
+    let submittedAddress: String
+    let status: String
+    let candidates: [RestaurantCandidate]
+    let selectedCandidate: RestaurantCandidate?
+    let errorMessage: String?
+    var id: String { _id }
+}
+
+struct RestaurantCandidate: Codable, Equatable, Identifiable {
+    let name: String
+    let address: String
+    let mapsUrl: String?
+    let googlePlaceId: String?
+    let websiteUrl: String?
+    let phone: String?
+    let hours: [String]?
+    let rating: Double?
+    let distance: Double?
+    let matchScore: Double?
+    var id: String { googlePlaceId ?? mapsUrl ?? "\(name)-\(address)" }
+}
+
+struct RestaurantRawMenuItem: Codable, Equatable, Identifiable {
+    let name: String
+    let description: String?
+    let price: String?
+    let category: String?
+    let imageUrl: String?
+    var id: String { name }
+}
+
+struct RestaurantMenuItem: Codable, Equatable, Identifiable {
+    var name: String
+    var category: String
+    var cuisine: String?
+    var tags: [String]
+    var description: String
+    var priceCents: Double
+    var allergens: [[String: String]]
+    var diet: [String]
+    var spice: Double
+    var isDrink: Bool
+    var shareable: Bool
+    var menuOrder: Double
+    var tagStatus: String
+    var imageUrl: String?
+    var id: String { "\(menuOrder)-\(name)" }
+}
+
+struct RestaurantMenuDraft: Decodable, Equatable {
+    let _id: String
+    let source: String
+    let rawItems: [RestaurantRawMenuItem]
+    let editedItems: [RestaurantMenuItem]
+    let status: String
+}
+
+struct RestaurantScrapeResult: Decodable {
+    let status: String
+    let itemCount: Double?
+    let errorMessage: String?
+}
+
+struct RestaurantPublishResult: Decodable {
+    let versionId: String
+    let previousVersionId: String?
+}
+
 struct RestaurantRef: Decodable, Equatable, Identifiable {
     let id: String
     let name: String

@@ -1,4 +1,5 @@
 // Owner: Role 2. Restaurant phone: setup → check-in (hosting UWB) → hunger wait → table talk → progress → ticket.
+import Combine
 import SwiftUI
 
 struct RestaurantFlow: View {
@@ -12,6 +13,8 @@ struct RestaurantFlow: View {
             Group {
                 if let partyId = app.partyId {
                     PartyScope(partyId: partyId, userId: nil) { store in RestaurantRootView(store: store) }
+                } else if app.backendKind == .live {
+                    RestaurantOnboardingView()
                 } else {
                     PartySetupView()
                 }
@@ -33,6 +36,168 @@ struct RestaurantFlow: View {
             }
         }
     }
+}
+
+/// First-run live restaurant setup. The persisted Convex onboarding record is the source of truth,
+/// so killing the app resumes at the last completed stage.
+struct RestaurantOnboardingView: View {
+    @Environment(AppModel.self) private var app
+    @State private var name = ""
+    @State private var address = ""
+    @State private var onboardingId: String?
+    @State private var onboarding: RestaurantOnboarding?
+    @State private var draft: RestaurantMenuDraft?
+    @State private var loading = true
+    @State private var saving = false
+    @State private var error: String?
+    @State private var statusSub: AnyCancellable?
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 18) {
+                Text("Set up your restaurant").font(AppTypography.style(.largeTitle, weight: .bold))
+                Text("This device owns one restaurant account. You can edit every detail before publishing.")
+                    .foregroundStyle(Theme.accent)
+                content
+                if let error { Text(error).foregroundStyle(Theme.accent) }
+                if loading { ProgressView() }
+            }
+            .padding()
+        }
+        .task { await loadAccount() }
+        .onDisappear { statusSub?.cancel() }
+    }
+
+    @ViewBuilder private var content: some View {
+        if onboardingId == nil {
+            TextField("Restaurant name", text: $name).textFieldStyle(.roundedBorder)
+            TextField("Street address", text: $address).textFieldStyle(.roundedBorder)
+            Button("Find my restaurant") { Task { await submitDetails() } }
+                .buttonStyle(.borderedProminent).disabled(name.trimmed.isEmpty || address.trimmed.isEmpty || saving)
+        } else if let onboarding, ["created", "details_submitted", "finding_restaurant"].contains(onboarding.status) {
+            ProgressView("Finding restaurants…")
+        } else if let onboarding, onboarding.status == "candidates_ready" {
+            Text("Choose the matching restaurant").font(AppTypography.headline)
+            ForEach(onboarding.candidates) { candidate in
+                Button { Task { await select(candidate) } } label: {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(candidate.name).font(AppTypography.headline)
+                        Text(candidate.address).font(AppTypography.footnote)
+                        if let rating = candidate.rating { Text("★ \(rating, specifier: "%.1f")").font(AppTypography.caption) }
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding()
+                    .background(Theme.accent.opacity(0.12), in: RoundedRectangle(cornerRadius: 12))
+                }
+                .buttonStyle(.plain)
+            }
+            Button("I’ll enter it manually") { Task { await manualReview() } }
+        } else if let draft {
+            MenuDraftEditor(draft: draft, saving: saving) { items in Task { await update(items) } } publish: { items in Task { await publish(items) } }
+        } else {
+            ProgressView(onboarding?.status == "normalizing" ? "Normalizing menu…" : "Preparing review…")
+                .task { await loadDraftIfNeeded() }
+        }
+    }
+
+    private func loadAccount() async {
+        loading = true; defer { loading = false }
+        do {
+            let account = try await app.backend.restaurantAccount(deviceId: app.deviceId, displayName: "Restaurant")
+            if let id = account.onboardingId {
+                onboardingId = id
+                subscribe(id)
+                name = onboarding?.submittedName ?? ""
+                address = onboarding?.submittedAddress ?? ""
+            }
+        } catch let caught { self.error = TTError.from(caught).userMessage }
+    }
+
+    private func submitDetails() async {
+        saving = true; defer { saving = false }
+        do {
+            let id = try await app.backend.createRestaurantDraft(deviceId: app.deviceId, name: name.trimmed, address: address.trimmed)
+            onboardingId = id
+            subscribe(id)
+            try await app.backend.resolveRestaurant(deviceId: app.deviceId, onboardingId: id)
+        } catch let caught { self.error = TTError.from(caught).userMessage }
+    }
+
+    private func subscribe(_ id: String) {
+        statusSub?.cancel()
+        statusSub = app.backend.restaurantOnboardingStatus(deviceId: app.deviceId, onboardingId: id)
+            .sink(receiveCompletion: { completion in if case .failure(let e) = completion { self.error = e.userMessage } }, receiveValue: { value in
+                onboarding = value
+                if let value, ["review_required", "manual_review", "normalization_failed"].contains(value.status) { Task { await loadDraftIfNeeded() } }
+            })
+    }
+
+    private func select(_ candidate: RestaurantCandidate) async {
+        guard let onboardingId else { return }; saving = true; defer { saving = false }
+        do {
+            try await app.backend.selectRestaurantCandidate(deviceId: app.deviceId, onboardingId: onboardingId, candidate: candidate)
+            try await app.backend.scrapeRestaurantMenu(deviceId: app.deviceId, onboardingId: onboardingId, menuUrl: candidate.websiteUrl)
+        } catch let caught { self.error = TTError.from(caught).userMessage }
+    }
+
+    private func manualReview() async { await loadDraftIfNeeded() }
+
+    private func loadDraftIfNeeded() async {
+        guard let onboardingId else { return }
+        do { draft = try await app.backend.restaurantDraft(deviceId: app.deviceId, onboardingId: onboardingId) }
+        catch let caught { self.error = TTError.from(caught).userMessage }
+    }
+
+    private func update(_ items: [RestaurantMenuItem]) async {
+        guard let onboardingId else { return }; saving = true; defer { saving = false }
+        do { try await app.backend.updateRestaurantDraft(deviceId: app.deviceId, onboardingId: onboardingId, items: items); await loadDraftIfNeeded() }
+        catch let caught { self.error = TTError.from(caught).userMessage }
+    }
+
+    private func publish(_ items: [RestaurantMenuItem]) async {
+        guard let onboardingId else { return }; saving = true; defer { saving = false }
+        do { try await app.backend.publishRestaurant(deviceId: app.deviceId, onboardingId: onboardingId, items: items) }
+        catch let caught { self.error = TTError.from(caught).userMessage }
+    }
+}
+
+private struct MenuDraftEditor: View {
+    let draft: RestaurantMenuDraft
+    let saving: Bool
+    let onSave: ([RestaurantMenuItem]) -> Void
+    let publish: ([RestaurantMenuItem]) -> Void
+    @State private var items: [RestaurantMenuItem]
+
+    init(draft: RestaurantMenuDraft, saving: Bool, onSave: @escaping ([RestaurantMenuItem]) -> Void, publish: @escaping ([RestaurantMenuItem]) -> Void) {
+        self.draft = draft; self.saving = saving; self.onSave = onSave; self.publish = publish
+        _items = State(initialValue: draft.editedItems)
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Review menu").font(AppTypography.style(.title, weight: .bold))
+            Text("Scraped details require your review.").font(AppTypography.footnote).foregroundStyle(Theme.accent)
+            ForEach($items) { $item in
+                VStack(alignment: .leading, spacing: 8) {
+                    TextField("Item name", text: $item.name).textFieldStyle(.roundedBorder)
+                    TextField("Description", text: $item.description).textFieldStyle(.roundedBorder)
+                    HStack {
+                        TextField("Price cents", value: $item.priceCents, format: .number).textFieldStyle(.roundedBorder)
+                        Text(item.category).foregroundStyle(Theme.accent)
+                    }
+                }
+                .padding(.vertical, 4)
+            }
+            HStack {
+                Button("Save edits") { onSave(items) }.buttonStyle(.bordered)
+                Button("Publish menu") { publish(items) }.buttonStyle(.borderedProminent).disabled(items.isEmpty || saving)
+            }
+        }
+    }
+}
+
+private extension String {
+    var trimmed: String { trimmingCharacters(in: .whitespacesAndNewlines) }
 }
 
 struct RestaurantRootView: View {

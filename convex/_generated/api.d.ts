@@ -30,6 +30,7 @@ import type * as lib_guards from "../lib/guards.js";
 import type * as menu from "../menu.js";
 import type * as messages from "../messages.js";
 import type * as negotiation from "../negotiation.js";
+import type * as onboarding from "../onboarding.js";
 import type * as orders from "../orders.js";
 import type * as parties from "../parties.js";
 import type * as seed from "../seed.js";
@@ -71,6 +72,7 @@ declare const fullApi: ApiFromModules<{
   menu: typeof menu;
   messages: typeof messages;
   negotiation: typeof negotiation;
+  onboarding: typeof onboarding;
   orders: typeof orders;
   parties: typeof parties;
   seed: typeof seed;

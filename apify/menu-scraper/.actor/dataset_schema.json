@@ -2,12 +2,12 @@
     "$schema": "https://apify.com/schemas/v1/dataset.ide.json",
     "actorSpecification": 1,
     "fields": {
-        "sourceUrl": { "type": "string", "description": "Source menu page" },
-        "name": { "type": "string", "description": "Menu item name" },
-        "description": { "type": "string", "description": "Menu item description" },
-        "price": { "type": "string", "description": "Menu item price" },
-        "category": { "type": "string", "description": "Menu section" },
-        "imageUrl": { "type": "string", "description": "HTTPS URL for the menu item's photo, when available" }
+        "sourceUrl": "Source menu page",
+        "name": "Menu item name",
+        "description": "Menu item description",
+        "price": "Menu item price",
+        "category": "Menu section",
+        "imageUrl": "HTTPS URL for the menu item's photo, when available"
     },
     "views": {
         "overview": {

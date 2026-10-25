@@ -97,6 +97,76 @@ final class LiveBackend: Backend {
         return try await act(API.usersSummarize, ["userId": userId, "answers": a])
     }
 
+    // MARK: Restaurant onboarding
+
+    func restaurantAccount(deviceId: String, displayName: String) async throws -> RestaurantAccount {
+        let _: String = try await mutate(API.restaurantAccountsCreateOrGet, ["deviceId": deviceId, "displayName": displayName])
+        return try await once(API.restaurantOnboardingMe, ["deviceId": deviceId])
+    }
+
+    func createRestaurantDraft(deviceId: String, name: String, address: String) async throws -> String {
+        try await mutate(API.restaurantCreateDraft, ["deviceId": deviceId, "name": name, "address": address])
+    }
+
+    func restaurantOnboardingStatus(deviceId: String, onboardingId: String) -> AnyPublisher<RestaurantOnboarding?, TTError> {
+        sub(API.restaurantGetStatus, ["deviceId": deviceId, "onboardingId": onboardingId])
+    }
+
+    func resolveRestaurant(deviceId: String, onboardingId: String) async throws {
+        let _: String = try await act(API.restaurantResolveGoogleMaps, ["deviceId": deviceId, "onboardingId": onboardingId])
+    }
+
+    private static func candidateArgs(_ c: RestaurantCandidate) -> [String: ConvexEncodable?] {
+        var args: [String: ConvexEncodable?] = ["name": c.name, "address": c.address]
+        if let value = c.mapsUrl { args["mapsUrl"] = value }
+        if let value = c.googlePlaceId { args["googlePlaceId"] = value }
+        if let value = c.websiteUrl { args["websiteUrl"] = value }
+        if let value = c.phone { args["phone"] = value }
+        if let value = c.hours { args["hours"] = strings(value) }
+        if let value = c.rating { args["rating"] = value }
+        if let value = c.distance { args["distance"] = value }
+        if let value = c.matchScore { args["matchScore"] = value }
+        return args
+    }
+
+    func selectRestaurantCandidate(deviceId: String, onboardingId: String, candidate: RestaurantCandidate) async throws {
+        try await mutate(API.restaurantSelectCandidate, ["deviceId": deviceId, "onboardingId": onboardingId, "candidate": Self.candidateArgs(candidate)])
+    }
+
+    func scrapeRestaurantMenu(deviceId: String, onboardingId: String, menuUrl: String?) async throws {
+        var args: [String: ConvexEncodable?] = ["deviceId": deviceId, "onboardingId": onboardingId]
+        if let menuUrl { args["menuUrl"] = menuUrl }
+        let _: RestaurantScrapeResult = try await act(API.restaurantScrapeMenu, args)
+    }
+
+    func restaurantDraft(deviceId: String, onboardingId: String) async throws -> RestaurantMenuDraft? {
+        try await once(API.restaurantGetDraft, ["deviceId": deviceId, "onboardingId": onboardingId])
+    }
+
+    private static func menuItemArgs(_ item: RestaurantMenuItem) -> [String: ConvexEncodable?] {
+        let allergens: [ConvexEncodable?] = item.allergens.map { values in
+            values.reduce(into: [String: ConvexEncodable?]()) { result, pair in result[pair.key] = pair.value }
+        }
+        var args: [String: ConvexEncodable?] = [
+            "name": item.name, "category": item.category, "tags": strings(item.tags), "description": item.description,
+            "priceCents": item.priceCents, "allergens": allergens, "diet": strings(item.diet), "spice": item.spice,
+            "isDrink": item.isDrink, "shareable": item.shareable, "menuOrder": item.menuOrder, "tagStatus": item.tagStatus,
+        ]
+        if let cuisine = item.cuisine { args["cuisine"] = cuisine }
+        if let imageUrl = item.imageUrl { args["imageUrl"] = imageUrl }
+        return args
+    }
+
+    private static func menuItemsArgs(_ items: [RestaurantMenuItem]) -> [ConvexEncodable?] { items.map { menuItemArgs($0) } }
+
+    func updateRestaurantDraft(deviceId: String, onboardingId: String, items: [RestaurantMenuItem]) async throws {
+        try await mutate(API.restaurantUpdateDraft, ["deviceId": deviceId, "onboardingId": onboardingId, "items": Self.menuItemsArgs(items)])
+    }
+
+    func publishRestaurant(deviceId: String, onboardingId: String, items: [RestaurantMenuItem]) async throws {
+        let _: RestaurantPublishResult = try await act(API.restaurantPublish, ["deviceId": deviceId, "onboardingId": onboardingId, "items": Self.menuItemsArgs(items)])
+    }
+
     func ingestMenu(restaurantId: String) async throws -> IngestResult {
         try await act(API.menuIngest, ["restaurantId": restaurantId])
     }

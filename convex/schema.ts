@@ -25,7 +25,25 @@ export default defineSchema({
 
   restaurants: defineTable({
     name: v.string(),
+    ownerAccountId: v.optional(v.id("restaurantAccounts")),
+    address: v.optional(v.string()),
     mapsUrl: v.optional(v.string()),
+    googlePlaceId: v.optional(v.string()),
+    googleMapsName: v.optional(v.string()),
+    phone: v.optional(v.string()),
+    websiteUrl: v.optional(v.string()),
+    latitude: v.optional(v.number()),
+    longitude: v.optional(v.number()),
+    rating: v.optional(v.number()),
+    priceLevel: v.optional(v.number()),
+    hours: v.optional(v.array(v.string())),
+    serviceOptions: v.optional(v.array(v.string())),
+    onboardingStatus: v.optional(v.string()),
+    lastScrapedAt: v.optional(v.number()),
+    lastNormalizedAt: v.optional(v.number()),
+    scraperRunId: v.optional(v.string()),
+    normalizerRunId: v.optional(v.string()),
+    activeMenuVersionId: v.optional(v.id("restaurantMenuVersions")),
     menuSource: v.union(v.literal("seed"), v.literal("apify")),
     apifyRunId: v.optional(v.string()),
     fetchedAt: v.optional(v.number()),
@@ -33,6 +51,7 @@ export default defineSchema({
 
   menuItems: defineTable({
     restaurantId: v.id("restaurants"),
+    menuVersionId: v.optional(v.id("restaurantMenuVersions")),
     imageUrl: v.optional(v.string()), // source photo URL exposed by the menu page
     imageStorageId: v.optional(v.id("_storage")), // cached transparent PNG cutout
     name: v.string(),
@@ -153,4 +172,54 @@ export default defineSchema({
     fallback: v.boolean(),
     error: v.optional(v.string()),
   }),
+
+  restaurantAccounts: defineTable({
+    deviceId: v.string(),
+    displayName: v.string(),
+    createdAt: v.number(),
+    lastSeenAt: v.number(),
+    status: v.union(v.literal("active"), v.literal("disabled")),
+  }).index("by_device", ["deviceId"]),
+
+  restaurantOnboardings: defineTable({
+    ownerAccountId: v.id("restaurantAccounts"),
+    restaurantId: v.optional(v.id("restaurants")),
+    submittedName: v.string(),
+    submittedAddress: v.string(),
+    status: v.union(
+      v.literal("created"), v.literal("details_submitted"), v.literal("finding_restaurant"),
+      v.literal("candidates_ready"), v.literal("restaurant_confirmed"), v.literal("scraping_menu"),
+      v.literal("review_required"), v.literal("normalizing"), v.literal("ready"),
+      v.literal("manual_review"), v.literal("match_failed"), v.literal("scrape_failed"),
+      v.literal("normalization_failed"),
+    ),
+    scraperRunId: v.optional(v.string()),
+    candidates: v.array(v.any()),
+    selectedCandidate: v.optional(v.any()),
+    errorMessage: v.optional(v.string()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  }).index("by_owner", ["ownerAccountId"]),
+
+  menuDrafts: defineTable({
+    onboardingId: v.id("restaurantOnboardings"),
+    restaurantId: v.id("restaurants"),
+    source: v.union(v.literal("scraped"), v.literal("manual")),
+    rawItems: v.array(v.any()),
+    editedItems: v.array(v.any()),
+    status: v.union(v.literal("draft"), v.literal("publishing"), v.literal("published"), v.literal("failed")),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  }).index("by_onboarding", ["onboardingId"]),
+
+  restaurantMenuVersions: defineTable({
+    restaurantId: v.id("restaurants"),
+    version: v.number(),
+    status: v.union(v.literal("draft"), v.literal("active"), v.literal("historical")),
+    source: v.union(v.literal("scraped"), v.literal("manual")),
+    scraperRunId: v.optional(v.string()),
+    normalizerRunId: v.optional(v.string()),
+    createdAt: v.number(),
+    publishedAt: v.optional(v.number()),
+  }).index("by_restaurant", ["restaurantId"]),
 });

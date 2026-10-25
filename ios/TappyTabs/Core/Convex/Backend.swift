@@ -26,6 +26,17 @@ protocol Backend: AnyObject {
     func followups(draft: DraftProfile) async throws -> [FollowUpQuestion]
     func summarize(userId: String, answers: [FollowUpAnswer]) async throws -> ProfileSummary
 
+    // Restaurant onboarding
+    func restaurantAccount(deviceId: String, displayName: String) async throws -> RestaurantAccount
+    func createRestaurantDraft(deviceId: String, name: String, address: String) async throws -> String
+    func restaurantOnboardingStatus(deviceId: String, onboardingId: String) -> AnyPublisher<RestaurantOnboarding?, TTError>
+    func resolveRestaurant(deviceId: String, onboardingId: String) async throws
+    func selectRestaurantCandidate(deviceId: String, onboardingId: String, candidate: RestaurantCandidate) async throws
+    func scrapeRestaurantMenu(deviceId: String, onboardingId: String, menuUrl: String?) async throws
+    func restaurantDraft(deviceId: String, onboardingId: String) async throws -> RestaurantMenuDraft?
+    func updateRestaurantDraft(deviceId: String, onboardingId: String, items: [RestaurantMenuItem]) async throws
+    func publishRestaurant(deviceId: String, onboardingId: String, items: [RestaurantMenuItem]) async throws
+
     // Restaurant
     func ingestMenu(restaurantId: String) async throws -> IngestResult
     func createParty(restaurantId: String, size: Int, hostDeviceId: String) async throws -> CreatedParty
