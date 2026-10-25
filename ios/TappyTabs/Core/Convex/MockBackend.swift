@@ -137,6 +137,7 @@ final class MockBackend: Backend {
         RestaurantAccount(_id: "mock-account", deviceId: deviceId, displayName: displayName, restaurantId: Self.restaurantId, onboardingId: nil)
     }
     func createRestaurantDraft(deviceId: String, name: String, address: String) async throws -> String { "mock-onboarding" }
+    func skipRestaurantOnboarding(deviceId: String) async throws {}
     func restaurantOnboardingStatus(deviceId: String, onboardingId: String) -> AnyPublisher<RestaurantOnboarding?, TTError> {
         onMain(Just(nil).setFailureType(to: TTError.self))
     }

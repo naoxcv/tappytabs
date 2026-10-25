@@ -4,6 +4,7 @@ import { internal } from "./_generated/api";
 import type { Id } from "./_generated/dataModel";
 import { fail } from "./shared/errors";
 import { normalizedItem } from "./menu";
+import { SEED_MENU } from "./seedData";
 
 const api: any = (internal as any).onboarding;
 const candidateV = v.object({ name: v.string(), address: v.string(), sourceUrl: v.optional(v.string()), confidence: v.optional(v.string()), extractionConfidence: v.optional(v.string()), categories: v.optional(v.array(v.string())), rawItems: v.optional(v.array(v.any())), rawPayload: v.optional(v.any()), mapsUrl: v.optional(v.string()), googlePlaceId: v.optional(v.string()), websiteUrl: v.optional(v.string()), phone: v.optional(v.string()), hours: v.optional(v.array(v.string())), rating: v.optional(v.number()), distance: v.optional(v.number()), matchScore: v.optional(v.number()) });
@@ -18,6 +19,36 @@ async function own(ctx: Ctx, deviceId: string, onboardingId: Id<"restaurantOnboa
 export const createOrGet = mutation({ args: { deviceId: v.string(), displayName: v.string() }, handler: async (ctx, { deviceId, displayName }) => { const existing = await ctx.db.query("restaurantAccounts").withIndex("by_device", (q) => q.eq("deviceId", deviceId)).unique(); const now = Date.now(); if (existing) { await ctx.db.patch(existing._id, { lastSeenAt: now }); return existing._id; } return ctx.db.insert("restaurantAccounts", { deviceId, displayName, createdAt: now, lastSeenAt: now, status: "active" }); } });
 export const me = query({ args: { deviceId: v.string() }, handler: async (ctx, { deviceId }) => { const a = await ctx.db.query("restaurantAccounts").withIndex("by_device", (q) => q.eq("deviceId", deviceId)).unique(); if (!a) return null; const restaurant = await ctx.db.query("restaurants").filter((q) => q.eq(q.field("ownerAccountId"), a._id)).first(); const onboarding = await ctx.db.query("restaurantOnboardings").withIndex("by_owner", (q) => q.eq("ownerAccountId", a._id)).order("desc").first(); return { ...a, restaurantId: restaurant?._id ?? null, onboardingId: onboarding?._id ?? null }; } });
 export const createDraft = mutation({ args: { deviceId: v.string(), name: v.string(), address: v.string() }, handler: async (ctx, { deviceId, name, address }) => { const a = await account(ctx, deviceId); if (await ctx.db.query("restaurants").filter((q) => q.eq(q.field("ownerAccountId"), a._id)).first()) fail("INVALID", "This device already has a restaurant account"); const restaurantId = await ctx.db.insert("restaurants", { ownerAccountId: a._id, name, address, menuSource: "seed", onboardingStatus: "awaiting_source" }); const now = Date.now(); return ctx.db.insert("restaurantOnboardings", { ownerAccountId: a._id, restaurantId, submittedName: name, submittedAddress: address, status: "awaiting_source", candidates: [], createdAt: now, updatedAt: now }); } });
+/** Creates the pre-scraping demo restaurant and activates the checked-in menu snapshot. */
+export const skipToDemo = mutation({
+  args: { deviceId: v.string() },
+  handler: async (ctx, { deviceId }) => {
+    const a = await account(ctx, deviceId);
+    const existing = await ctx.db.query("restaurants").filter((q) => q.eq(q.field("ownerAccountId"), a._id)).first();
+    if (existing?.activeMenuVersionId && existing.onboardingStatus === "ready") return existing._id;
+
+    const now = Date.now();
+    const restaurantId = existing?._id ?? await ctx.db.insert("restaurants", {
+      ownerAccountId: a._id,
+      name: "Tappy Kitchen (demo)",
+      address: "Demo menu",
+      menuSource: "seed",
+      onboardingStatus: "ready",
+    });
+    const versions = await ctx.db.query("restaurantMenuVersions").withIndex("by_restaurant", (q) => q.eq("restaurantId", restaurantId)).collect();
+    for (const version of versions.filter((row) => row.status === "active")) await ctx.db.patch(version._id, { status: "historical" });
+    const versionId = await ctx.db.insert("restaurantMenuVersions", {
+      restaurantId, version: versions.length + 1, status: "active", source: "manual", createdAt: now, publishedAt: now,
+    });
+    for (const item of SEED_MENU) await ctx.db.insert("menuItems", { restaurantId, menuVersionId: versionId, ...item });
+    await ctx.db.patch(restaurantId, { name: "Tappy Kitchen (demo)", address: "Demo menu", menuSource: "seed", onboardingStatus: "ready", activeMenuVersionId: versionId, lastNormalizedAt: now });
+
+    const onboarding = await ctx.db.query("restaurantOnboardings").withIndex("by_owner", (q) => q.eq("ownerAccountId", a._id)).order("desc").first();
+    if (onboarding) await ctx.db.patch(onboarding._id, { restaurantId, status: "ready", updatedAt: now, errorMessage: undefined });
+    else await ctx.db.insert("restaurantOnboardings", { ownerAccountId: a._id, restaurantId, submittedName: "Tappy Kitchen (demo)", submittedAddress: "Demo menu", status: "ready", candidates: [], createdAt: now, updatedAt: now });
+    return restaurantId;
+  },
+});
 export const getOwned = query({ args: { deviceId: v.string() }, handler: async (ctx, { deviceId }) => { const a = await account(ctx, deviceId); return ctx.db.query("restaurants").filter((q) => q.eq(q.field("ownerAccountId"), a._id)).first(); } });
 export const submitDetails = mutation({ args: { deviceId: v.string(), onboardingId: v.id("restaurantOnboardings"), name: v.string(), address: v.string() }, handler: async (ctx, args) => { const { row } = await own(ctx, args.deviceId, args.onboardingId); const now = Date.now(); await ctx.db.patch(args.onboardingId, { submittedName: args.name, submittedAddress: args.address, status: "awaiting_source", updatedAt: now, errorMessage: undefined }); if (row.restaurantId) await ctx.db.patch(row.restaurantId, { name: args.name, address: args.address, onboardingStatus: "awaiting_source" }); return args.onboardingId; } });
 export const getStatus = query({ args: { deviceId: v.string(), onboardingId: v.id("restaurantOnboardings") }, handler: async (ctx, args) => { await own(ctx, args.deviceId, args.onboardingId); return ctx.db.get(args.onboardingId); } });

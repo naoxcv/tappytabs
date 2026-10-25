@@ -48,6 +48,18 @@ async function errorCode(promise: Promise<unknown>) {
 }
 
 describe("restaurant onboarding", () => {
+  test("can skip onboarding into the checked-in demo menu", async () => {
+    const t = testBackend();
+    await t.mutation(api.onboarding.createOrGet, { deviceId: "demo-owner", displayName: "Restaurant" });
+    const restaurantId = await t.mutation(api.onboarding.skipToDemo, { deviceId: "demo-owner" });
+    const restaurant = await t.query(api.onboarding.getOwned, { deviceId: "demo-owner" });
+    expect(restaurant?._id).toBe(restaurantId);
+    expect(restaurant?.menuSource).toBe("seed");
+    expect(restaurant?.onboardingStatus).toBe("ready");
+    expect((await t.query(api.menu.status, { restaurantId }))?.itemCount).toBeGreaterThan(0);
+    expect((await t.query(api.onboarding.me, { deviceId: "demo-owner" }))?.onboardingId).toBeTruthy();
+  });
+
   test("creates one account per device and one restaurant draft per account", async () => {
     const t = testBackend();
     const accountId = await t.mutation(api.onboarding.createOrGet, { deviceId: "restaurant-device", displayName: "Tappy Cafe" });

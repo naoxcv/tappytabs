@@ -56,6 +56,7 @@ struct RestaurantOnboardingView: View {
     @State private var draft: RestaurantMenuDraft?
     @State private var loading = true
     @State private var saving = false
+    @State private var skipping = false
     @State private var error: String?
     @State private var statusSub: AnyCancellable?
     @State private var showingResetConfirmation = false
@@ -111,6 +112,14 @@ struct RestaurantOnboardingView: View {
             if acquisition == .search { Text("This may take several minutes. You’ll choose a result before reviewing its menu.").font(AppTypography.footnote).foregroundStyle(Theme.accent) }
             Button(acquisition == .url ? "Import menu" : "Find it automatically") { Task { await submitDetails() } }
                 .buttonStyle(.borderedProminent).disabled((acquisition == .url ? sourceURL : name).trimmed.isEmpty || (acquisition == .search && address.trimmed.isEmpty) || saving)
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Just want to demo the ordering flow?")
+                    .font(AppTypography.footnote)
+                    .foregroundStyle(Theme.accent)
+                Button(skipping ? "Preparing demo menu…" : "Skip setup — use demo menu") { Task { await skipToDemo() } }
+                    .buttonStyle(.bordered)
+                    .disabled(saving || skipping)
+            }
         } else if let onboarding, ["awaiting_source", "created", "details_submitted", "scraping_url", "scraping_search", "finding_restaurant"].contains(onboarding.status) {
             ProgressView(onboarding.status == "scraping_search" ? "Searching menus…" : "Importing menu…")
         } else if let onboarding, ["search_results_ready", "candidates_ready"].contains(onboarding.status) {
@@ -175,6 +184,14 @@ struct RestaurantOnboardingView: View {
             } else {
                 try await app.backend.startRestaurantSearch(deviceId: app.deviceId, onboardingId: id, query: name.trimmed, location: address.trimmed)
             }
+        } catch let caught { self.error = TTError.from(caught).userMessage }
+    }
+
+    private func skipToDemo() async {
+        skipping = true; defer { skipping = false }
+        do {
+            try await app.backend.skipRestaurantOnboarding(deviceId: app.deviceId)
+            onReady()
         } catch let caught { self.error = TTError.from(caught).userMessage }
     }
 

@@ -119,6 +119,10 @@ final class LiveBackend: Backend {
         try await mutate(API.restaurantCreateDraft, ["deviceId": deviceId, "name": name, "address": address])
     }
 
+    func skipRestaurantOnboarding(deviceId: String) async throws {
+        let _: String = try await mutate(API.restaurantSkipToDemo, ["deviceId": deviceId])
+    }
+
     func restaurantOnboardingStatus(deviceId: String, onboardingId: String) -> AnyPublisher<RestaurantOnboarding?, TTError> {
         sub(API.restaurantGetStatus, ["deviceId": deviceId, "onboardingId": onboardingId])
     }
