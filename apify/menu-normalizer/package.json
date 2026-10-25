@@ -8,7 +8,7 @@
     "build": "tsc",
     "start": "node dist/main.js",
     "local": "tsc && APIFY_LOCAL_STORAGE_DIR=./storage node dist/main.js",
-    "test": "tsc && node --test dist/normalize.test.js"
+    "test": "tsc && node --test dist/*.test.js"
   },
   "dependencies": {
     "apify": "^3.7.2",

@@ -25,9 +25,11 @@ This Actor accepts hand-written or scraped menu items and writes one normalized 
 
 Each dataset row matches the Convex menu item shape, excluding `restaurantId`: `name`, `category`, optional `cuisine`, `tags`, `description`, `priceCents`, `priceVerified`, `allergens`, `diet`, `spice`, `isDrink`, `shareable`, `menuOrder`, and `tagStatus`.
 
-Unknown or ambiguous prices use `priceCents: 0` and `priceVerified: false`. This keeps the MVP's numeric ordering contract while preventing an unknown price from being presented as a verified free item. A failed Bitdeer batch still produces conservative `tagStatus: "untagged"` rows.
+When a scraped price is missing or zero, the Bitdeer enrichment call estimates a positive price from the dish and up to six known prices on the same menu, favoring the same category. Batches without missing prices receive no price examples. Estimates use cents and retain `priceVerified: false`; known positive prices and explicitly free prices such as `"$0.00"` are never replaced. Invalid estimates, ambiguous prices, or a failed model call stay at `priceCents: 0` with `priceVerified: false`. A failed Bitdeer batch still produces conservative `tagStatus: "untagged"` rows.
 
 The keyword pass runs before model enrichment. Model output may only add or raise allergen warnings, and diet labels are intersected with the deterministic pass. If enrichment fails, unconfirmed allergens become `may_contain` and `tagStatus` is `untagged`; TappyTabs agents do not recommend untagged items.
+
+Tagging uses at most three concurrent Bitdeer requests. A failed or incomplete batch is retried as smaller groups, down to individual items, within a 50-second tagging budget. Each model request has a 12-second timeout; the budget leaves room for the 60-second synchronous Apify caller to receive the dataset. Items still unresolved at the deadline retain conservative keyword-only output. The Actor logs their count.
 
 ## Local development and publishing
 
