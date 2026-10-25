@@ -11,6 +11,12 @@
             "editor": "requestListSources",
             "minItems": 1
         },
+        "menuUrl": {
+            "title": "Menu URL (pipeline input)",
+            "type": "string",
+            "description": "A single public menu or online-ordering URL. Use this instead of startUrls when called by TappyTabs.",
+            "editor": "textfield"
+        },
         "maxRequestsPerCrawl": {
             "title": "Max Requests per Crawl",
             "type": "integer",
@@ -19,5 +25,5 @@
             "default": 1
         }
     },
-    "required": ["startUrls"]
+    "additionalProperties": false
 }

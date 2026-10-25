@@ -4,7 +4,7 @@ Scrapes menu items from a user-supplied public restaurant menu or online orderin
 
 ## Input
 
-You must supply at least one URL in `startUrls`. The Actor does not choose a restaurant or menu for you. `maxRequestsPerCrawl` defaults to one page.
+You must supply at least one URL in `startUrls`, or a single `menuUrl` when called by the TappyTabs onboarding pipeline. The Actor does not choose a restaurant or menu for you. `maxRequestsPerCrawl` defaults to one page.
 
 The source page must be publicly accessible and expose menu information in its HTML. Pages requiring sign-in, image-only/PDF menus, bot challenges, and JavaScript-rendered pages may need additional browser or OCR support. The Actor fails when it cannot find menu items instead of returning an empty or misleading menu.
 
