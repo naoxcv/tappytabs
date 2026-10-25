@@ -75,10 +75,17 @@ final class LiveBackend: Backend {
             "spice": p.spice,
             "likes": strings(p.likes),
             "dislikes": strings(p.dislikes),
+            "ingredientLikes": strings(p.ingredientLikes),
+            "ingredientAvoids": strings(p.ingredientAvoids),
             "cuisines": strings(p.cuisines),
             "dislikedCuisines": strings(p.dislikedCuisines),
             "likedCategories": strings(p.likedCategories),
             "avatarId": p.avatarId,
+            "pairAnswers": p.pairAnswers.sorted { $0.key < $1.key }.map { ["pairId": $0.key, "choice": $0.value] as [String: ConvexEncodable?] },
+            "tasteCorrections": p.tasteCorrections.sorted { $0.key < $1.key }.map { ["contrast": $0.key, "value": $0.value] as [String: ConvexEncodable?] },
+            "removedContrasts": strings(p.removedContrasts.sorted()),
+            "priceSensitivity": p.priceSensitivity,
+            "familiarity": p.familiarity,
         ]
     }
 

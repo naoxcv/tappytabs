@@ -60,7 +60,10 @@
     "isDrink": false,
     "shareable": true,
     "menuOrder": 0,
-    "tagStatus": "tagged"
+    "tagStatus": "tagged",
+    "taste": [],
+    "priceVerified": false,
+    "currency": "USD"
   },
   {
     "name": "Garlic Butter Shrimp",
@@ -123,7 +126,23 @@
     "isDrink": false,
     "shareable": true,
     "menuOrder": 1,
-    "tagStatus": "tagged"
+    "tagStatus": "tagged",
+    "taste": [
+      {
+        "contrast": "richness",
+        "value": 1,
+        "evidence": "inferred",
+        "detail": "Butter"
+      },
+      {
+        "contrast": "boldness",
+        "value": 1,
+        "evidence": "inferred",
+        "detail": "Garlic"
+      }
+    ],
+    "priceVerified": false,
+    "currency": "USD"
   },
   {
     "name": "Chicken Satay",
@@ -186,7 +205,17 @@
     "isDrink": false,
     "shareable": true,
     "menuOrder": 2,
-    "tagStatus": "tagged"
+    "tagStatus": "tagged",
+    "taste": [
+      {
+        "contrast": "char",
+        "value": 1,
+        "evidence": "inferred",
+        "detail": "Grilled"
+      }
+    ],
+    "priceVerified": false,
+    "currency": "USD"
   },
   {
     "name": "Margherita Flatbread",
@@ -250,7 +279,17 @@
     "isDrink": false,
     "shareable": true,
     "menuOrder": 3,
-    "tagStatus": "tagged"
+    "tagStatus": "tagged",
+    "taste": [
+      {
+        "contrast": "char",
+        "value": -1,
+        "evidence": "stated",
+        "detail": "basil"
+      }
+    ],
+    "priceVerified": false,
+    "currency": "USD"
   },
   {
     "name": "Hummus & Warm Pita",
@@ -316,7 +355,10 @@
     "isDrink": false,
     "shareable": true,
     "menuOrder": 4,
-    "tagStatus": "tagged"
+    "tagStatus": "tagged",
+    "taste": [],
+    "priceVerified": false,
+    "currency": "USD"
   },
   {
     "name": "Salted Edamame",
@@ -382,7 +424,10 @@
     "isDrink": false,
     "shareable": true,
     "menuOrder": 5,
-    "tagStatus": "tagged"
+    "tagStatus": "tagged",
+    "taste": [],
+    "priceVerified": false,
+    "currency": "USD"
   },
   {
     "name": "Crispy Brussels Sprouts",
@@ -448,7 +493,17 @@
     "isDrink": false,
     "shareable": true,
     "menuOrder": 6,
-    "tagStatus": "tagged"
+    "tagStatus": "tagged",
+    "taste": [
+      {
+        "contrast": "texture",
+        "value": -1,
+        "evidence": "stated",
+        "detail": "Crispy"
+      }
+    ],
+    "priceVerified": false,
+    "currency": "USD"
   },
   {
     "name": "Korean Fried Chicken",
@@ -512,7 +567,17 @@
     "isDrink": false,
     "shareable": true,
     "menuOrder": 7,
-    "tagStatus": "tagged"
+    "tagStatus": "tagged",
+    "taste": [
+      {
+        "contrast": "boldness",
+        "value": 1,
+        "evidence": "inferred",
+        "detail": "gochujang"
+      }
+    ],
+    "priceVerified": false,
+    "currency": "USD"
   },
   {
     "name": "Truffle Fries",
@@ -578,7 +643,10 @@
     "isDrink": false,
     "shareable": true,
     "menuOrder": 8,
-    "tagStatus": "tagged"
+    "tagStatus": "tagged",
+    "taste": [],
+    "priceVerified": false,
+    "currency": "USD"
   },
   {
     "name": "Pad Thai",
@@ -642,7 +710,10 @@
     "isDrink": false,
     "shareable": false,
     "menuOrder": 9,
-    "tagStatus": "tagged"
+    "tagStatus": "tagged",
+    "taste": [],
+    "priceVerified": false,
+    "currency": "USD"
   },
   {
     "name": "Tofu Green Curry",
@@ -706,7 +777,10 @@
     "isDrink": false,
     "shareable": false,
     "menuOrder": 10,
-    "tagStatus": "tagged"
+    "tagStatus": "tagged",
+    "taste": [],
+    "priceVerified": false,
+    "currency": "USD"
   },
   {
     "name": "Pesto Pasta",
@@ -769,7 +843,17 @@
     "isDrink": false,
     "shareable": false,
     "menuOrder": 11,
-    "tagStatus": "tagged"
+    "tagStatus": "tagged",
+    "taste": [
+      {
+        "contrast": "char",
+        "value": -1,
+        "evidence": "stated",
+        "detail": "Basil"
+      }
+    ],
+    "priceVerified": false,
+    "currency": "USD"
   },
   {
     "name": "Grilled Salmon Bowl",
@@ -833,7 +917,17 @@
     "isDrink": false,
     "shareable": false,
     "menuOrder": 12,
-    "tagStatus": "tagged"
+    "tagStatus": "tagged",
+    "taste": [
+      {
+        "contrast": "char",
+        "value": 1,
+        "evidence": "inferred",
+        "detail": "Grilled"
+      }
+    ],
+    "priceVerified": false,
+    "currency": "USD"
   },
   {
     "name": "Chicken Shawarma Plate",
@@ -897,7 +991,17 @@
     "isDrink": false,
     "shareable": false,
     "menuOrder": 13,
-    "tagStatus": "tagged"
+    "tagStatus": "tagged",
+    "taste": [
+      {
+        "contrast": "boldness",
+        "value": 1,
+        "evidence": "inferred",
+        "detail": "Spiced"
+      }
+    ],
+    "priceVerified": false,
+    "currency": "USD"
   },
   {
     "name": "Pork Belly Bao",
@@ -958,7 +1062,17 @@
     "isDrink": false,
     "shareable": false,
     "menuOrder": 14,
-    "tagStatus": "tagged"
+    "tagStatus": "tagged",
+    "taste": [
+      {
+        "contrast": "texture",
+        "value": 1,
+        "evidence": "inferred",
+        "detail": "Braised"
+      }
+    ],
+    "priceVerified": false,
+    "currency": "USD"
   },
   {
     "name": "Beef Pho",
@@ -1022,7 +1136,17 @@
     "isDrink": false,
     "shareable": false,
     "menuOrder": 15,
-    "tagStatus": "tagged"
+    "tagStatus": "tagged",
+    "taste": [
+      {
+        "contrast": "brothiness",
+        "value": 1,
+        "evidence": "stated",
+        "detail": "broth"
+      }
+    ],
+    "priceVerified": false,
+    "currency": "USD"
   },
   {
     "name": "Falafel Wrap",
@@ -1088,7 +1212,10 @@
     "isDrink": false,
     "shareable": false,
     "menuOrder": 16,
-    "tagStatus": "tagged"
+    "tagStatus": "tagged",
+    "taste": [],
+    "priceVerified": false,
+    "currency": "USD"
   },
   {
     "name": "Mushroom Risotto",
@@ -1151,7 +1278,10 @@
     "isDrink": false,
     "shareable": false,
     "menuOrder": 17,
-    "tagStatus": "tagged"
+    "tagStatus": "tagged",
+    "taste": [],
+    "priceVerified": false,
+    "currency": "USD"
   },
   {
     "name": "Spicy Bibimbap",
@@ -1215,7 +1345,17 @@
     "isDrink": false,
     "shareable": false,
     "menuOrder": 18,
-    "tagStatus": "tagged"
+    "tagStatus": "tagged",
+    "taste": [
+      {
+        "contrast": "boldness",
+        "value": 1,
+        "evidence": "inferred",
+        "detail": "gochujang"
+      }
+    ],
+    "priceVerified": false,
+    "currency": "USD"
   },
   {
     "name": "Garden Salad",
@@ -1281,7 +1421,17 @@
     "isDrink": false,
     "shareable": false,
     "menuOrder": 19,
-    "tagStatus": "tagged"
+    "tagStatus": "tagged",
+    "taste": [
+      {
+        "contrast": "brightness",
+        "value": 1,
+        "evidence": "inferred",
+        "detail": "lemon"
+      }
+    ],
+    "priceVerified": false,
+    "currency": "USD"
   },
   {
     "name": "Thai Iced Tea",
@@ -1345,7 +1495,10 @@
     "isDrink": true,
     "shareable": false,
     "menuOrder": 20,
-    "tagStatus": "tagged"
+    "tagStatus": "tagged",
+    "taste": [],
+    "priceVerified": false,
+    "currency": "USD"
   },
   {
     "name": "Mango Lassi",
@@ -1410,7 +1563,10 @@
     "isDrink": true,
     "shareable": false,
     "menuOrder": 21,
-    "tagStatus": "tagged"
+    "tagStatus": "tagged",
+    "taste": [],
+    "priceVerified": false,
+    "currency": "USD"
   },
   {
     "name": "Fresh Lemonade",
@@ -1476,7 +1632,17 @@
     "isDrink": true,
     "shareable": false,
     "menuOrder": 22,
-    "tagStatus": "tagged"
+    "tagStatus": "tagged",
+    "taste": [
+      {
+        "contrast": "brightness",
+        "value": 1,
+        "evidence": "inferred",
+        "detail": "Lemon"
+      }
+    ],
+    "priceVerified": false,
+    "currency": "USD"
   },
   {
     "name": "Almond Horchata",
@@ -1541,7 +1707,10 @@
     "isDrink": true,
     "shareable": false,
     "menuOrder": 23,
-    "tagStatus": "tagged"
+    "tagStatus": "tagged",
+    "taste": [],
+    "priceVerified": false,
+    "currency": "USD"
   },
   {
     "name": "Iced Oat Matcha",
@@ -1605,7 +1774,10 @@
     "isDrink": true,
     "shareable": false,
     "menuOrder": 24,
-    "tagStatus": "tagged"
+    "tagStatus": "tagged",
+    "taste": [],
+    "priceVerified": false,
+    "currency": "USD"
   },
   {
     "name": "Sparkling Water",
@@ -1670,7 +1842,10 @@
     "isDrink": true,
     "shareable": false,
     "menuOrder": 25,
-    "tagStatus": "tagged"
+    "tagStatus": "tagged",
+    "taste": [],
+    "priceVerified": false,
+    "currency": "USD"
   },
   {
     "name": "Mochi Ice Cream",
@@ -1735,7 +1910,10 @@
     "isDrink": false,
     "shareable": true,
     "menuOrder": 26,
-    "tagStatus": "tagged"
+    "tagStatus": "tagged",
+    "taste": [],
+    "priceVerified": false,
+    "currency": "USD"
   },
   {
     "name": "Baklava",
@@ -1799,6 +1977,9 @@
     "isDrink": false,
     "shareable": true,
     "menuOrder": 27,
-    "tagStatus": "tagged"
+    "tagStatus": "tagged",
+    "taste": [],
+    "priceVerified": false,
+    "currency": "USD"
   }
 ]

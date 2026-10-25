@@ -15,12 +15,19 @@ export default defineSchema({
     spice: v.number(), // 0–4 tolerance
     likes: v.array(v.string()), // tags
     dislikes: v.array(v.string()), // tags
+    ingredientLikes: v.optional(v.array(v.string())),
+    ingredientAvoids: v.optional(v.array(v.string())),
     cuisines: v.array(v.string()),
     dislikedCuisines: v.optional(v.array(v.string())),
     likedCategories: v.optional(v.array(v.string())),
     personality: v.optional(personalityV),
     avatarId: v.string(),
     profileSummary: v.optional(v.string()),
+    pairAnswers: v.optional(v.array(v.object({ pairId: v.string(), choice: v.union(v.literal("a"), v.literal("b"), v.literal("both"), v.literal("neither")) }))),
+    tasteCorrections: v.optional(v.array(v.object({ contrast: v.string(), value: v.union(v.number(), v.null()) }))),
+    taste: v.optional(v.array(v.object({ contrast: v.string(), value: v.number(), confidence: v.number() }))),
+    priceSensitivity: v.optional(v.union(v.literal("a_lot"), v.literal("somewhat"), v.literal("not_much"))),
+    familiarity: v.optional(v.union(v.literal("familiar"), v.literal("open"))),
   }).index("by_device", ["deviceId"]),
 
   restaurants: defineTable({
@@ -67,6 +74,9 @@ export default defineSchema({
     shareable: v.boolean(),
     menuOrder: v.number(),
     tagStatus: tagStatusV,
+    taste: v.optional(v.array(v.object({ contrast: v.string(), value: v.number(), evidence: v.union(v.literal("stated"), v.literal("inferred")), detail: v.string() }))),
+    priceVerified: v.optional(v.boolean()),
+    currency: v.optional(v.string()),
   })
     .index("by_restaurant", ["restaurantId"])
     .index("by_restaurant_name", ["restaurantId", "name"]),

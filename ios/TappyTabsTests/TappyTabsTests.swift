@@ -69,7 +69,6 @@ final class FixtureDecodingTests: XCTestCase {
         XCTAssertNotNil(r.substitute)
         let _: MenuStatus = Fixtures.load("menu_status")
         let _: [RestaurantRef] = Fixtures.load("restaurants")
-        let _: [OnboardingCard] = Fixtures.load("OnboardingCards")
     }
 
     func testTotalsSumExactly() {
