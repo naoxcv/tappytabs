@@ -1,10 +1,11 @@
-// Owner: Role 3. Bitdeer tagging prompt (batches of 20). Output is merged with "add or raise only" rules.
+// Owner: Role 3. Bitdeer tagging prompt (default batches of 8). Output is merged with "add or raise only" rules.
 import type { RawItem } from "./normalize.js";
 import { ALLERGENS } from "./keywords.js";
 
 export const TAG_SYSTEM = [
   "You tag restaurant menu items for a food-allergy app. Safety matters more than recall.",
   `For each item return allergens as an object mapping any of ${ALLERGENS.join(", ")} to "contains" or "may_contain".`,
+  "Copy each item's zero-based batch index exactly in your reply.",
   "Use may_contain when a typical recipe often includes it. Omit allergens you are confident are absent.",
   "Also return: diet (subset of vegetarian, vegan, halal, no_pork — only if clearly true), 2–5 lowercase taste tags",
   "(e.g. noodles, spicy, cheesy, fried, seafood, rice, grilled), cuisine, spice 0–4, isDrink, shareable.",
