@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { inferTaste, isMissingPrice, keywordPass, mergeLlm, parsePrice, parsePriceCents } from "./normalize.js";
+import { inferTaste, isCompleteLlmTags, isMissingPrice, keywordPass, mergeLlm, parsePrice, parsePriceCents } from "./normalize.js";
 import { tagUser } from "./tagPrompt.js";
 
 const level = (item: ReturnType<typeof keywordPass>, a: string) => item.allergens.find((x) => x.allergen === a)!.level;
@@ -81,6 +81,13 @@ test("LLM may only raise; no LLM → untagged, may_contain everywhere else", () 
   assert.equal(unread.tagStatus, "untagged");
   assert.equal(level(unread, "milk"), "may_contain");
   assert.equal(level(unread, "peanut"), "contains");
+});
+
+test("a complete tag reply includes the safety and diet fields", () => {
+  const complete = { allergens: {}, diet: [], tags: ["pasta"], spice: 0, isDrink: false, shareable: false };
+  assert.equal(isCompleteLlmTags(complete), true);
+  assert.equal(isCompleteLlmTags({ ...complete, diet: undefined }), false);
+  assert.equal(isCompleteLlmTags({ ...complete, allergens: { milk: "unknown" } }), false);
 });
 
 test("dish traits distinguish direct wording from preparation inferences", () => {

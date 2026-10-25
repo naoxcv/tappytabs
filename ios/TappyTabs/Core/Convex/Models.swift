@@ -154,6 +154,7 @@ struct RestaurantAccount: Decodable, Equatable {
     let deviceId: String
     let displayName: String
     let restaurantId: String?
+    let activeMenuVersionId: String?
     let onboardingId: String?
 }
 
@@ -234,7 +235,9 @@ struct RestaurantScrapeResult: Decodable {
 }
 
 struct RestaurantPublishResult: Decodable {
-    let versionId: String
+    let status: String?
+    let normalizerRunId: String?
+    let versionId: String?
     let previousVersionId: String?
 }
 

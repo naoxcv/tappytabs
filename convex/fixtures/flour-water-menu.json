@@ -1,0 +1,1892 @@
+[
+  {
+    "name": "Today's Ricotta",
+    "category": "shareables",
+    "cuisine": "Italian",
+    "tags": [
+      "ricotta",
+      "cheese",
+      "honey",
+      "bread",
+      "creamy"
+    ],
+    "description": "Honeycomb, Sicilian olive oil, sourdough tigelle",
+    "priceCents": 1800,
+    "allergens": [
+      {
+        "allergen": "milk",
+        "level": "contains"
+      },
+      {
+        "allergen": "egg",
+        "level": "may_contain"
+      },
+      {
+        "allergen": "fish",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "shellfish",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "tree_nut",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "peanut",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "wheat",
+        "level": "contains"
+      },
+      {
+        "allergen": "soy",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "sesame",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "gluten",
+        "level": "contains"
+      }
+    ],
+    "diet": [
+      "vegetarian",
+      "no_pork"
+    ],
+    "spice": 0,
+    "isDrink": false,
+    "shareable": true,
+    "tagStatus": "tagged",
+    "taste": [],
+    "priceVerified": true,
+    "currency": "USD",
+    "menuOrder": 0
+  },
+  {
+    "name": "Pole Beans",
+    "category": "shareables",
+    "cuisine": "Italian",
+    "tags": [
+      "beans",
+      "burrata",
+      "smoky",
+      "umami",
+      "vegetable"
+    ],
+    "description": "Burrata, smoked tomato, miso bagna cauda",
+    "priceCents": 2100,
+    "allergens": [
+      {
+        "allergen": "milk",
+        "level": "contains"
+      },
+      {
+        "allergen": "egg",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "fish",
+        "level": "contains"
+      },
+      {
+        "allergen": "shellfish",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "tree_nut",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "peanut",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "wheat",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "soy",
+        "level": "contains"
+      },
+      {
+        "allergen": "sesame",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "gluten",
+        "level": "not_detected"
+      }
+    ],
+    "diet": [
+      "no_pork"
+    ],
+    "spice": 0,
+    "isDrink": false,
+    "shareable": true,
+    "tagStatus": "tagged",
+    "taste": [
+      {
+        "contrast": "smoke",
+        "value": 1,
+        "evidence": "stated",
+        "detail": "Smoked tomato"
+      }
+    ],
+    "priceVerified": true,
+    "currency": "USD",
+    "menuOrder": 1
+  },
+  {
+    "name": "Koshihikari Arancini",
+    "category": "shareables",
+    "cuisine": "Italian",
+    "tags": [
+      "rice",
+      "fried",
+      "crispy",
+      "cheesy"
+    ],
+    "description": "Eggplant, smoked mozzarella, tomato, basil",
+    "priceCents": 1900,
+    "allergens": [
+      {
+        "allergen": "milk",
+        "level": "contains"
+      },
+      {
+        "allergen": "egg",
+        "level": "contains"
+      },
+      {
+        "allergen": "fish",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "shellfish",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "tree_nut",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "peanut",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "wheat",
+        "level": "contains"
+      },
+      {
+        "allergen": "soy",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "sesame",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "gluten",
+        "level": "contains"
+      }
+    ],
+    "diet": [
+      "vegetarian",
+      "no_pork"
+    ],
+    "spice": 0,
+    "isDrink": false,
+    "shareable": true,
+    "tagStatus": "tagged",
+    "taste": [
+      {
+        "contrast": "crunch",
+        "value": 1,
+        "evidence": "inferred",
+        "detail": "Fried rice balls"
+      }
+    ],
+    "priceVerified": true,
+    "currency": "USD",
+    "menuOrder": 2
+  },
+  {
+    "name": "Bluefin Crudo",
+    "category": "shareables",
+    "cuisine": "Italian",
+    "tags": [
+      "raw",
+      "tuna",
+      "crudo",
+      "seafood",
+      "light"
+    ],
+    "description": "Bottarga, muscat grape, chive",
+    "priceCents": 2200,
+    "allergens": [
+      {
+        "allergen": "milk",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "egg",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "fish",
+        "level": "contains"
+      },
+      {
+        "allergen": "shellfish",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "tree_nut",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "peanut",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "wheat",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "soy",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "sesame",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "gluten",
+        "level": "not_detected"
+      }
+    ],
+    "diet": [
+      "no_pork"
+    ],
+    "spice": 0,
+    "isDrink": false,
+    "shareable": true,
+    "tagStatus": "tagged",
+    "taste": [],
+    "priceVerified": true,
+    "currency": "USD",
+    "menuOrder": 3
+  },
+  {
+    "name": "Little Gem Lettuces",
+    "category": "shareables",
+    "cuisine": "Italian",
+    "tags": [
+      "salad",
+      "fresh",
+      "lettuce",
+      "nutty"
+    ],
+    "description": "Tahini vinaigrette, pecorino sardo, toasted sesame",
+    "priceCents": 1800,
+    "allergens": [
+      {
+        "allergen": "milk",
+        "level": "contains"
+      },
+      {
+        "allergen": "egg",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "fish",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "shellfish",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "tree_nut",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "peanut",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "wheat",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "soy",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "sesame",
+        "level": "contains"
+      },
+      {
+        "allergen": "gluten",
+        "level": "not_detected"
+      }
+    ],
+    "diet": [
+      "vegetarian",
+      "no_pork"
+    ],
+    "spice": 0,
+    "isDrink": false,
+    "shareable": true,
+    "tagStatus": "tagged",
+    "taste": [],
+    "priceVerified": true,
+    "currency": "USD",
+    "menuOrder": 4
+  },
+  {
+    "name": "Heirloom Tomatoes",
+    "category": "shareables",
+    "cuisine": "Italian",
+    "tags": [
+      "tomato",
+      "salad",
+      "fresh",
+      "summer"
+    ],
+    "description": "Pluot, shiso, Genovese basil, sourdough",
+    "priceCents": 2200,
+    "allergens": [
+      {
+        "allergen": "milk",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "egg",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "fish",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "shellfish",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "tree_nut",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "peanut",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "wheat",
+        "level": "contains"
+      },
+      {
+        "allergen": "soy",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "sesame",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "gluten",
+        "level": "contains"
+      }
+    ],
+    "diet": [
+      "vegetarian",
+      "vegan",
+      "halal",
+      "no_pork"
+    ],
+    "spice": 0,
+    "isDrink": false,
+    "shareable": true,
+    "tagStatus": "tagged",
+    "taste": [],
+    "priceVerified": true,
+    "currency": "USD",
+    "menuOrder": 5
+  },
+  {
+    "name": "Puttanesca Pizza",
+    "category": "shareables",
+    "cuisine": "Italian",
+    "tags": [
+      "pizza",
+      "briny",
+      "salty",
+      "anchovy",
+      "tomato"
+    ],
+    "description": "Tomato, castelvetrano olive, caper, chili, boquerones",
+    "priceCents": 2800,
+    "allergens": [
+      {
+        "allergen": "milk",
+        "level": "may_contain"
+      },
+      {
+        "allergen": "egg",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "fish",
+        "level": "contains"
+      },
+      {
+        "allergen": "shellfish",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "tree_nut",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "peanut",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "wheat",
+        "level": "contains"
+      },
+      {
+        "allergen": "soy",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "sesame",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "gluten",
+        "level": "contains"
+      }
+    ],
+    "diet": [
+      "no_pork"
+    ],
+    "spice": 1,
+    "isDrink": false,
+    "shareable": true,
+    "tagStatus": "tagged",
+    "taste": [],
+    "priceVerified": true,
+    "currency": "USD",
+    "menuOrder": 6
+  },
+  {
+    "name": "Salsiccia Bianca Pizza",
+    "category": "shareables",
+    "cuisine": "Italian",
+    "tags": [
+      "pizza",
+      "sausage",
+      "pork",
+      "cheesy"
+    ],
+    "description": "Pork sausage, broccoli rabe, caciocavallo, guindilla peppers",
+    "priceCents": 2900,
+    "allergens": [
+      {
+        "allergen": "milk",
+        "level": "contains"
+      },
+      {
+        "allergen": "egg",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "fish",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "shellfish",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "tree_nut",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "peanut",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "wheat",
+        "level": "contains"
+      },
+      {
+        "allergen": "soy",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "sesame",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "gluten",
+        "level": "contains"
+      }
+    ],
+    "diet": [],
+    "spice": 1,
+    "isDrink": false,
+    "shareable": true,
+    "tagStatus": "tagged",
+    "taste": [],
+    "priceVerified": true,
+    "currency": "USD",
+    "menuOrder": 7
+  },
+  {
+    "name": "Margherita Pizza",
+    "category": "shareables",
+    "cuisine": "Italian",
+    "tags": [
+      "pizza",
+      "cheesy",
+      "tomato",
+      "classic"
+    ],
+    "description": "Tomato, fior di latte, basil",
+    "priceCents": 2400,
+    "allergens": [
+      {
+        "allergen": "milk",
+        "level": "contains"
+      },
+      {
+        "allergen": "egg",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "fish",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "shellfish",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "tree_nut",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "peanut",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "wheat",
+        "level": "contains"
+      },
+      {
+        "allergen": "soy",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "sesame",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "gluten",
+        "level": "contains"
+      }
+    ],
+    "diet": [
+      "vegetarian",
+      "no_pork"
+    ],
+    "spice": 0,
+    "isDrink": false,
+    "shareable": true,
+    "tagStatus": "tagged",
+    "taste": [],
+    "priceVerified": true,
+    "currency": "USD",
+    "menuOrder": 8
+  },
+  {
+    "name": "Corn Cappelletti",
+    "category": "mains",
+    "cuisine": "Italian",
+    "tags": [
+      "pasta",
+      "corn",
+      "sweet",
+      "buttery",
+      "stuffed"
+    ],
+    "description": "Brown butter, ricotta salata, Fresno chili",
+    "priceCents": 3100,
+    "allergens": [
+      {
+        "allergen": "milk",
+        "level": "contains"
+      },
+      {
+        "allergen": "egg",
+        "level": "contains"
+      },
+      {
+        "allergen": "fish",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "shellfish",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "tree_nut",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "peanut",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "wheat",
+        "level": "contains"
+      },
+      {
+        "allergen": "soy",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "sesame",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "gluten",
+        "level": "contains"
+      }
+    ],
+    "diet": [
+      "vegetarian",
+      "no_pork"
+    ],
+    "spice": 1,
+    "isDrink": false,
+    "shareable": false,
+    "tagStatus": "tagged",
+    "taste": [],
+    "priceVerified": true,
+    "currency": "USD",
+    "menuOrder": 9
+  },
+  {
+    "name": "Orecchiette",
+    "category": "mains",
+    "cuisine": "Italian",
+    "tags": [
+      "pasta",
+      "mushroom",
+      "earthy"
+    ],
+    "description": "Chanterelle, turnip, wasabi, pecorino toscano",
+    "priceCents": 3100,
+    "allergens": [
+      {
+        "allergen": "milk",
+        "level": "contains"
+      },
+      {
+        "allergen": "egg",
+        "level": "may_contain"
+      },
+      {
+        "allergen": "fish",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "shellfish",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "tree_nut",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "peanut",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "wheat",
+        "level": "contains"
+      },
+      {
+        "allergen": "soy",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "sesame",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "gluten",
+        "level": "contains"
+      }
+    ],
+    "diet": [
+      "vegetarian",
+      "no_pork"
+    ],
+    "spice": 1,
+    "isDrink": false,
+    "shareable": false,
+    "tagStatus": "tagged",
+    "taste": [],
+    "priceVerified": true,
+    "currency": "USD",
+    "menuOrder": 10
+  },
+  {
+    "name": "Taleggio Scarpinocc",
+    "category": "mains",
+    "cuisine": "Italian",
+    "tags": [
+      "pasta",
+      "cheesy",
+      "stuffed",
+      "rich"
+    ],
+    "description": "Parmigiano reggiano, aceto balsamico",
+    "priceCents": 3000,
+    "allergens": [
+      {
+        "allergen": "milk",
+        "level": "contains"
+      },
+      {
+        "allergen": "egg",
+        "level": "contains"
+      },
+      {
+        "allergen": "fish",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "shellfish",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "tree_nut",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "peanut",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "wheat",
+        "level": "contains"
+      },
+      {
+        "allergen": "soy",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "sesame",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "gluten",
+        "level": "contains"
+      }
+    ],
+    "diet": [
+      "vegetarian",
+      "no_pork"
+    ],
+    "spice": 0,
+    "isDrink": false,
+    "shareable": false,
+    "tagStatus": "tagged",
+    "taste": [],
+    "priceVerified": true,
+    "currency": "USD",
+    "menuOrder": 11
+  },
+  {
+    "name": "Saffron Soprese",
+    "category": "mains",
+    "cuisine": "Italian",
+    "tags": [
+      "pasta",
+      "seafood",
+      "mussels",
+      "saffron",
+      "spicy"
+    ],
+    "description": "Mussels escabeche, Calabrian chili, garlic scapes",
+    "priceCents": 3200,
+    "allergens": [
+      {
+        "allergen": "milk",
+        "level": "may_contain"
+      },
+      {
+        "allergen": "egg",
+        "level": "contains"
+      },
+      {
+        "allergen": "fish",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "shellfish",
+        "level": "contains"
+      },
+      {
+        "allergen": "tree_nut",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "peanut",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "wheat",
+        "level": "contains"
+      },
+      {
+        "allergen": "soy",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "sesame",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "gluten",
+        "level": "contains"
+      }
+    ],
+    "diet": [
+      "no_pork"
+    ],
+    "spice": 2,
+    "isDrink": false,
+    "shareable": false,
+    "tagStatus": "tagged",
+    "taste": [],
+    "priceVerified": true,
+    "currency": "USD",
+    "menuOrder": 12
+  },
+  {
+    "name": "Duck Triangoli",
+    "category": "mains",
+    "cuisine": "Italian",
+    "tags": [
+      "pasta",
+      "duck",
+      "stuffed",
+      "nutty"
+    ],
+    "description": "Pistachio, cocoa, Sicilian granola",
+    "priceCents": 3300,
+    "allergens": [
+      {
+        "allergen": "milk",
+        "level": "may_contain"
+      },
+      {
+        "allergen": "egg",
+        "level": "contains"
+      },
+      {
+        "allergen": "fish",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "shellfish",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "tree_nut",
+        "level": "contains"
+      },
+      {
+        "allergen": "peanut",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "wheat",
+        "level": "contains"
+      },
+      {
+        "allergen": "soy",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "sesame",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "gluten",
+        "level": "contains"
+      }
+    ],
+    "diet": [
+      "no_pork"
+    ],
+    "spice": 0,
+    "isDrink": false,
+    "shareable": false,
+    "tagStatus": "tagged",
+    "taste": [],
+    "priceVerified": true,
+    "currency": "USD",
+    "menuOrder": 13
+  },
+  {
+    "name": "Pappardelle",
+    "category": "mains",
+    "cuisine": "Italian",
+    "tags": [
+      "pasta",
+      "lamb",
+      "ragu",
+      "spicy",
+      "rich"
+    ],
+    "description": "Lamb merguez ragu, shishito, tomato XO",
+    "priceCents": 3200,
+    "allergens": [
+      {
+        "allergen": "milk",
+        "level": "may_contain"
+      },
+      {
+        "allergen": "egg",
+        "level": "contains"
+      },
+      {
+        "allergen": "fish",
+        "level": "may_contain"
+      },
+      {
+        "allergen": "shellfish",
+        "level": "may_contain"
+      },
+      {
+        "allergen": "tree_nut",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "peanut",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "wheat",
+        "level": "contains"
+      },
+      {
+        "allergen": "soy",
+        "level": "may_contain"
+      },
+      {
+        "allergen": "sesame",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "gluten",
+        "level": "contains"
+      }
+    ],
+    "diet": [],
+    "spice": 2,
+    "isDrink": false,
+    "shareable": false,
+    "tagStatus": "tagged",
+    "taste": [],
+    "priceVerified": true,
+    "currency": "USD",
+    "menuOrder": 14
+  },
+  {
+    "name": "King Salmon",
+    "category": "mains",
+    "cuisine": "Italian",
+    "tags": [
+      "salmon",
+      "fish",
+      "seafood",
+      "seasonal"
+    ],
+    "description": "Squash, corn, basil, shishito",
+    "priceCents": 4400,
+    "allergens": [
+      {
+        "allergen": "milk",
+        "level": "may_contain"
+      },
+      {
+        "allergen": "egg",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "fish",
+        "level": "contains"
+      },
+      {
+        "allergen": "shellfish",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "tree_nut",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "peanut",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "wheat",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "soy",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "sesame",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "gluten",
+        "level": "not_detected"
+      }
+    ],
+    "diet": [
+      "no_pork"
+    ],
+    "spice": 0,
+    "isDrink": false,
+    "shareable": false,
+    "tagStatus": "tagged",
+    "taste": [],
+    "priceVerified": true,
+    "currency": "USD",
+    "menuOrder": 15
+  },
+  {
+    "name": "Pork Chop",
+    "category": "mains",
+    "cuisine": "Italian",
+    "tags": [
+      "pork",
+      "grilled",
+      "hearty"
+    ],
+    "description": "Mustard greens, stone fruit, salsa verde",
+    "priceCents": 4800,
+    "allergens": [
+      {
+        "allergen": "milk",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "egg",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "fish",
+        "level": "may_contain"
+      },
+      {
+        "allergen": "shellfish",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "tree_nut",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "peanut",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "wheat",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "soy",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "sesame",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "gluten",
+        "level": "not_detected"
+      }
+    ],
+    "diet": [],
+    "spice": 0,
+    "isDrink": false,
+    "shareable": false,
+    "tagStatus": "tagged",
+    "taste": [
+      {
+        "contrast": "char",
+        "value": 1,
+        "evidence": "inferred",
+        "detail": "Chop"
+      }
+    ],
+    "priceVerified": true,
+    "currency": "USD",
+    "menuOrder": 16
+  },
+  {
+    "name": "Josey Baker Sourdough",
+    "category": "sides",
+    "cuisine": "Italian",
+    "tags": [
+      "bread",
+      "butter",
+      "sourdough"
+    ],
+    "description": "Parmigiano reggiano cultured butter",
+    "priceCents": 1000,
+    "allergens": [
+      {
+        "allergen": "milk",
+        "level": "contains"
+      },
+      {
+        "allergen": "egg",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "fish",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "shellfish",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "tree_nut",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "peanut",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "wheat",
+        "level": "contains"
+      },
+      {
+        "allergen": "soy",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "sesame",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "gluten",
+        "level": "contains"
+      }
+    ],
+    "diet": [
+      "vegetarian",
+      "no_pork"
+    ],
+    "spice": 0,
+    "isDrink": false,
+    "shareable": true,
+    "tagStatus": "tagged",
+    "taste": [],
+    "priceVerified": true,
+    "currency": "USD",
+    "menuOrder": 17
+  },
+  {
+    "name": "Chocolate Budino",
+    "category": "desserts",
+    "cuisine": "Italian",
+    "tags": [
+      "chocolate",
+      "sweet",
+      "creamy",
+      "coffee"
+    ],
+    "description": "Caramel espresso crema, sea salt",
+    "priceCents": 1400,
+    "allergens": [
+      {
+        "allergen": "milk",
+        "level": "contains"
+      },
+      {
+        "allergen": "egg",
+        "level": "contains"
+      },
+      {
+        "allergen": "fish",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "shellfish",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "tree_nut",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "peanut",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "wheat",
+        "level": "may_contain"
+      },
+      {
+        "allergen": "soy",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "sesame",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "gluten",
+        "level": "may_contain"
+      }
+    ],
+    "diet": [
+      "vegetarian",
+      "no_pork"
+    ],
+    "spice": 0,
+    "isDrink": false,
+    "shareable": false,
+    "tagStatus": "tagged",
+    "taste": [],
+    "priceVerified": true,
+    "currency": "USD",
+    "menuOrder": 18
+  },
+  {
+    "name": "Miso Pumpkin Tart",
+    "category": "desserts",
+    "cuisine": "Italian",
+    "tags": [
+      "pumpkin",
+      "sweet",
+      "tart",
+      "miso"
+    ],
+    "description": "Kuri squash sabayon",
+    "priceCents": 1400,
+    "allergens": [
+      {
+        "allergen": "milk",
+        "level": "contains"
+      },
+      {
+        "allergen": "egg",
+        "level": "contains"
+      },
+      {
+        "allergen": "fish",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "shellfish",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "tree_nut",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "peanut",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "wheat",
+        "level": "contains"
+      },
+      {
+        "allergen": "soy",
+        "level": "contains"
+      },
+      {
+        "allergen": "sesame",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "gluten",
+        "level": "contains"
+      }
+    ],
+    "diet": [
+      "vegetarian",
+      "no_pork"
+    ],
+    "spice": 0,
+    "isDrink": false,
+    "shareable": false,
+    "tagStatus": "tagged",
+    "taste": [],
+    "priceVerified": true,
+    "currency": "USD",
+    "menuOrder": 19
+  },
+  {
+    "name": "Strawberry Pavlova",
+    "category": "desserts",
+    "cuisine": "Italian",
+    "tags": [
+      "strawberry",
+      "sweet",
+      "meringue",
+      "fruity"
+    ],
+    "description": "Hibiscus, mascarpone, caramelized white chocolate",
+    "priceCents": 1500,
+    "allergens": [
+      {
+        "allergen": "milk",
+        "level": "contains"
+      },
+      {
+        "allergen": "egg",
+        "level": "contains"
+      },
+      {
+        "allergen": "fish",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "shellfish",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "tree_nut",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "peanut",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "wheat",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "soy",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "sesame",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "gluten",
+        "level": "not_detected"
+      }
+    ],
+    "diet": [
+      "vegetarian",
+      "no_pork"
+    ],
+    "spice": 0,
+    "isDrink": false,
+    "shareable": false,
+    "tagStatus": "tagged",
+    "taste": [],
+    "priceVerified": true,
+    "currency": "USD",
+    "menuOrder": 20
+  },
+  {
+    "name": "Mr Espresso French Press",
+    "category": "drinks",
+    "cuisine": "Italian",
+    "tags": [
+      "coffee",
+      "hot"
+    ],
+    "description": "Regular or decaf",
+    "priceCents": 700,
+    "allergens": [
+      {
+        "allergen": "milk",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "egg",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "fish",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "shellfish",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "tree_nut",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "peanut",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "wheat",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "soy",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "sesame",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "gluten",
+        "level": "not_detected"
+      }
+    ],
+    "diet": [
+      "vegetarian",
+      "vegan",
+      "halal",
+      "no_pork"
+    ],
+    "spice": 0,
+    "isDrink": true,
+    "shareable": false,
+    "tagStatus": "tagged",
+    "taste": [],
+    "priceVerified": true,
+    "currency": "USD",
+    "menuOrder": 21
+  },
+  {
+    "name": "Organic Tea",
+    "category": "drinks",
+    "cuisine": "Italian",
+    "tags": [
+      "tea",
+      "hot",
+      "herbal"
+    ],
+    "description": "Moroccan peppermint, ginger lemon, or earl grey",
+    "priceCents": 600,
+    "allergens": [
+      {
+        "allergen": "milk",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "egg",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "fish",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "shellfish",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "tree_nut",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "peanut",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "wheat",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "soy",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "sesame",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "gluten",
+        "level": "not_detected"
+      }
+    ],
+    "diet": [
+      "vegetarian",
+      "vegan",
+      "halal",
+      "no_pork"
+    ],
+    "spice": 0,
+    "isDrink": true,
+    "shareable": false,
+    "tagStatus": "tagged",
+    "taste": [],
+    "priceVerified": true,
+    "currency": "USD",
+    "menuOrder": 22
+  },
+  {
+    "name": "Lucano Non-Alcoholic Amaro",
+    "category": "drinks",
+    "cuisine": "Italian",
+    "tags": [
+      "amaro",
+      "bitter",
+      "herbal",
+      "non-alcoholic"
+    ],
+    "description": "Basilicata, Italy, 2oz",
+    "priceCents": 1400,
+    "allergens": [
+      {
+        "allergen": "milk",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "egg",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "fish",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "shellfish",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "tree_nut",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "peanut",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "wheat",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "soy",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "sesame",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "gluten",
+        "level": "not_detected"
+      }
+    ],
+    "diet": [
+      "vegetarian",
+      "vegan",
+      "halal",
+      "no_pork"
+    ],
+    "spice": 0,
+    "isDrink": true,
+    "shareable": false,
+    "tagStatus": "tagged",
+    "taste": [],
+    "priceVerified": true,
+    "currency": "USD",
+    "menuOrder": 23
+  },
+  {
+    "name": "G.D. Vajra Moscato d'Asti",
+    "category": "drinks",
+    "cuisine": "Italian",
+    "tags": [
+      "wine",
+      "sweet",
+      "sparkling",
+      "alcohol"
+    ],
+    "description": "Piemonte, Italy '24, 4oz",
+    "priceCents": 1300,
+    "allergens": [
+      {
+        "allergen": "milk",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "egg",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "fish",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "shellfish",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "tree_nut",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "peanut",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "wheat",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "soy",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "sesame",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "gluten",
+        "level": "not_detected"
+      }
+    ],
+    "diet": [
+      "vegetarian",
+      "no_pork"
+    ],
+    "spice": 0,
+    "isDrink": true,
+    "shareable": false,
+    "tagStatus": "tagged",
+    "taste": [],
+    "priceVerified": true,
+    "currency": "USD",
+    "menuOrder": 24
+  },
+  {
+    "name": "Fred Jerbis Vermut",
+    "category": "drinks",
+    "cuisine": "Italian",
+    "tags": [
+      "vermouth",
+      "herbal",
+      "bitter",
+      "alcohol"
+    ],
+    "description": "Friuli, Italy, 2oz",
+    "priceCents": 1500,
+    "allergens": [
+      {
+        "allergen": "milk",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "egg",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "fish",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "shellfish",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "tree_nut",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "peanut",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "wheat",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "soy",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "sesame",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "gluten",
+        "level": "not_detected"
+      }
+    ],
+    "diet": [
+      "vegetarian",
+      "no_pork"
+    ],
+    "spice": 0,
+    "isDrink": true,
+    "shareable": false,
+    "tagStatus": "tagged",
+    "taste": [],
+    "priceVerified": true,
+    "currency": "USD",
+    "menuOrder": 25
+  },
+  {
+    "name": "Giusti Visciola",
+    "category": "drinks",
+    "cuisine": "Italian",
+    "tags": [
+      "cherry",
+      "sweet",
+      "wine",
+      "alcohol"
+    ],
+    "description": "Sour cherry wine, Le Marche, Italy, 2oz",
+    "priceCents": 1300,
+    "allergens": [
+      {
+        "allergen": "milk",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "egg",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "fish",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "shellfish",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "tree_nut",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "peanut",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "wheat",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "soy",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "sesame",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "gluten",
+        "level": "not_detected"
+      }
+    ],
+    "diet": [
+      "vegetarian",
+      "no_pork"
+    ],
+    "spice": 0,
+    "isDrink": true,
+    "shareable": false,
+    "tagStatus": "tagged",
+    "taste": [],
+    "priceVerified": true,
+    "currency": "USD",
+    "menuOrder": 26
+  },
+  {
+    "name": "Patricius Tokaji Aszú 5 Puttonyos",
+    "category": "drinks",
+    "cuisine": "Hungarian",
+    "tags": [
+      "dessert wine",
+      "sweet",
+      "alcohol"
+    ],
+    "description": "Tokaj, Hungary, 2oz",
+    "priceCents": 1700,
+    "allergens": [
+      {
+        "allergen": "milk",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "egg",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "fish",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "shellfish",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "tree_nut",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "peanut",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "wheat",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "soy",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "sesame",
+        "level": "not_detected"
+      },
+      {
+        "allergen": "gluten",
+        "level": "not_detected"
+      }
+    ],
+    "diet": [
+      "vegetarian",
+      "no_pork"
+    ],
+    "spice": 0,
+    "isDrink": true,
+    "shareable": false,
+    "tagStatus": "tagged",
+    "taste": [],
+    "priceVerified": true,
+    "currency": "USD",
+    "menuOrder": 27
+  }
+]

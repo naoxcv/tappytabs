@@ -95,6 +95,15 @@ final class PartyStoreTests: XCTestCase {
     }
 }
 
+final class TableTalkTests: XCTestCase {
+    func testSpeakerStopsWhenBubbleExpiresOrPartyMovesToPick() {
+        let bubble = Bubble(id: "one", fromUserId: "diner", text: "Hello", showAt: 1_000)
+        XCTAssertEqual(TableTalkView.activeBubble(in: [bubble], serverNowMs: 1_000, status: .negotiating), bubble)
+        XCTAssertNil(TableTalkView.activeBubble(in: [bubble], serverNowMs: 2_800, status: .negotiating))
+        XCTAssertNil(TableTalkView.activeBubble(in: [bubble], serverNowMs: 1_000, status: .pick))
+    }
+}
+
 
 final class AgentFlingMotionTests: XCTestCase {
     func testFlingSettlesThenHopsBackToItsStartingPosition() {

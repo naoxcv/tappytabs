@@ -1,4 +1,4 @@
-// Owner: Role 1. Three big buttons. A second tap changes the choice while status is still `hunger`.
+// Owner: Role 1. Hunger choices are available from check-in onward.
 import SwiftUI
 
 struct HungerView: View {

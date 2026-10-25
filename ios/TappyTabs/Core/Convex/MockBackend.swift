@@ -61,7 +61,7 @@ final class MockBackend: Backend {
         case .hunger:
             setParty(base.with(status: .hunger, members: base.members.enumerated().map { $0.element.with(hunger: $0.offset == 0 ? nil : .normal) }))
         case .negotiating:
-            setParty(base.with(status: .negotiating)); playMessages(thenAdvance: false)
+            setParty(base.with(status: .negotiating)); playMessages(thenAdvance: true)
         case .pick:
             setParty(base); candidatesSubject.send(fixtureCandidates); linesSubject.send(linesPick); messagesSubject.send(rebased(spread: false))
         case .confirm:
@@ -134,10 +134,10 @@ final class MockBackend: Backend {
 
     // Restaurant onboarding is intentionally kept out of the seeded demo path.
     func restaurantAccount(deviceId: String, displayName: String) async throws -> RestaurantAccount {
-        RestaurantAccount(_id: "mock-account", deviceId: deviceId, displayName: displayName, restaurantId: Self.restaurantId, onboardingId: nil)
+        RestaurantAccount(_id: "mock-account", deviceId: deviceId, displayName: displayName, restaurantId: Self.restaurantId, activeMenuVersionId: nil, onboardingId: nil)
     }
     func createRestaurantDraft(deviceId: String, name: String, address: String) async throws -> String { "mock-onboarding" }
-    func skipRestaurantOnboarding(deviceId: String) async throws {}
+    func skipRestaurantOnboarding(deviceId: String, menu: DemoMenu) async throws {}
     func restaurantOnboardingStatus(deviceId: String, onboardingId: String) -> AnyPublisher<RestaurantOnboarding?, TTError> {
         onMain(Just(nil).setFailureType(to: TTError.self))
     }
@@ -169,7 +169,9 @@ final class MockBackend: Backend {
             candidatesSubject.send(fixtureCandidates)
             publishLines(linesPick.lines + autoPersonalLines(members))
         } else {
-            setParty(p.with(status: .hunger, size: Double(p.members.count)))
+            let allChose = p.members.allSatisfy { $0.hunger != nil }
+            setParty(p.with(status: allChose ? .negotiating : .hunger, size: Double(p.members.count)))
+            if allChose { playMessages(thenAdvance: true) }
         }
     }
 
@@ -210,8 +212,11 @@ final class MockBackend: Backend {
     }
 
     func setHunger(partyId: String, userId: String, deviceId: String, hunger: Hunger) async throws {
-        try requireStatus(.hunger)
+        guard let current = partySubject.value, current.status == .checkin || current.status == .hunger else {
+            throw TTError(code: .BAD_STATUS, message: "Not choosing hunger")
+        }
         updateMember(userId) { $0.with(hunger: hunger) }
+        guard partySubject.value?.status == .hunger else { return }
         // Everyone else chooses a moment later.
         after(delay) { [self] in
             for m in partySubject.value?.members ?? [] where m.hunger == nil { updateMember(m.userId) { $0.with(hunger: .normal) } }

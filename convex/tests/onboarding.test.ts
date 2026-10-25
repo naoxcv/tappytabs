@@ -2,7 +2,9 @@ import { convexTest } from "convex-test";
 import { describe, expect, test, vi } from "vitest";
 import { api, internal } from "../_generated/api";
 import schema from "../schema";
-import { normalizerPrice, publishedPriceVerified, withEstimatedPrices } from "../lib/normalizerPrice";
+import { normalizerPrice, publishedPriceVerified } from "../lib/normalizerPrice";
+import { normalizedItem as menuItemSchema } from "../menu";
+import { FLOUR_WATER_MENU } from "../seedData";
 
 const modules = import.meta.glob("../**/!(*.test).ts");
 
@@ -58,15 +60,6 @@ describe("restaurant onboarding", () => {
     expect(publishedPriceVerified({ priceCents: 0 }, { priceCents: 1650, priceVerified: false })).toBe(false);
   });
 
-  test("accepts only matching, unverified actor price estimates", () => {
-    const raw = [{ name: "Pasta", price: 0 }, { name: "Tea", price: "$4.00" }];
-    expect(withEstimatedPrices(raw, [
-      { name: "Pasta", menuOrder: 0, priceCents: 1650, priceVerified: false },
-      { name: "Tea", menuOrder: 1, priceCents: 500, priceVerified: false },
-    ])).toEqual([{ name: "Pasta", price: 0, estimatedPriceCents: 1650 }, raw[1]]);
-    expect(withEstimatedPrices(raw, [{ name: "Wrong dish", menuOrder: 0, priceCents: 1650, priceVerified: false }])).toEqual(raw);
-  });
-
   test("can skip onboarding into the checked-in demo menu", async () => {
     const t = testBackend();
     await t.mutation(api.onboarding.createOrGet, { deviceId: "demo-owner", displayName: "Restaurant" });
@@ -77,6 +70,20 @@ describe("restaurant onboarding", () => {
     expect(restaurant?.onboardingStatus).toBe("ready");
     expect((await t.query(api.menu.status, { restaurantId }))?.itemCount).toBeGreaterThan(0);
     expect((await t.query(api.onboarding.me, { deviceId: "demo-owner" }))?.onboardingId).toBeTruthy();
+  });
+
+  test("can switch between the checked-in demo menus", async () => {
+    for (const item of FLOUR_WATER_MENU) expect(menuItemSchema.safeParse(item).success).toBe(true);
+    const t = testBackend();
+    await t.mutation(api.onboarding.createOrGet, { deviceId: "demo-owner", displayName: "Restaurant" });
+    const restaurantId = await t.mutation(api.onboarding.skipToDemo, { deviceId: "demo-owner" });
+    expect(await t.mutation(api.onboarding.skipToDemo, { deviceId: "demo-owner", menu: "flourWater" })).toBe(restaurantId);
+    expect((await t.query(api.onboarding.getOwned, { deviceId: "demo-owner" }))?.name).toBe("Flour + Water");
+    const menu = await t.query(api.menu.list, { restaurantId });
+    expect(menu).toHaveLength(FLOUR_WATER_MENU.length);
+    expect(menu.every((item) => item.tagStatus === "tagged")).toBe(true);
+    await t.mutation(api.onboarding.skipToDemo, { deviceId: "demo-owner", menu: "tappy" });
+    expect((await t.query(api.menu.list, { restaurantId })).map((item) => item.name)).toContain("Seafood Paella");
   });
 
   test("creates one account per device and one restaurant draft per account", async () => {
@@ -141,7 +148,7 @@ describe("restaurant onboarding", () => {
     const rawItems = [
       { name: "Rice Bowl", description: "Seasonal vegetables", price: 14.5, category: "Mains" },
       { name: "Iced Tea", price: "$4.00", category: "Drinks" },
-      { name: "Pasta", price: 0, estimatedPriceCents: 1650, category: "Mains" },
+      { name: "Pasta", price: 0, category: "Mains" },
     ];
 
     await t.mutation(internal.onboarding.saveUrlResult, {
@@ -160,7 +167,7 @@ describe("restaurant onboarding", () => {
     expect(draft?.editedItems).toEqual([
       expect.objectContaining({ name: "Rice Bowl", priceCents: 1450, tagStatus: "untagged", menuOrder: 0 }),
       expect.objectContaining({ name: "Iced Tea", priceCents: 400, tagStatus: "untagged", menuOrder: 1 }),
-      expect.objectContaining({ name: "Pasta", priceCents: 1650, priceVerified: false, menuOrder: 2 }),
+      expect.objectContaining({ name: "Pasta", priceCents: 0, priceVerified: false, menuOrder: 2 }),
     ]);
     expect((await t.query(api.onboarding.getStatus, { deviceId: "owner-device", onboardingId }))?.status).toBe("review_required");
   });
@@ -173,18 +180,18 @@ describe("restaurant onboarding", () => {
     });
     await t.mutation(internal.onboarding.saveSearchResults, {
       deviceId: "owner-device", onboardingId,
-      candidates: [{ ...candidate, sourceUrl: "https://tappy.example/menu", rawItems: [{ name: "Pasta", price: 0, estimatedPriceCents: 1650 }] }],
+      candidates: [{ ...candidate, sourceUrl: "https://tappy.example/menu", rawItems: [{ name: "Pasta", price: 0 }] }],
     });
     await t.mutation(api.onboarding.selectCandidate, {
       deviceId: "owner-device", onboardingId,
       candidate: { name: candidate.name, address: candidate.address, sourceUrl: "https://tappy.example/menu" },
     });
     const draft = await t.query(api.onboarding.getDraft, { deviceId: "owner-device", onboardingId });
-    expect(draft?.editedItems[0]).toEqual(expect.objectContaining({ name: "Pasta", priceCents: 1650, priceVerified: false }));
+    expect(draft?.editedItems[0]).toEqual(expect.objectContaining({ name: "Pasta", priceCents: 0, priceVerified: false }));
     expect((await t.query(api.onboarding.getStatus, { deviceId: "owner-device", onboardingId }))?.status).toBe("review_required");
   });
 
-  test("a completed URL scrape prefills zero prices from the normalizer before review", async () => {
+  test("a completed URL scrape saves the review draft without waiting on the normalizer", async () => {
     const t = testBackend();
     await t.mutation(api.onboarding.createOrGet, { deviceId: "owner-device", displayName: "Owner" });
     const onboardingId = await t.mutation(api.onboarding.createDraft, {
@@ -193,15 +200,12 @@ describe("restaurant onboarding", () => {
     vi.stubEnv("APIFY_TOKEN", "test-token");
     vi.stubEnv("APIFY_NORMALIZER_ACTOR", "test/menu-normalizer");
     const requests: string[] = [];
-    vi.stubGlobal("fetch", async (request: string, init?: RequestInit) => {
+    vi.stubGlobal("fetch", async (request: string) => {
       requests.push(request);
       const payload = request.includes("/actor-runs/")
         ? { data: { status: "SUCCEEDED", defaultDatasetId: "dataset-1" } }
-        : request.includes("/datasets/")
-          ? [{ success: true, restaurant: { name: "Tappy Cafe", address: candidate.address, url: "https://tappy.example/menu" },
-              menu: { categories: [{ name: "Mains", items: Array.from({ length: 5 }, (_, index) => ({ name: `Dish ${index}`, price: index === 0 ? 0 : 12 })) }] } }]
-          : [{ name: "Dish 0", menuOrder: 0, priceCents: 1550, priceVerified: false }];
-      if (init?.body) expect(JSON.parse(String(init.body)).items[0].price).toBe("0");
+        : [{ success: true, restaurant: { name: "Tappy Cafe", address: candidate.address, url: "https://tappy.example/menu" },
+            menu: { categories: [{ name: "Mains", items: Array.from({ length: 5 }, (_, index) => ({ name: `Dish ${index}`, price: index === 0 ? 0 : 12 })) }] } }];
       return new Response(JSON.stringify(payload), { status: 200 });
     });
     try {
@@ -209,8 +213,9 @@ describe("restaurant onboarding", () => {
         onboardingId, deviceId: "owner-device", actorRunId: "run-1", mode: "url", deadline: Date.now() + 60_000,
       });
       const draft = await t.query(api.onboarding.getDraft, { deviceId: "owner-device", onboardingId });
-      expect(draft?.editedItems[0]).toEqual(expect.objectContaining({ name: "Dish 0", priceCents: 1550, priceVerified: false }));
-      expect(requests.some((url) => url.includes("run-sync-get-dataset-items"))).toBe(true);
+      expect(draft?.editedItems[0]).toEqual(expect.objectContaining({ name: "Dish 0", priceCents: 0, priceVerified: false }));
+      expect((await t.query(api.onboarding.getStatus, { deviceId: "owner-device", onboardingId }))?.status).toBe("review_required");
+      expect(requests.some((url) => url.includes("/acts/"))).toBe(false);
     } finally {
       vi.unstubAllGlobals();
       vi.unstubAllEnvs();
@@ -225,10 +230,18 @@ describe("restaurant onboarding", () => {
     });
     vi.stubEnv("APIFY_TOKEN", "test-token");
     vi.stubEnv("APIFY_NORMALIZER_ACTOR", "test/menu-normalizer");
-    vi.stubGlobal("fetch", async (_request: string, init?: RequestInit) => {
-      const input = JSON.parse(String(init?.body));
-      expect(input.items[0].price).toBeUndefined();
-      expect(input.items[1].price).toBe("$16.50");
+    let runChecks = 0;
+    vi.stubGlobal("fetch", async (request: string, init?: RequestInit) => {
+      if (request.includes("/acts/") && request.includes("/runs")) {
+        const input = JSON.parse(String(init?.body));
+        expect(input.items[0].price).toBeUndefined();
+        expect(input.items[1].price).toBe("$16.50");
+        return new Response(JSON.stringify({ data: { id: "normalizer-run-1" } }), { status: 200 });
+      }
+      if (request.includes("/actor-runs/")) {
+        runChecks++;
+        return new Response(JSON.stringify({ data: runChecks === 1 ? { status: "RUNNING" } : { status: "SUCCEEDED", defaultDatasetId: "dataset-1" } }), { status: 200 });
+      }
       return new Response(JSON.stringify([
         { ...normalizedItem, name: "Pasta", priceCents: 1550, priceVerified: false, menuOrder: 0 },
         { ...normalizedItem, name: "Pizza", priceCents: 1650, priceVerified: true, menuOrder: 1 },
@@ -240,11 +253,48 @@ describe("restaurant onboarding", () => {
         items: [{ ...normalizedItem, name: "Pasta", priceCents: 0, menuOrder: 0 },
           { ...normalizedItem, name: "Pizza", priceCents: 1650, priceVerified: false, menuOrder: 1 }],
       });
-      const menu = await t.query(api.menu.list, { restaurantId: (await t.query(api.onboarding.getOwned, { deviceId: "owner-device" }))!._id });
-      expect(result.versionId).toBeTruthy();
+      expect(result.status).toBe("normalizing");
+      expect((await t.query(api.onboarding.getStatus, { deviceId: "owner-device", onboardingId }))?.status).toBe("normalizing");
+      await t.action(internal.onboarding.pollNormalizerRun, { onboardingId, runId: result.normalizerRunId });
+      expect((await t.query(api.onboarding.getStatus, { deviceId: "owner-device", onboardingId }))?.status).toBe("normalizing");
+      await t.action(internal.onboarding.pollNormalizerRun, { onboardingId, runId: result.normalizerRunId });
+      const restaurantId = (await t.query(api.onboarding.getOwned, { deviceId: "owner-device" }))!._id;
+      const menu = await t.query(api.menu.list, { restaurantId });
       expect(menu.map((item) => [item.name, item.priceCents, item.priceVerified])).toEqual([
         ["Pasta", 1550, false], ["Pizza", 1650, false],
       ]);
+      expect((await t.query(api.onboarding.getStatus, { deviceId: "owner-device", onboardingId }))?.status).toBe("ready");
+      expect((await t.query(api.onboarding.getOwned, { deviceId: "owner-device" }))?.activeMenuVersionId).toBeTruthy();
+      expect((await t.query(api.onboarding.me, { deviceId: "owner-device" }))?.activeMenuVersionId).toBeTruthy();
+      await t.mutation(api.parties.create, { restaurantId, size: 2, hostDeviceId: "demo-host" });
+      expect((await t.query(api.menu.status, { restaurantId }))?.itemCount).toBe(2);
+    } finally {
+      vi.unstubAllGlobals();
+      vi.unstubAllEnvs();
+    }
+  });
+
+  test("an incomplete normalization never replaces the saved demo menu", async () => {
+    const t = testBackend();
+    await t.mutation(api.onboarding.createOrGet, { deviceId: "owner-device", displayName: "Owner" });
+    const restaurantId = await t.mutation(api.onboarding.skipToDemo, { deviceId: "owner-device" });
+    const onboardingId = (await t.query(api.onboarding.me, { deviceId: "owner-device" }))!.onboardingId!;
+    const before = await t.query(api.onboarding.getOwned, { deviceId: "owner-device" });
+    const beforeMenu = await t.query(api.menu.list, { restaurantId });
+    vi.stubEnv("APIFY_TOKEN", "test-token");
+    vi.stubEnv("APIFY_NORMALIZER_ACTOR", "test/menu-normalizer");
+    vi.stubGlobal("fetch", async (request: string) => {
+      if (request.includes("/acts/")) return new Response(JSON.stringify({ data: { id: "partial-run" } }), { status: 200 });
+      if (request.includes("/actor-runs/")) return new Response(JSON.stringify({ data: { status: "SUCCEEDED", defaultDatasetId: "partial-dataset" } }), { status: 200 });
+      return new Response(JSON.stringify([{ ...normalizedItem, tagStatus: "untagged", menuOrder: 0 }]), { status: 200 });
+    });
+    try {
+      await t.action(api.onboarding.publish, { deviceId: "owner-device", onboardingId, items: [{ ...normalizedItem, menuOrder: 0 }] });
+      await t.action(internal.onboarding.pollNormalizerRun, { onboardingId, runId: "partial-run" });
+      const after = await t.query(api.onboarding.getOwned, { deviceId: "owner-device" });
+      expect(after?.activeMenuVersionId).toBe(before?.activeMenuVersionId);
+      expect((await t.query(api.menu.list, { restaurantId })).map((item) => item._id)).toEqual(beforeMenu.map((item) => item._id));
+      expect((await t.query(api.onboarding.getStatus, { deviceId: "owner-device", onboardingId }))?.status).toBe("normalization_failed");
     } finally {
       vi.unstubAllGlobals();
       vi.unstubAllEnvs();

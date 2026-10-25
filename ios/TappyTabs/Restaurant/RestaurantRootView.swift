@@ -116,7 +116,10 @@ struct RestaurantOnboardingView: View {
                 Text("Just want to demo the ordering flow?")
                     .font(AppTypography.footnote)
                     .foregroundStyle(Theme.accent)
-                Button(skipping ? "Preparing demo menu…" : "Skip setup — use demo menu") { Task { await skipToDemo() } }
+                Button(skipping ? "Preparing demo menu…" : "Skip setup — use demo menu") { Task { await skipToDemo(.tappy) } }
+                    .buttonStyle(.bordered)
+                    .disabled(saving || skipping)
+                Button("Skip setup — use Flour + Water menu") { Task { await skipToDemo(.flourWater) } }
                     .buttonStyle(.bordered)
                     .disabled(saving || skipping)
             }
@@ -139,6 +142,12 @@ struct RestaurantOnboardingView: View {
                 .buttonStyle(.plain)
             }
             Button("I’ll enter a URL manually") { resetToSourceEntry() }
+        } else if onboarding?.status == "normalizing" {
+            ProgressView("Completing every menu item…")
+        } else if onboarding?.status == "normalization_failed", let draft {
+            Text(onboarding?.errorMessage ?? "Menu normalization did not finish. Your saved menu is available to retry.")
+                .foregroundStyle(Theme.accent)
+            MenuDraftEditor(draft: draft, saving: saving) { items in Task { await update(items) } } publish: { items in Task { await publish(items) } }
         } else if let onboarding, ["scrape_failed", "manual_review", "match_failed"].contains(onboarding.status) {
             Text(onboarding.errorMessage ?? "We couldn’t import a usable menu.").foregroundStyle(Theme.accent)
             Button("Try another URL") { resetToSourceEntry() }.buttonStyle(.borderedProminent)
@@ -153,6 +162,10 @@ struct RestaurantOnboardingView: View {
         loading = true; defer { loading = false }
         do {
             let account = try await app.backend.restaurantAccount(deviceId: app.deviceId, displayName: "Restaurant")
+            if account.activeMenuVersionId != nil {
+                onReady()
+                return
+            }
             if let id = account.onboardingId {
                 onboardingId = id
                 subscribe(id)
@@ -187,10 +200,10 @@ struct RestaurantOnboardingView: View {
         } catch let caught { self.error = TTError.from(caught).userMessage }
     }
 
-    private func skipToDemo() async {
+    private func skipToDemo(_ menu: DemoMenu) async {
         skipping = true; defer { skipping = false }
         do {
-            try await app.backend.skipRestaurantOnboarding(deviceId: app.deviceId)
+            try await app.backend.skipRestaurantOnboarding(deviceId: app.deviceId, menu: menu)
             onReady()
         } catch let caught { self.error = TTError.from(caught).userMessage }
     }
@@ -305,7 +318,7 @@ struct RestaurantRootView: View {
             case .placed: OrderReceivedView(store: store)
             }
         }
-        .id(displayedStatus?.rawValue ?? "loading")
+        .id(pageKey)
         .transition(AppPageTransition.transition(reduceMotion: reduceMotion))
         .animation(AppPageTransition.animation(reduceMotion: reduceMotion), value: displayedStatus)
         .onChange(of: store.party?.status, initial: true) { _, newStatus in
@@ -323,5 +336,13 @@ struct RestaurantRootView: View {
             }
         }
         .onDisappear { statusTransition?.cancel() }
+    }
+
+    private var pageKey: String {
+        switch displayedStatus {
+        case .negotiating, .pick: "table-talk"
+        case .some(let status): status.rawValue
+        case .none: "loading"
+        }
     }
 }

@@ -4,7 +4,7 @@
 // Pipeline: keyword pass (deterministic) → bounded Bitdeer tag pass (add/raise only) → push.
 import { Actor, log } from "apify";
 import OpenAI from "openai";
-import { isMissingPrice, keywordPass, mergeLlm, parsePrice, type LlmTags, type RawItem } from "./normalize.js";
+import { isCompleteLlmTags, isMissingPrice, keywordPass, mergeLlm, parsePrice, type LlmTags, type RawItem } from "./normalize.js";
 import { TAG_SYSTEM, tagUser } from "./tagPrompt.js";
 import { tagBatches, type IndexedItem } from "./tagBatches.js";
 
@@ -18,7 +18,7 @@ log.info(`Normalizing ${items.length} items`);
 const apiKey = process.env.BITDEER_API_KEY;
 const model = process.env.BITDEER_MODEL;
 const client = apiKey && model ? new OpenAI({ apiKey, baseURL: "https://api-inference.bitdeer.ai/v1", maxRetries: 1 }) : null;
-if (!client) log.warning("BITDEER_API_KEY/BITDEER_MODEL not set: keyword-only tags, everything else may_contain");
+if (!client) throw new Error("BITDEER_API_KEY/BITDEER_MODEL are required for a complete demo menu");
 const knownPrices = items.filter((item) => (parsePrice(item.price).cents ?? 0) > 0);
 const knownCurrencies = [...new Set(knownPrices.map((item) => parsePrice(item.price).currency).filter((currency) => currency !== undefined))];
 const estimatedCurrency = knownCurrencies.length === 1 ? knownCurrencies[0] : undefined;
@@ -41,16 +41,20 @@ async function callTags(batch: IndexedItem[], timeoutMs: number): Promise<(LlmTa
   }, { timeout: timeoutMs, maxRetries: 0 });
   const parsed: unknown = JSON.parse(res.choices[0]?.message?.content ?? "{}");
   if (!parsed || typeof parsed !== "object" || !Array.isArray((parsed as { items?: unknown }).items)) throw new Error("Tag response has no items array");
-  return (parsed as { items: (LlmTags & { index: number })[] }).items;
+  return (parsed as { items: unknown[] }).items.filter((row): row is LlmTags & { index: number } => {
+    if (!row || typeof row !== "object" || !Number.isInteger((row as { index?: unknown }).index)) return false;
+    const index = (row as { index: number }).index;
+    if (index < 0 || index >= requestBatch.length || !isCompleteLlmTags(row)) return false;
+    return !isMissingPrice(requestBatch[index].item.price) ||
+      (Number.isInteger(row.estimatedPriceCents) && row.estimatedPriceCents! > 0 && row.estimatedPriceCents! <= 20_000);
+  });
 }
 
-const size = Math.max(1, Math.min(8, Math.floor(input.batchSize ?? 8)));
-// The onboarding caller uses a 60-second synchronous Apify request. Leave time
-// for startup, dataset output, and network transit after the bounded tag pass.
-const tags = client ? await tagBatches(items.map((item, index) => ({ index, item })), size, callTags, {
-  maxConcurrent: 3, budgetMs: 50_000, requestTimeoutMs: 12_000,
+const size = Math.max(1, Math.min(8, Math.floor(input.batchSize ?? 4)));
+const tags = await tagBatches(items.map((item, index) => ({ index, item })), size, callTags, {
+  maxConcurrent: 3, requestTimeoutMs: 120_000,
   onFailure: (message) => log.warning(message),
-}) : new Map<number, LlmTags>();
+});
 
 const rows = items.map((raw, i) => {
   const base = keywordPass(raw, i);
@@ -58,8 +62,9 @@ const rows = items.map((raw, i) => {
   return normalized.priceCents > 0 && !normalized.priceVerified && estimatedCurrency
     ? { ...normalized, currency: estimatedCurrency } : normalized;
 });
+const incomplete = rows.filter((row) => row.tagStatus !== "tagged" || (row.priceCents === 0 && !row.priceVerified));
+if (incomplete.length) throw new Error(`Normalizer could not complete ${incomplete.length}/${rows.length} item(s); no partial menu was published`);
 await Actor.pushData(rows);
 log.info(`Done: ${rows.filter((r) => r.tagStatus === "tagged").length}/${rows.length} tagged`);
 log.info(`Estimated prices for ${rows.filter((r) => r.priceCents > 0 && !r.priceVerified).length}/${rows.length} items`);
-if (client && tags.size < rows.length) log.warning(`Completed with ${rows.length - tags.size} untagged item(s); emitted conservative keyword-only rows`);
 await Actor.exit();

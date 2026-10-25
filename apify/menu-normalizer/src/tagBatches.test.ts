@@ -18,7 +18,7 @@ test("timed-out batches shrink until every item is tagged", async () => {
     } finally {
       active--;
     }
-  }, { maxConcurrent: 3, budgetMs: 5_000 });
+  }, { maxConcurrent: 3 });
   assert.equal(tagged.size, 8);
   assert.deepEqual(sizes, [8, 4, 4, 2, 2, 2, 2]);
   assert.ok(peak <= 3);
@@ -30,7 +30,7 @@ test("partial responses retry only omitted items", async () => {
     requested.push(batch.map(({ index }) => index));
     return batch.filter(({ index }) => index !== 1 || batch.length === 1)
       .map(({ index }) => ({ index: batch.findIndex((entry) => entry.index === index), tags: ["food"] }));
-  }, { budgetMs: 5_000 });
+  });
   assert.equal(tagged.size, 3);
   assert.deepEqual(requested, [[0, 1, 2], [1]]);
 });
@@ -44,14 +44,15 @@ test("provider concurrency stays bounded across initial batches", async () => {
     await new Promise((resolve) => setTimeout(resolve, 2));
     active--;
     return [{ index: 0, tags: ["food"] }];
-  }, { maxConcurrent: 3, budgetMs: 5_000 });
+  }, { maxConcurrent: 3 });
   assert.equal(tagged.size, 8);
   assert.equal(peak, 3);
 });
 
-test("expired tagging budget returns remaining items to keyword fallback", async () => {
-  let called = false;
-  const tagged = await tagBatches(items, 8, async () => { called = true; return []; }, { budgetMs: 1 });
-  assert.equal(called, false);
-  assert.equal(tagged.size, 0);
+test("slow batches still finish instead of hitting a whole-menu deadline", async () => {
+  const tagged = await tagBatches(items, 8, async (batch) => {
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    return batch.map((_, index) => ({ index, tags: ["food"] }));
+  });
+  assert.equal(tagged.size, items.length);
 });

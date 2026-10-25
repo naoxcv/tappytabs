@@ -25,6 +25,27 @@ const code = async (p: Promise<unknown>) => {
 };
 
 describe("parties:join", () => {
+  test("a diner can choose hunger immediately while the rest of the table checks in", async () => {
+    const { t, partyId, joinCode, userIds, hostDeviceId } = await setup();
+    await t.mutation(api.parties.join, { partyId, userId: userIds[0], via: "uwb", hostDeviceId });
+    await t.mutation(api.parties.setHunger, { partyId, userId: userIds[0], deviceId: "demo-diner-1", hunger: "starving" });
+    let party = (await t.query(api.parties.current, { partyId }))!;
+    expect(party.status).toBe("checkin");
+    expect(party.members[0].hunger).toBe("starving");
+
+    for (let index = 1; index < 4; index++) {
+      await t.mutation(api.parties.join, { joinCode, userId: userIds[index], via: "qr", deviceId: `demo-diner-${index + 1}` });
+    }
+    party = (await t.query(api.parties.current, { partyId }))!;
+    expect(party.status).toBe("hunger");
+    expect(party.members[0].hunger).toBe("starving");
+
+    for (let index = 1; index < 4; index++) {
+      await t.mutation(api.parties.setHunger, { partyId, userId: userIds[index], deviceId: `demo-diner-${index + 1}`, hunger: "normal" });
+    }
+    expect((await t.query(api.parties.current, { partyId }))!.status).toBe("negotiating");
+  });
+
   test("join, already, full, and the last seat moves to hunger", async () => {
     const { t, partyId, userIds, hostDeviceId } = await setup();
     for (const userId of userIds.slice(0, 3)) {
@@ -83,6 +104,19 @@ describe("parties:join", () => {
     expect(r.status).toBe("checkin");
     expect(r.members).toHaveLength(0);
     expect(r.joinCode).not.toBe(p.joinCode);
+  });
+
+  test("startWithFewer advances when the checked-in diners already chose hunger", async () => {
+    const { t, partyId, userIds, hostDeviceId } = await setup();
+    for (let index = 0; index < 2; index++) {
+      await t.mutation(api.parties.join, { partyId, userId: userIds[index], via: "uwb", hostDeviceId });
+      await t.mutation(api.parties.setHunger, { partyId, userId: userIds[index], deviceId: `demo-diner-${index + 1}`, hunger: "normal" });
+    }
+    expect((await t.query(api.parties.current, { partyId }))!.status).toBe("checkin");
+    await t.mutation(api.parties.startWithFewer, { partyId, hostDeviceId });
+    const party = (await t.query(api.parties.current, { partyId }))!;
+    expect(party.size).toBe(2);
+    expect(party.status).toBe("negotiating");
   });
 
   test("scheduled work from before reset is harmless", async () => {

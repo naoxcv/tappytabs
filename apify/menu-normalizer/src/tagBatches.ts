@@ -7,10 +7,9 @@ type Call = (batch: IndexedItem[], timeoutMs: number) => Promise<TaggedRow[]>;
 /** Retry only unresolved items, shrinking timed-out batches without exceeding provider concurrency. */
 export async function tagBatches(
   items: IndexedItem[], batchSize: number, call: Call,
-  options: { maxConcurrent?: number; budgetMs?: number; requestTimeoutMs?: number; onFailure?: (message: string) => void } = {},
+  options: { maxConcurrent?: number; requestTimeoutMs?: number; onFailure?: (message: string) => void } = {},
 ): Promise<Map<number, LlmTags>> {
-  const deadline = Date.now() + (options.budgetMs ?? 50_000);
-  const requestTimeoutMs = options.requestTimeoutMs ?? 12_000;
+  const requestTimeoutMs = options.requestTimeoutMs ?? 120_000;
   const queue: { items: IndexedItem[]; singletonRetry: boolean }[] = [];
   for (let i = 0; i < items.length; i += batchSize) queue.push({ items: items.slice(i, i + batchSize), singletonRetry: false });
   const tagged = new Map<number, LlmTags>();
@@ -27,11 +26,10 @@ export async function tagBatches(
   }
 
   async function worker() {
-    while (queue.length && Date.now() + 1_000 < deadline) {
+    while (queue.length) {
       const task = queue.shift()!;
-      const timeoutMs = Math.min(requestTimeoutMs, deadline - Date.now() - 1_000);
       try {
-        const response = await call(task.items, timeoutMs);
+        const response = await call(task.items, requestTimeoutMs);
         for (const row of response) {
           if (!row || !Number.isInteger(row.index) || row.index < 0 || row.index >= task.items.length) continue;
           const sourceIndex = task.items[row.index].index;

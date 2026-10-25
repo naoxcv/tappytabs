@@ -4,8 +4,8 @@ import { internal } from "./_generated/api";
 import type { Id } from "./_generated/dataModel";
 import { fail } from "./shared/errors";
 import { normalizedItem } from "./menu";
-import { SEED_MENU } from "./seedData";
-import { normalizerPrice, publishedPriceVerified, scrapedPriceCents, withEstimatedPrices } from "./lib/normalizerPrice";
+import { DEMO_MENUS } from "./seedData";
+import { normalizerPrice, publishedPriceVerified, scrapedPriceCents } from "./lib/normalizerPrice";
 
 const api: any = (internal as any).onboarding;
 const candidateV = v.object({ name: v.string(), address: v.string(), sourceUrl: v.optional(v.string()), confidence: v.optional(v.string()), extractionConfidence: v.optional(v.string()), categories: v.optional(v.array(v.string())), rawItems: v.optional(v.array(v.any())), rawPayload: v.optional(v.any()), mapsUrl: v.optional(v.string()), googlePlaceId: v.optional(v.string()), websiteUrl: v.optional(v.string()), phone: v.optional(v.string()), hours: v.optional(v.array(v.string())), rating: v.optional(v.number()), distance: v.optional(v.number()), matchScore: v.optional(v.number()) });
@@ -18,21 +18,22 @@ async function account(ctx: Ctx, deviceId: string) { const row = await ctx.db.qu
 async function own(ctx: Ctx, deviceId: string, onboardingId: Id<"restaurantOnboardings">) { const a = await account(ctx, deviceId); const row = await ctx.db.get(onboardingId); if (!row || row.ownerAccountId !== a._id) fail("NOT_HOST", "Only the owning device can modify this onboarding"); return { a, row }; }
 
 export const createOrGet = mutation({ args: { deviceId: v.string(), displayName: v.string() }, handler: async (ctx, { deviceId, displayName }) => { const existing = await ctx.db.query("restaurantAccounts").withIndex("by_device", (q) => q.eq("deviceId", deviceId)).unique(); const now = Date.now(); if (existing) { await ctx.db.patch(existing._id, { lastSeenAt: now }); return existing._id; } return ctx.db.insert("restaurantAccounts", { deviceId, displayName, createdAt: now, lastSeenAt: now, status: "active" }); } });
-export const me = query({ args: { deviceId: v.string() }, handler: async (ctx, { deviceId }) => { const a = await ctx.db.query("restaurantAccounts").withIndex("by_device", (q) => q.eq("deviceId", deviceId)).unique(); if (!a) return null; const restaurant = await ctx.db.query("restaurants").filter((q) => q.eq(q.field("ownerAccountId"), a._id)).first(); const onboarding = await ctx.db.query("restaurantOnboardings").withIndex("by_owner", (q) => q.eq("ownerAccountId", a._id)).order("desc").first(); return { ...a, restaurantId: restaurant?._id ?? null, onboardingId: onboarding?._id ?? null }; } });
+export const me = query({ args: { deviceId: v.string() }, handler: async (ctx, { deviceId }) => { const a = await ctx.db.query("restaurantAccounts").withIndex("by_device", (q) => q.eq("deviceId", deviceId)).unique(); if (!a) return null; const restaurant = await ctx.db.query("restaurants").filter((q) => q.eq(q.field("ownerAccountId"), a._id)).first(); const onboarding = await ctx.db.query("restaurantOnboardings").withIndex("by_owner", (q) => q.eq("ownerAccountId", a._id)).order("desc").first(); return { ...a, restaurantId: restaurant?._id ?? null, activeMenuVersionId: restaurant?.activeMenuVersionId ?? null, onboardingId: onboarding?._id ?? null }; } });
 export const createDraft = mutation({ args: { deviceId: v.string(), name: v.string(), address: v.string() }, handler: async (ctx, { deviceId, name, address }) => { const a = await account(ctx, deviceId); if (await ctx.db.query("restaurants").filter((q) => q.eq(q.field("ownerAccountId"), a._id)).first()) fail("INVALID", "This device already has a restaurant account"); const restaurantId = await ctx.db.insert("restaurants", { ownerAccountId: a._id, name, address, menuSource: "seed", onboardingStatus: "awaiting_source" }); const now = Date.now(); return ctx.db.insert("restaurantOnboardings", { ownerAccountId: a._id, restaurantId, submittedName: name, submittedAddress: address, status: "awaiting_source", candidates: [], createdAt: now, updatedAt: now }); } });
-/** Creates the pre-scraping demo restaurant and activates the checked-in menu snapshot. */
+/** Creates a pre-scraping demo restaurant and activates one of the checked-in menu snapshots. */
 export const skipToDemo = mutation({
-  args: { deviceId: v.string() },
-  handler: async (ctx, { deviceId }) => {
+  args: { deviceId: v.string(), menu: v.optional(v.union(v.literal("tappy"), v.literal("flourWater"))) },
+  handler: async (ctx, { deviceId, menu }) => {
+    const demo = DEMO_MENUS[menu ?? "tappy"];
     const a = await account(ctx, deviceId);
     const existing = await ctx.db.query("restaurants").filter((q) => q.eq(q.field("ownerAccountId"), a._id)).first();
-    if (existing?.activeMenuVersionId && existing.onboardingStatus === "ready") return existing._id;
+    if (existing?.activeMenuVersionId && existing.onboardingStatus === "ready" && existing.name === demo.name) return existing._id;
 
     const now = Date.now();
     const restaurantId = existing?._id ?? await ctx.db.insert("restaurants", {
       ownerAccountId: a._id,
-      name: "Tappy Kitchen (demo)",
-      address: "Demo menu",
+      name: demo.name,
+      address: demo.address,
       menuSource: "seed",
       onboardingStatus: "ready",
     });
@@ -41,12 +42,12 @@ export const skipToDemo = mutation({
     const versionId = await ctx.db.insert("restaurantMenuVersions", {
       restaurantId, version: versions.length + 1, status: "active", source: "manual", createdAt: now, publishedAt: now,
     });
-    for (const item of SEED_MENU) await ctx.db.insert("menuItems", { restaurantId, menuVersionId: versionId, ...item });
-    await ctx.db.patch(restaurantId, { name: "Tappy Kitchen (demo)", address: "Demo menu", menuSource: "seed", onboardingStatus: "ready", activeMenuVersionId: versionId, lastNormalizedAt: now });
+    for (const item of demo.items) await ctx.db.insert("menuItems", { restaurantId, menuVersionId: versionId, ...item });
+    await ctx.db.patch(restaurantId, { name: demo.name, address: demo.address, menuSource: "seed", onboardingStatus: "ready", activeMenuVersionId: versionId, lastNormalizedAt: now });
 
     const onboarding = await ctx.db.query("restaurantOnboardings").withIndex("by_owner", (q) => q.eq("ownerAccountId", a._id)).order("desc").first();
     if (onboarding) await ctx.db.patch(onboarding._id, { restaurantId, status: "ready", updatedAt: now, errorMessage: undefined });
-    else await ctx.db.insert("restaurantOnboardings", { ownerAccountId: a._id, restaurantId, submittedName: "Tappy Kitchen (demo)", submittedAddress: "Demo menu", status: "ready", candidates: [], createdAt: now, updatedAt: now });
+    else await ctx.db.insert("restaurantOnboardings", { ownerAccountId: a._id, restaurantId, submittedName: demo.name, submittedAddress: demo.address, status: "ready", candidates: [], createdAt: now, updatedAt: now });
     return restaurantId;
   },
 });
@@ -63,14 +64,12 @@ function usable(x: any) { return x && x.rawPayload?.success === true && x.name &
 function editableItems(rawItems: any[]): any[] {
   return rawItems.map((item, index) => {
     const scraped = scrapedPriceCents(item.price);
-    const estimated = Number.isInteger(item.estimatedPriceCents) && item.estimatedPriceCents > 0 && item.estimatedPriceCents <= 20_000
-      ? item.estimatedPriceCents : 0;
     return {
       name: String(item.name),
       category: String(item.category ?? "Other"),
       tags: [],
       description: String(item.description ?? ""),
-      priceCents: scraped || estimated,
+      priceCents: scraped,
       priceVerified: scraped > 0,
       allergens: [],
       diet: [],
@@ -91,28 +90,6 @@ function rawItemsForClient(rawItems: any[]): any[] {
     category: typeof item.category === "string" ? item.category : "Other",
     ...(typeof item.imageUrl === "string" ? { imageUrl: item.imageUrl } : {}),
   }));
-}
-async function estimateRawItems(rawItems: any[], token: string): Promise<any[]> {
-  const actor = process.env.APIFY_NORMALIZER_ACTOR;
-  if (!actor || !rawItems.some((item) => scrapedPriceCents(item.price) === 0)) return rawItems;
-  try {
-    const response = await fetch(`${actorPath(actor, "run-sync-get-dataset-items")}?token=${encodeURIComponent(token)}&timeout=60`, {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({
-        items: rawItems.map((item) => ({
-          name: item.name, description: item.description, category: item.category,
-          ...(item.price === undefined || item.price === null ? {} : { price: String(item.price) }),
-        })),
-        batchSize: 8,
-      }),
-    });
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    return withEstimatedPrices(rawItems, await response.json());
-  } catch (error) {
-    console.warn(`Could not prefill missing menu prices: ${String(error)}`);
-    return rawItems;
-  }
 }
 async function startActor(ctx: any, args: any) { const task = args.mode === "url" ? process.env.APIFY_SCRAPER_URL_TASK : process.env.APIFY_SCRAPER_SEARCH_TASK; const token = process.env.APIFY_TOKEN; if (!task || !token) throw new Error(`${args.mode === "url" ? "APIFY_SCRAPER_URL_TASK" : "APIFY_SCRAPER_SEARCH_TASK"} and APIFY_TOKEN are required`); const input = args.mode === "url" ? { mode: "url", url: args.url, location: args.location, freshness: "med_cache" } : { mode: "search", query: args.query, location: args.location, freshness: "med_cache", maxResults: 3 }; const response = await fetch(`${apifyPath(task, "actor-tasks", "runs")}?token=${encodeURIComponent(token)}`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(input) }); if (!response.ok) throw new Error(`Scraper Task HTTP ${response.status}`); const run: any = (await response.json()).data; if (!run?.id) throw new Error("Scraper Task did not return a run id"); await ctx.runMutation(api.recordActorRun, { deviceId: args.deviceId, onboardingId: args.onboardingId, mode: args.mode, actorRunId: run.id, sourceUrl: args.url, searchQuery: args.query, searchLocation: args.location }); await ctx.scheduler.runAfter(15000, api.pollActorRun, { onboardingId: args.onboardingId, deviceId: args.deviceId, actorRunId: run.id, mode: args.mode, deadline: Date.now() + (args.mode === "url" ? 4 : 8) * 60 * 1000 }); return { status: args.mode === "url" ? "scraping_url" : "scraping_search", actorRunId: run.id }; }
 export const startUrlImport = action({ args: { deviceId: v.string(), onboardingId: v.id("restaurantOnboardings"), url: v.string(), location: v.optional(v.string()) }, handler: async (ctx, args) => { try { return await startActor(ctx, { ...args, mode: "url" }); } catch (e) { await ctx.runMutation(api.failScrape, { onboardingId: args.onboardingId, errorMessage: String(e) }); return { status: "scrape_failed", errorMessage: String(e) }; } } });
@@ -140,16 +117,10 @@ export const pollActorRun = internalAction({
       const payload: any = await data.json();
       const onboarding: any = await ctx.runQuery(api.getForAction, { onboardingId: args.onboardingId });
       const results = (Array.isArray(payload) ? payload : []).map((x: any) => mapResult(x, onboarding?.sourceUrl)).filter(usable);
-      if (args.mode === "search") {
-        const candidates = [];
-        for (const result of results.slice(0, 3)) {
-          candidates.push({ ...result, rawItems: await estimateRawItems(result.rawItems, token) });
-        }
-        return ctx.runMutation(api.saveSearchResults, { onboardingId: args.onboardingId, deviceId: args.deviceId, candidates });
-      }
+      // Missing prices stay at zero for review; the async publish normalizer estimates them.
+      if (args.mode === "search") return ctx.runMutation(api.saveSearchResults, { onboardingId: args.onboardingId, deviceId: args.deviceId, candidates: results.slice(0, 3) });
       const result = results[0];
       if (!result) return ctx.runMutation(api.failScrape, { onboardingId: args.onboardingId, errorMessage: "No usable menu found. Enter a menu URL or request manual review." });
-      result.rawItems = await estimateRawItems(result.rawItems, token);
       return ctx.runMutation(api.saveUrlResult, { onboardingId: args.onboardingId, deviceId: args.deviceId, result, actorRunId: args.actorRunId });
     } catch (error) {
       return ctx.runMutation(api.failScrape, { onboardingId: args.onboardingId, errorMessage: String(error) });
@@ -190,8 +161,9 @@ export const publish = action({
     await ctx.runMutation(api.beginPublish, { onboardingId: args.onboardingId, items: args.items });
     try {
       const actor = process.env.APIFY_NORMALIZER_ACTOR;
-      if (!actor || !process.env.APIFY_TOKEN) throw new Error("Menu normalizer is not configured");
-      const response = await fetch(`${actorPath(actor, "run-sync-get-dataset-items")}?token=${encodeURIComponent(process.env.APIFY_TOKEN)}&timeout=60`, {
+      const token = process.env.APIFY_TOKEN;
+      if (!actor || !token) throw new Error("Menu normalizer is not configured");
+      const response = await fetch(`${actorPath(actor, "runs")}?token=${encodeURIComponent(token)}&timeout=1800`, {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
@@ -203,54 +175,136 @@ export const publish = action({
             // as strings, and image URLs are restored from the draft locally.
             ...normalizerPrice(item),
           })),
-          batchSize: 8,
+          batchSize: 4,
         }),
       });
-      const runId = response.headers.get("x-apify-run-id") ?? undefined;
       if (!response.ok) {
         const body = (await response.text()).replace(/\s+/g, " ").slice(0, 500);
-        throw new Error(`Normalizer diagnostics: httpStatus=${response.status}; runId=${runId ?? "unknown"}; body=${body || "<empty>"}`);
+        throw new Error(`Normalizer start failed: httpStatus=${response.status}; body=${body || "<empty>"}`);
       }
-      const normalized = await response.json();
-      const returnedItems = Array.isArray(normalized) ? normalized : [];
-      const imageByName = new Map(
-        args.items
-          .filter((item: any) => typeof item.imageUrl === "string")
-          .map((item: any) => [item.name.trim().toLowerCase(), item.imageUrl]),
-      );
-      const rejectedReasons: string[] = [];
-      const validItems = returnedItems.flatMap((item: any, index: number) => {
-        // Older Actor deployments emitted null for ambiguous prices. Keep the
-        // current numeric Convex contract compatible while marking the price
-        // as unverified instead of rejecting the whole dataset.
-        const priceCents = item?.priceCents === null || item?.priceCents === undefined ? 0 : item.priceCents;
-        const candidate = {
-          ...item,
-          priceCents,
-          priceVerified: publishedPriceVerified(
-            args.items[index]?.name.trim() === item?.name ? args.items[index] : undefined,
-            { priceCents, priceVerified: item?.priceVerified },
-          ),
-          ...(typeof item?.name === "string" && imageByName.has(item.name.trim().toLowerCase())
-            ? { imageUrl: imageByName.get(item.name.trim().toLowerCase()) }
-            : {}),
-        };
-        const parsed = normalizedItem.safeParse(candidate);
-        if (parsed.success) return [parsed.data];
-        if (rejectedReasons.length < 3) rejectedReasons.push(`row ${index}: ${parsed.error.issues.map((issue) => issue.path.join(".") + " " + issue.message).join(", ")}`);
-        return [];
-      });
-      const diagnostics = `Normalizer diagnostics: httpStatus=${response.status}; array=${Array.isArray(normalized)}; returned=${returnedItems.length}; valid=${validItems.length}; rejected=${returnedItems.length - validItems.length}; runId=${runId ?? "unknown"}${rejectedReasons.length ? `; reasons=${rejectedReasons.join(" | ")}` : ""}`;
-      if (!validItems.length) throw new Error(diagnostics);
-      return ctx.runMutation(api.activateVersion, { onboardingId: args.onboardingId, restaurantId: row.restaurantId, items: validItems, normalizerRunId: runId });
+      const run: any = (await response.json()).data;
+      if (typeof run?.id !== "string") throw new Error("Normalizer did not return a run ID");
+      const runId = run.id;
+      await ctx.runMutation(api.recordNormalizerRun, { onboardingId: args.onboardingId, runId });
+      await ctx.scheduler.runAfter(10_000, internal.onboarding.pollNormalizerRun, { onboardingId: args.onboardingId, runId });
+      return { status: "normalizing", normalizerRunId: runId };
     } catch (e) {
       await ctx.runMutation(api.failPublish, { onboardingId: args.onboardingId, errorMessage: String(e) });
       throw e;
     }
   },
 });
+export const pollNormalizerRun = internalAction({
+  args: { onboardingId: v.id("restaurantOnboardings"), runId: v.string() },
+  handler: async (ctx, { onboardingId, runId }) => {
+    const row: any = await ctx.runQuery(api.getForAction, { onboardingId });
+    if (row.status !== "normalizing" || row.normalizerRunId !== runId || !row.restaurantId) return;
+    const token = process.env.APIFY_TOKEN;
+    if (!token) {
+      await ctx.runMutation(api.failPublish, { onboardingId, runId, errorMessage: "APIFY_TOKEN is not configured" });
+      return;
+    }
+    try {
+      const response = await fetch(`https://api.apify.com/v2/actor-runs/${encodeURIComponent(runId)}?token=${encodeURIComponent(token)}`);
+      if (!response.ok) throw new Error(`Normalizer run HTTP ${response.status}`);
+      const run: any = (await response.json()).data;
+      const status = String(run?.status ?? "");
+      if (status === "READY" || status === "RUNNING") {
+        await ctx.scheduler.runAfter(10_000, internal.onboarding.pollNormalizerRun, { onboardingId, runId });
+        return;
+      }
+      if (status !== "SUCCEEDED" || !run?.defaultDatasetId) {
+        throw new Error(`Normalizer run ${runId} finished with ${status || "unknown status"}`);
+      }
+      const dataset = await fetch(`https://api.apify.com/v2/datasets/${encodeURIComponent(run.defaultDatasetId)}/items?clean=true&token=${encodeURIComponent(token)}`);
+      if (!dataset.ok) throw new Error(`Normalizer dataset HTTP ${dataset.status}`);
+      const returnedItems: unknown = await dataset.json();
+      const draft: any = await ctx.runQuery(api.getPublishDraft, { onboardingId });
+      const originalItems: any[] = draft?.editedItems ?? [];
+      if (!Array.isArray(returnedItems) || !originalItems.length || returnedItems.length !== originalItems.length) {
+        throw new Error(`Normalizer returned ${Array.isArray(returnedItems) ? returnedItems.length : 0}/${originalItems.length} dishes; the previous menu was kept`);
+      }
+      const validItems = returnedItems.map((item: any, index: number) => {
+        const source = originalItems[index];
+        if (item?.name?.trim() !== source.name.trim() || item?.menuOrder !== index) {
+          throw new Error(`Normalizer dish ${index + 1} does not match the saved draft`);
+        }
+        const priceCents = item.priceCents ?? 0;
+        const parsed = normalizedItem.safeParse({
+          ...item,
+          priceCents,
+          priceVerified: publishedPriceVerified(source, { priceCents, priceVerified: item.priceVerified }),
+          ...(typeof source.imageUrl === "string" ? { imageUrl: source.imageUrl } : {}),
+        });
+        if (!parsed.success) throw new Error(`Normalizer dish ${index + 1} is invalid: ${parsed.error.issues[0]?.message ?? "unknown error"}`);
+        if (parsed.data.tagStatus !== "tagged" || (parsed.data.priceCents === 0 && !parsed.data.priceVerified)) {
+          throw new Error(`Normalizer did not finish dish ${index + 1} (${parsed.data.name}); the previous menu was kept`);
+        }
+        return parsed.data;
+      });
+      await ctx.runMutation(api.activateVersion, { onboardingId, restaurantId: row.restaurantId, items: validItems, normalizerRunId: runId });
+    } catch (error) {
+      await ctx.runMutation(api.failPublish, { onboardingId, runId, errorMessage: String(error) });
+    }
+  },
+});
 export const accountId = internalQuery({ args: { deviceId: v.string() }, handler: async (ctx, { deviceId }) => (await account(ctx, deviceId))._id });
 export const getForAction = internalQuery({ args: { onboardingId: v.id("restaurantOnboardings") }, handler: async (ctx, { onboardingId }) => { const row = await ctx.db.get(onboardingId); if (!row) throw new Error("Onboarding not found"); return row; } });
-export const beginPublish = internalMutation({ args: { onboardingId: v.id("restaurantOnboardings"), items: v.array(editedItemV) }, handler: async (ctx, { onboardingId, items }) => { const draft = await ctx.db.query("menuDrafts").withIndex("by_onboarding", (q) => q.eq("onboardingId", onboardingId)).unique(); const now = Date.now(); if (draft) await ctx.db.patch(draft._id, { editedItems: items, status: "publishing", updatedAt: now }); else { const row = await ctx.db.get(onboardingId); if (!row?.restaurantId) throw new Error("Restaurant has not been created"); await ctx.db.insert("menuDrafts", { onboardingId, restaurantId: row.restaurantId, source: "manual", rawItems: items, editedItems: items, status: "publishing", createdAt: now, updatedAt: now }); } await ctx.db.patch(onboardingId, { status: "normalizing", updatedAt: now }); } });
-export const failPublish = internalMutation({ args: { onboardingId: v.id("restaurantOnboardings"), errorMessage: v.string() }, handler: async (ctx, { onboardingId, errorMessage }) => { const draft = await ctx.db.query("menuDrafts").withIndex("by_onboarding", (q) => q.eq("onboardingId", onboardingId)).unique(); if (draft) await ctx.db.patch(draft._id, { status: "failed", errorMessage, updatedAt: Date.now() }); await ctx.db.patch(onboardingId, { status: "normalization_failed", errorMessage, updatedAt: Date.now() }); } });
-export const activateVersion = internalMutation({ args: { onboardingId: v.id("restaurantOnboardings"), restaurantId: v.id("restaurants"), items: v.array(v.any()), normalizerRunId: v.optional(v.string()) }, handler: async (ctx, args) => { const previous = await ctx.db.get(args.restaurantId); const draft = await ctx.db.query("menuDrafts").withIndex("by_onboarding", (q) => q.eq("onboardingId", args.onboardingId)).unique(); const versions = await ctx.db.query("restaurantMenuVersions").withIndex("by_restaurant", (q) => q.eq("restaurantId", args.restaurantId)).collect(); const now = Date.now(); const versionId = await ctx.db.insert("restaurantMenuVersions", { restaurantId: args.restaurantId, version: versions.length + 1, status: "active", source: draft?.source ?? "manual", normalizerRunId: args.normalizerRunId, createdAt: now, publishedAt: now }); for (const old of versions.filter((x: any) => x.status === "active")) await ctx.db.patch(old._id, { status: "historical" }); for (const item of args.items) await ctx.db.insert("menuItems", { restaurantId: args.restaurantId, menuVersionId: versionId, ...item }); await ctx.db.patch(args.restaurantId, { activeMenuVersionId: versionId, onboardingStatus: "ready", lastNormalizedAt: now, normalizerRunId: args.normalizerRunId }); if (draft) await ctx.db.patch(draft._id, { status: "published", updatedAt: now }); await ctx.db.patch(args.onboardingId, { status: "ready", errorMessage: undefined, updatedAt: now }); return { versionId, previousVersionId: previous?.activeMenuVersionId ?? null }; } });
+export const getPublishDraft = internalQuery({
+  args: { onboardingId: v.id("restaurantOnboardings") },
+  handler: async (ctx, { onboardingId }) => ctx.db.query("menuDrafts")
+    .withIndex("by_onboarding", (q) => q.eq("onboardingId", onboardingId)).unique(),
+});
+export const beginPublish = internalMutation({
+  args: { onboardingId: v.id("restaurantOnboardings"), items: v.array(editedItemV) },
+  handler: async (ctx, { onboardingId, items }) => {
+    const draft = await ctx.db.query("menuDrafts").withIndex("by_onboarding", (q) => q.eq("onboardingId", onboardingId)).unique();
+    const now = Date.now();
+    if (draft) await ctx.db.patch(draft._id, { editedItems: items, status: "publishing", updatedAt: now });
+    else {
+      const row = await ctx.db.get(onboardingId);
+      if (!row?.restaurantId) throw new Error("Restaurant has not been created");
+      await ctx.db.insert("menuDrafts", { onboardingId, restaurantId: row.restaurantId, source: "manual", rawItems: items, editedItems: items, status: "publishing", createdAt: now, updatedAt: now });
+    }
+    await ctx.db.patch(onboardingId, { status: "normalizing", normalizerRunId: undefined, updatedAt: now });
+  },
+});
+export const recordNormalizerRun = internalMutation({
+  args: { onboardingId: v.id("restaurantOnboardings"), runId: v.string() },
+  handler: async (ctx, { onboardingId, runId }) => {
+    const row = await ctx.db.get(onboardingId);
+    if (!row || row.status !== "normalizing") throw new Error("Onboarding is no longer normalizing");
+    await ctx.db.patch(onboardingId, { normalizerRunId: runId, updatedAt: Date.now() });
+  },
+});
+export const failPublish = internalMutation({
+  args: { onboardingId: v.id("restaurantOnboardings"), errorMessage: v.string(), runId: v.optional(v.string()) },
+  handler: async (ctx, { onboardingId, errorMessage, runId }) => {
+    const row = await ctx.db.get(onboardingId);
+    if (!row || (runId && row.normalizerRunId !== runId)) return;
+    const draft = await ctx.db.query("menuDrafts").withIndex("by_onboarding", (q) => q.eq("onboardingId", onboardingId)).unique();
+    if (draft) await ctx.db.patch(draft._id, { status: "failed", errorMessage, updatedAt: Date.now() });
+    await ctx.db.patch(onboardingId, { status: "normalization_failed", errorMessage, updatedAt: Date.now() });
+  },
+});
+export const activateVersion = internalMutation({
+  args: { onboardingId: v.id("restaurantOnboardings"), restaurantId: v.id("restaurants"), items: v.array(v.any()), normalizerRunId: v.string() },
+  handler: async (ctx, args) => {
+    const onboarding = await ctx.db.get(args.onboardingId);
+    if (!onboarding || onboarding.status !== "normalizing" || onboarding.normalizerRunId !== args.normalizerRunId || onboarding.restaurantId !== args.restaurantId) return null;
+    if (!args.items.length || args.items.some((item: any) => item.tagStatus !== "tagged" || (item.priceCents === 0 && !item.priceVerified))) {
+      throw new Error("A complete tagged menu is required before activation");
+    }
+    const previous = await ctx.db.get(args.restaurantId);
+    const draft = await ctx.db.query("menuDrafts").withIndex("by_onboarding", (q) => q.eq("onboardingId", args.onboardingId)).unique();
+    const versions = await ctx.db.query("restaurantMenuVersions").withIndex("by_restaurant", (q) => q.eq("restaurantId", args.restaurantId)).collect();
+    const now = Date.now();
+    const versionId = await ctx.db.insert("restaurantMenuVersions", { restaurantId: args.restaurantId, version: versions.length + 1, status: "active", source: draft?.source ?? "manual", normalizerRunId: args.normalizerRunId, createdAt: now, publishedAt: now });
+    for (const old of versions.filter((x) => x.status === "active")) await ctx.db.patch(old._id, { status: "historical" });
+    for (const item of args.items) await ctx.db.insert("menuItems", { restaurantId: args.restaurantId, menuVersionId: versionId, ...item });
+    await ctx.db.patch(args.restaurantId, { activeMenuVersionId: versionId, onboardingStatus: "ready", lastNormalizedAt: now, normalizerRunId: args.normalizerRunId });
+    if (draft) await ctx.db.patch(draft._id, { status: "published", updatedAt: now });
+    await ctx.db.patch(args.onboardingId, { status: "ready", errorMessage: undefined, updatedAt: now });
+    return { versionId, previousVersionId: previous?.activeMenuVersionId ?? null };
+  },
+});

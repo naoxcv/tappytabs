@@ -39,6 +39,20 @@ export type LlmTags = {
   taste?: { contrast: string; value: number; detail: string }[];
 };
 
+/** A model reply must contain the fields used to decide whether an item is fully tagged. */
+export function isCompleteLlmTags(value: unknown): value is LlmTags {
+  if (!value || typeof value !== "object") return false;
+  const row = value as Record<string, unknown>;
+  if (!row.allergens || typeof row.allergens !== "object" || Array.isArray(row.allergens)) return false;
+  const allergens = row.allergens as Record<string, unknown>;
+  if (!Object.entries(allergens).every(([name, level]) =>
+    ALLERGENS.includes(name as Allergen) && (level === "contains" || level === "may_contain"))) return false;
+  return Array.isArray(row.diet) && row.diet.every((diet) => ["vegetarian", "vegan", "halal", "no_pork"].includes(diet)) &&
+    Array.isArray(row.tags) && row.tags.every((tag) => typeof tag === "string") &&
+    Number.isInteger(row.spice) && Number(row.spice) >= 0 && Number(row.spice) <= 4 &&
+    typeof row.isDrink === "boolean" && typeof row.shareable === "boolean";
+}
+
 const RANK: Record<Level, number> = { not_detected: 0, may_contain: 1, contains: 2 };
 const raise = (a: Level, b: Level): Level => (RANK[b] > RANK[a] ? b : a);
 

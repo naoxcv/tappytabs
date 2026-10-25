@@ -257,11 +257,12 @@ export const setHunger = mutation({
   handler: async (ctx, { partyId, userId, deviceId, hunger }) => {
     await requireUser(ctx, userId, deviceId);
     const party = await getParty(ctx, partyId);
-    requireStatus(party, "hunger");
+    // Keep the party in check-in until seats are filled so later diners can still tap in.
+    if (party.status !== "checkin") requireStatus(party, "hunger");
     const me = await requireMember(ctx, partyId, userId);
     await ctx.db.patch(me._id, { hunger });
     const members = await membersOf(ctx, partyId);
-    if (members.every((m) => (m._id === me._id ? true : !!m.hunger))) {
+    if (members.length === party.size && members.every((m) => (m._id === me._id ? true : !!m.hunger))) {
       await ctx.db.patch(partyId, { status: "negotiating", negotiationStartedAt: Date.now() });
       await startNegotiation(ctx, partyId, party.epoch);
     }
@@ -282,6 +283,9 @@ export const startWithFewer = mutation({
       }
       await ctx.db.patch(partyId, { size: members.length, status: "negotiating", negotiationStartedAt: Date.now() });
       await ctx.scheduler.runAfter(0, internal.orders.autoPlace, { partyId, epoch: party.epoch });
+    } else if (members.every(member => member.hunger != null)) {
+      await ctx.db.patch(partyId, { size: members.length, status: "negotiating", negotiationStartedAt: Date.now() });
+      await startNegotiation(ctx, partyId, party.epoch);
     } else {
       await ctx.db.patch(partyId, { size: members.length, status: "hunger" });
     }

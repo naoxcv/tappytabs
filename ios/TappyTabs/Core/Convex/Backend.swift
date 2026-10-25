@@ -30,7 +30,7 @@ protocol Backend: AnyObject {
     // Restaurant onboarding
     func restaurantAccount(deviceId: String, displayName: String) async throws -> RestaurantAccount
     func createRestaurantDraft(deviceId: String, name: String, address: String) async throws -> String
-    func skipRestaurantOnboarding(deviceId: String) async throws
+    func skipRestaurantOnboarding(deviceId: String, menu: DemoMenu) async throws
     func restaurantOnboardingStatus(deviceId: String, onboardingId: String) -> AnyPublisher<RestaurantOnboarding?, TTError>
     func startRestaurantUrlImport(deviceId: String, onboardingId: String, url: String, location: String?) async throws
     func startRestaurantSearch(deviceId: String, onboardingId: String, query: String, location: String) async throws
@@ -96,4 +96,10 @@ struct TTError: Error, Equatable, LocalizedError {
     }
 
     static func network(_ message: String) -> TTError { TTError(code: .NETWORK, message: message) }
+}
+
+/// Checked-in menus an owner can skip onboarding into (`onboarding:skipToDemo`).
+enum DemoMenu: String {
+    case tappy
+    case flourWater
 }

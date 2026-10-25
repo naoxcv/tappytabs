@@ -13,6 +13,11 @@ struct PartySetupView: View {
     @State private var note: String?
     @State private var error: String?
     @State private var menuSub: AnyCancellable?
+    @State private var onboardingSub: AnyCancellable?
+    @State private var onboardingId: String?
+    @State private var savedDraftItems: [RestaurantMenuItem] = []
+    @State private var normalizing = false
+    @State private var reprocessing = false
 
     var body: some View {
         ScrollView {
@@ -53,6 +58,14 @@ struct PartySetupView: View {
                     }
                 }
                 .tint(Theme.accent)
+                if !savedDraftItems.isEmpty {
+                    Button(reprocessing ? "Starting…" : "Complete saved menu for demo") {
+                        Task { await completeSavedMenu() }
+                    }
+                    .buttonStyle(SecondaryButtonStyle())
+                    .disabled(reprocessing || normalizing)
+                    if normalizing { ProgressView("Completing all \(savedDraftItems.count) dishes…") }
+                }
                 if let error { Text(error).foregroundStyle(Theme.accent) }
                 if opening { ProgressView("Opening table…") }
             }
@@ -86,8 +99,12 @@ struct PartySetupView: View {
 
     private func load() async {
         menuSub = nil
+        onboardingSub = nil
         restaurant = nil
         menu = nil
+        onboardingId = nil
+        savedDraftItems = []
+        normalizing = false
         error = nil
         do {
             let backend = app.backend
@@ -98,6 +115,27 @@ struct PartySetupView: View {
             restaurant = nextRestaurant
             if let restaurant {
                 menuSub = backend.menuStatus(restaurant.id).replaceError(with: nil).sink { menu = $0 }
+            }
+            if app.backendKind == .live {
+                let account = try await backend.restaurantAccount(deviceId: app.deviceId, displayName: "Restaurant")
+                if let id = account.onboardingId,
+                   let draft = try await backend.restaurantDraft(deviceId: app.deviceId, onboardingId: id) {
+                    onboardingId = id
+                    savedDraftItems = draft.editedItems
+                    onboardingSub = backend.restaurantOnboardingStatus(deviceId: app.deviceId, onboardingId: id)
+                        .sink(receiveCompletion: { completion in
+                            if case .failure(let caught) = completion { error = caught.userMessage }
+                        }, receiveValue: { status in
+                            guard let status else { return }
+                            normalizing = status.status == "normalizing"
+                            if status.status == "normalization_failed" {
+                                error = status.errorMessage ?? "Could not complete the saved menu. You can retry."
+                            } else if status.status == "ready", note == "Completing saved menu…" {
+                                note = "Complete menu saved for the next table"
+                                error = nil
+                            }
+                        })
+                }
             }
         } catch is CancellationError {
             return
@@ -111,6 +149,24 @@ struct PartySetupView: View {
         fetching = true
         note = (try? await app.backend.ingestMenu(restaurantId: restaurant.id))?.note
         fetching = false
+    }
+
+    private func completeSavedMenu() async {
+        guard let onboardingId, !savedDraftItems.isEmpty, !normalizing, !reprocessing else { return }
+        reprocessing = true
+        error = nil
+        note = "Completing saved menu…"
+        defer { reprocessing = false }
+        do {
+            try await app.backend.publishRestaurant(
+                deviceId: app.deviceId,
+                onboardingId: onboardingId,
+                items: savedDraftItems
+            )
+        } catch {
+            note = nil
+            self.error = TTError.from(error).userMessage
+        }
     }
 
     private func open(size: Int) async {

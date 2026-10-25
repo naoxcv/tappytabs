@@ -9,10 +9,15 @@ struct TableTalkView: View {
             let messages = store.visibleBubbles(at: context.date).sorted {
                 $0.showAt == $1.showAt ? $0.id < $1.id : $0.showAt < $1.showAt
             }
+            let speaking = Self.activeBubble(
+                in: messages,
+                serverNowMs: context.date.ms + store.serverOffsetMs,
+                status: store.party?.status
+            )
             GeometryReader { geometry in
                 let contentWidth = max(0, geometry.size.width - 1)
                 HStack(spacing: 0) {
-                    AgentPlayArea(store: store, current: messages.last)
+                    AgentPlayArea(store: store, current: speaking)
                         .frame(width: contentWidth * 2 / 3, height: geometry.size.height)
                     Rectangle().fill(Theme.accent.opacity(0.15)).frame(width: 1)
                     LiveChatLog(store: store, messages: messages)
@@ -22,6 +27,12 @@ struct TableTalkView: View {
             .background(Theme.background.ignoresSafeArea())
         }
         .storeFeedback(store)
+    }
+
+    static func activeBubble(in messages: [Bubble], serverNowMs: Double, status: PartyStatus?) -> Bubble? {
+        guard status == .negotiating, let latest = messages.last else { return nil }
+        let durationMs = max(1_800, 1_200 + Double(latest.text.trimmingCharacters(in: .whitespacesAndNewlines).count) * 15)
+        return serverNowMs < latest.showAt + durationMs ? latest : nil
     }
 }
 

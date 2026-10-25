@@ -214,6 +214,7 @@ export default defineSchema({
     searchLocation: v.optional(v.string()),
     actorRunId: v.optional(v.string()),
     scraperRunId: v.optional(v.string()),
+    normalizerRunId: v.optional(v.string()),
     candidates: v.array(v.any()),
     selectedCandidate: v.optional(v.any()),
     errorMessage: v.optional(v.string()),

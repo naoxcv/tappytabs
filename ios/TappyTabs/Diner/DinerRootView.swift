@@ -88,15 +88,17 @@ struct DinerFlow: View {
 struct DinerRootView: View {
     @Environment(AppModel.self) private var app
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var checkinAnimationComplete = false
     let store: PartyStore
 
     var body: some View {
         Group {
             switch store.party?.status {
             case nil: ProgressView("Loading your table…")
-            case .checkin: WaitingView(title: "You're in!", subtitle: "Waiting for everyone to tap in", store: store) { _ in true }
-            case .hunger:
-                if store.me?.hunger == nil { HungerView(store: store) }
+            case .checkin, .hunger:
+                if !checkinAnimationComplete && store.me?.hunger == nil {
+                    WaitingView(title: "You're in!", subtitle: "Getting your table ready", store: store) { _ in true }
+                } else if store.me?.hunger == nil { HungerView(store: store) }
                 else { WaitingView(title: "Waiting for the table", subtitle: "Who's chosen so far", store: store) { $0.hunger != nil } }
             case .negotiating: NegotiatingView(store: store)
             case .pick:
@@ -113,12 +115,19 @@ struct DinerRootView: View {
             if let party, !app.tapSearchPaused, app.partyId == store.partyId, app.userId == store.userId,
                party.member(app.userId) == nil { app.leaveTable() }
         }
+        .task(id: store.me?.userId) {
+            guard store.me != nil, !checkinAnimationComplete else { return }
+            try? await Task.sleep(for: .seconds(reduceMotion ? 0.15 : 1.1))
+            if !Task.isCancelled { checkinAnimationComplete = true }
+        }
     }
 
     private var pageKey: String {
         guard let status = store.party?.status else { return "loading" }
         switch status {
-        case .hunger: return store.me?.hunger == nil ? "hunger" : "hunger-wait"
+        case .checkin, .hunger:
+            if !checkinAnimationComplete && store.me?.hunger == nil { return "checkin" }
+            return store.me?.hunger == nil ? "hunger" : "hunger-wait"
         case .pick: return store.me?.picked == true ? "pick-wait" : "pick"
         default: return status.rawValue
         }
