@@ -105,16 +105,31 @@ export const publish = action({
         }),
       });
       const runId = response.headers.get("x-apify-run-id") ?? undefined;
-      if (!response.ok) throw new Error(`Normalizer diagnostics: httpStatus=${response.status}; runId=${runId ?? "unknown"}`);
+      if (!response.ok) {
+        const body = (await response.text()).replace(/\s+/g, " ").slice(0, 500);
+        throw new Error(`Normalizer diagnostics: httpStatus=${response.status}; runId=${runId ?? "unknown"}; body=${body || "<empty>"}`);
+      }
       const normalized = await response.json();
       const returnedItems = Array.isArray(normalized) ? normalized : [];
+      const imageByName = new Map(
+        args.items
+          .filter((item: any) => typeof item.imageUrl === "string")
+          .map((item: any) => [item.name.trim().toLowerCase(), item.imageUrl]),
+      );
       const rejectedReasons: string[] = [];
       const validItems = returnedItems.flatMap((item: any, index: number) => {
         // Older Actor deployments emitted null for ambiguous prices. Keep the
         // current numeric Convex contract compatible while marking the price
         // as unverified instead of rejecting the whole dataset.
         const priceCents = item?.priceCents === null || item?.priceCents === undefined ? 0 : item.priceCents;
-        const candidate = { ...item, priceCents, priceVerified: item?.priceVerified ?? priceCents > 0 };
+        const candidate = {
+          ...item,
+          priceCents,
+          priceVerified: item?.priceVerified ?? priceCents > 0,
+          ...(typeof item?.name === "string" && imageByName.has(item.name.trim().toLowerCase())
+            ? { imageUrl: imageByName.get(item.name.trim().toLowerCase()) }
+            : {}),
+        };
         const parsed = normalizedItem.safeParse(candidate);
         if (parsed.success) return [parsed.data];
         if (rejectedReasons.length < 3) rejectedReasons.push(`row ${index}: ${parsed.error.issues.map((issue) => issue.path.join(".") + " " + issue.message).join(", ")}`);

@@ -6,6 +6,7 @@ struct RestaurantFlow: View {
     @Environment(AppModel.self) private var app
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @AppStorage("tt.debugOverlay") private var debugOverlay = false
+    @State private var restaurantReady = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -13,13 +14,15 @@ struct RestaurantFlow: View {
             Group {
                 if let partyId = app.partyId {
                     PartyScope(partyId: partyId, userId: nil) { store in RestaurantRootView(store: store) }
-                } else if app.backendKind == .live {
-                    RestaurantOnboardingView()
+                } else if app.backendKind == .live && !restaurantReady {
+                    RestaurantOnboardingView {
+                        restaurantReady = true
+                    }
                 } else {
                     PartySetupView()
                 }
             }
-            .id(app.partyId == nil ? "setup" : "party")
+            .id(app.partyId == nil ? (restaurantReady ? "party-setup" : "setup") : "party")
             .transition(AppPageTransition.transition(reduceMotion: reduceMotion))
             .animation(AppPageTransition.animation(reduceMotion: reduceMotion), value: app.partyId)
             .frame(maxHeight: .infinity)
@@ -42,6 +45,7 @@ struct RestaurantFlow: View {
 /// so killing the app resumes at the last completed stage.
 struct RestaurantOnboardingView: View {
     @Environment(AppModel.self) private var app
+    private let onReady: () -> Void
     @State private var name = ""
     @State private var address = ""
     @State private var sourceURL = ""
@@ -59,6 +63,10 @@ struct RestaurantOnboardingView: View {
     @State private var draftLoadInFlight = false
 
     private enum Acquisition: Hashable { case url, search }
+
+    init(onReady: @escaping () -> Void = {}) {
+        self.onReady = onReady
+    }
 
     var body: some View {
         ScrollView {
@@ -175,6 +183,10 @@ struct RestaurantOnboardingView: View {
         statusSub = app.backend.restaurantOnboardingStatus(deviceId: app.deviceId, onboardingId: id)
             .sink(receiveCompletion: { completion in if case .failure(let e) = completion { self.error = e.userMessage } }, receiveValue: { value in
                 onboarding = value
+                if value?.status == "ready" {
+                    onReady()
+                    return
+                }
                 if let value, ["review_required", "manual_review", "normalization_failed"].contains(value.status) {
                     let loadKey = "\(id):\(value.status)"
                     guard lastDraftLoadKey != loadKey else { return }
