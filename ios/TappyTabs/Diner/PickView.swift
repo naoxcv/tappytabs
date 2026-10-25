@@ -13,7 +13,9 @@ struct PickView: View {
                 if let deadline = store.party?.pickDeadline { Countdown(deadlineMs: deadline, offsetMs: store.serverOffsetMs) }
                 if store.mains.isEmpty { Text("Your agent couldn't find a safe main. Ask your server.").foregroundStyle(Theme.accent) }
                 ForEach(store.mains) { c in
-                    CandidateCard(candidate: c, big: c.rank == 1, selected: (selected ?? store.mains.first?.itemId) == c.itemId)
+                    CandidateCard(candidate: c, big: c.rank == 1, selected: (selected ?? store.mains.first?.itemId) == c.itemId) { pngData in
+                        Task { await store.cacheDishCutout(c, pngData: pngData) }
+                    }
                         .onTapGesture { selected = c.itemId }
                 }
                 if let drink = store.drink {
@@ -47,9 +49,15 @@ struct CandidateCard: View {
     let candidate: Candidate
     let big: Bool
     let selected: Bool
+    var onCutout: (Data) -> Void = { _ in }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
+            DishCutoutImage(urlString: candidate.imageUrl, isCutout: candidate.imageIsCutout ?? false, onCutout: onCutout)
+                .frame(height: big ? 170 : 112)
+                .frame(maxWidth: .infinity)
+                .clipped()
+                .clipShape(RoundedRectangle(cornerRadius: 12))
             HStack(alignment: .firstTextBaseline) {
                 if big {
                     Text("TOP PICK")

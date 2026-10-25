@@ -6,13 +6,14 @@
         "name": { "type": "string", "description": "Menu item name" },
         "description": { "type": "string", "description": "Menu item description" },
         "price": { "type": "string", "description": "Menu item price" },
-        "category": { "type": "string", "description": "Menu section" }
+        "category": { "type": "string", "description": "Menu section" },
+        "imageUrl": { "type": "string", "description": "HTTPS URL for the menu item's photo, when available" }
     },
     "views": {
         "overview": {
             "title": "Overview",
             "transformation": {
-                "fields": ["name", "description", "price", "category", "sourceUrl"]
+                "fields": ["name", "description", "price", "category", "imageUrl", "sourceUrl"]
             },
             "display": {
                 "component": "table",
@@ -21,6 +22,7 @@
                     "description": { "label": "Description", "format": "text" },
                     "price": { "label": "Price", "format": "text" },
                     "category": { "label": "Category", "format": "text" },
+                    "imageUrl": { "label": "Photo URL", "format": "link" },
                     "sourceUrl": { "label": "Source URL", "format": "link" }
                 }
             }

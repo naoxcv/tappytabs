@@ -1,6 +1,6 @@
 # TappyTabs Restaurant Menu Scraper
 
-Scrapes menu items from a user-supplied public restaurant menu or online ordering page. It recognizes common menu markup, Schema.org `MenuItem` and `Product` data, and visible item cards. Each dataset row contains the item name, description, price when available, category, and source URL. The TappyTabs menu normalizer can then add dietary and cuisine tags.
+Scrapes menu items from a user-supplied public restaurant menu or online ordering page. It recognizes common menu markup, Schema.org `MenuItem` and `Product` data, and visible item cards. Each dataset row contains the item name, description, price when available, category, source URL, and an HTTPS photo URL when the page exposes one. The TappyTabs menu normalizer can then add dietary and cuisine tags.
 
 ## Input
 
@@ -23,6 +23,7 @@ npx apify run
 | `description` | Item description, when available |
 | `price`       | Price string, when available     |
 | `category`    | Menu section, when identifiable  |
+| `imageUrl`    | Item photo URL, when available   |
 | `sourceUrl`   | URL scraped                      |
 
 ## Deploy

@@ -26,9 +26,49 @@ export const candidates = query({
       return item && {
         itemId: c.itemId, name: item.name, description: item.description, priceCents: item.priceCents,
         reason: c.reason, rank: c.rank, isDrink: c.isDrink, askServer: c.askServer,
+        imageUrl: item.imageStorageId ? await ctx.storage.getUrl(item.imageStorageId) : item.imageUrl ?? null,
+        imageIsCutout: !!item.imageStorageId,
       };
     }));
     return out.filter((x) => x !== null).sort((a, b) => (a.isDrink ? 1 : 0) - (b.isDrink ? 1 : 0) || a.rank - b.rank);
+  },
+});
+
+/** Allocate storage only for a current pick candidate with the exact source image URL. */
+export const prepareDishImageUpload = mutation({
+  args: { partyId: v.id("parties"), userId: v.id("users"), deviceId: v.string(), itemId: v.id("menuItems"), imageUrl: v.string() },
+  returns: v.union(v.string(), v.null()),
+  handler: async (ctx, { partyId, userId, deviceId, itemId, imageUrl }) => {
+    await requireUser(ctx, userId, deviceId);
+    const party = await getParty(ctx, partyId);
+    requireStatus(party, "pick");
+    await requireMember(ctx, partyId, userId);
+    const candidate = (await candidateRows(ctx, partyId, userId)).find((row) => row.itemId === itemId && !row.isDrink);
+    if (!candidate) fail("INVALID", "That dish is not one of your agent's picks");
+    const item = await ctx.db.get(itemId);
+    if (!item || item.imageUrl !== imageUrl) fail("INVALID", "Dish photo changed");
+    if (item.imageStorageId) return null;
+    return await ctx.storage.generateUploadUrl();
+  },
+});
+
+/** Save the processed PNG in shared storage; first successful cutout wins. */
+export const saveDishImage = mutation({
+  args: { partyId: v.id("parties"), userId: v.id("users"), deviceId: v.string(), itemId: v.id("menuItems"), imageUrl: v.string(), storageId: v.id("_storage") },
+  returns: v.boolean(),
+  handler: async (ctx, { partyId, userId, deviceId, itemId, imageUrl, storageId }) => {
+    await requireUser(ctx, userId, deviceId);
+    const party = await getParty(ctx, partyId);
+    requireStatus(party, "pick");
+    await requireMember(ctx, partyId, userId);
+    const candidate = (await candidateRows(ctx, partyId, userId)).find((row) => row.itemId === itemId && !row.isDrink);
+    const item = await ctx.db.get(itemId);
+    if (!candidate || !item || item.imageUrl !== imageUrl || item.imageStorageId) {
+      await ctx.storage.delete(storageId);
+      return false;
+    }
+    await ctx.db.patch(itemId, { imageStorageId: storageId });
+    return true;
   },
 });
 

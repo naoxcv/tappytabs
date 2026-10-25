@@ -197,6 +197,7 @@ final class MockBackend: Backend {
             linesSubject.send(linesConfirm)
         }
     }
+    func cacheDishCutout(partyId: String, userId: String, deviceId: String, itemId: String, sourceImageUrl: String, pngData: Data) async throws {}
 
     func add(partyId: String, userId: String, deviceId: String, itemId: String, shared: Bool) async throws {
         try requireStatus(.confirm)

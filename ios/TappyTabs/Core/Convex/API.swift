@@ -29,6 +29,8 @@ enum API {
     static let messagesList = "messages:list"
     // orders
     static let ordersCandidates = "orders:candidates"
+    static let ordersPrepareDishImageUpload = "orders:prepareDishImageUpload"
+    static let ordersSaveDishImage = "orders:saveDishImage"
     static let ordersPick = "orders:pick"
     static let ordersLines = "orders:lines"
     static let ordersAddable = "orders:addable"
