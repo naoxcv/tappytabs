@@ -10,7 +10,7 @@ struct PickView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 14) {
                 Text("Your agent's picks").font(AppTypography.style(.largeTitle, weight: .bold))
-                if let deadline = store.party?.pickDeadline { Countdown(deadlineMs: deadline, offsetMs: store.serverOffsetMs) }
+                if let deadline = store.party?.pickDeadline { Countdown(deadlineMs: deadline, offsetMs: store.serverOffsetMs, showsAgentDecision: true) }
                 if store.mains.isEmpty { Text("Your agent couldn't find a safe main. Ask your server.").foregroundStyle(Theme.accent) }
                 ForEach(store.mains) { c in
                     CandidateCard(candidate: c, big: c.rank == 1, selected: (selected ?? store.mains.first?.itemId) == c.itemId) { imageData in
@@ -88,10 +88,11 @@ struct CandidateCard: View {
 struct Countdown: View {
     let deadlineMs: Double
     let offsetMs: Double
+    var showsAgentDecision = false
     var body: some View {
         TimelineView(.periodic(from: .now, by: 1)) { ctx in
             let left = max(0, Int((deadlineMs - (ctx.date.ms + offsetMs)) / 1000))
-            Label("\(left)s left: then your agent decides", systemImage: "timer")
+            Label(showsAgentDecision ? "\(left)s left: then your agent decides" : "\(left)s left", systemImage: "timer")
                 .font(AppTypography.footnote).foregroundStyle(Theme.accent)
         }
     }

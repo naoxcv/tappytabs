@@ -4,6 +4,7 @@ import SwiftUI
 
 struct CheckInView: View {
     @Environment(AppModel.self) private var app
+    @Environment(\.scenePhase) private var scenePhase
     @Environment(\.verticalSizeClass) private var verticalSizeClass
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     let store: PartyStore
@@ -85,20 +86,23 @@ struct CheckInView: View {
             }
             .allowsHitTesting(false)
         }
-        .task(id: store.partyId) {
-            proximity.startHosting(partyId: store.partyId, hostDeviceId: app.deviceId, backend: app.backend) { userId in
-                Task {
-                    if let error = await store.admit(userId: userId, via: .uwb) {
-                        proximity.reject(userId: userId, reason: error.userMessage)
-                    }
-                }
-            }
-        }
+        .task(id: store.partyId) { startHosting() }
+        .onChange(of: scenePhase) { _, phase in if phase == .active { startHosting() } }
         .onDisappear { proximity.stop() }
     }
 
     private func arrivalStart(target: CGRect) -> CGPoint {
         CGPoint(x: -52, y: target.midY)
+    }
+
+    private func startHosting() {
+        proximity.startHosting(partyId: store.partyId, hostDeviceId: app.deviceId, backend: app.backend) { userId in
+            Task {
+                if let error = await store.admit(userId: userId, via: .uwb) {
+                    proximity.reject(userId: userId, reason: error.userMessage)
+                }
+            }
+        }
     }
 }
 

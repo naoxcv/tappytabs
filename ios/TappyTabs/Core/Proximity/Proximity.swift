@@ -56,6 +56,7 @@ final class Proximity: NSObject {
     @ObservationIgnored private var niSessions: [String: NISession] = [:]
     @ObservationIgnored private var detectors: [String: TapDetector] = [:]
     @ObservationIgnored private var hasDistance: Set<String> = []
+    @ObservationIgnored private var rangingUpdates: Set<String> = []
     @ObservationIgnored private var capacityLimited = false
     @ObservationIgnored private var focusedPartyId: String?
     @ObservationIgnored private var onTableDiscovered: ((String) -> Void)?
@@ -170,7 +171,7 @@ final class Proximity: NSObject {
         browser?.stopBrowsingForPeers(); browser = nil
         pendingWatch = nil; sessionWatches = [:]
         niSessions.values.forEach { $0.invalidate() }
-        niSessions = [:]; detectors = [:]; hasDistance = []
+        niSessions = [:]; detectors = [:]; hasDistance = []; rangingUpdates = []
         nearbyPeers = [:]; lostMarkers = [:]; phases = [:]
         dinerAttempts = [:]; hostAttempts = [:]; hostTokens = [:]
         capacityLimited = false; focusedPartyId = nil
@@ -204,6 +205,7 @@ final class Proximity: NSObject {
         detectors[key] = detector
         debugDistances[key] = nil; debugTapCounts[key] = nil
         hasDistance.remove(key)
+        rangingUpdates.remove(key)
         return session
     }
     private func releaseSession(for key: String) {
@@ -212,6 +214,7 @@ final class Proximity: NSObject {
         detectors[key] = nil
         debugDistances[key] = nil; debugTapCounts[key] = nil
         hasDistance.remove(key)
+        rangingUpdates.remove(key)
         lastDistanceAt[key] = nil
     }
 
@@ -356,6 +359,19 @@ final class Proximity: NSObject {
         phases[partyId] = .ranging
         record("UWB ranging ready for \(partyId.suffix(6))")
         publishTables()
+        waitForFirstDistance(from: partyId, attempt: response.attemptId)
+    }
+    private func waitForFirstDistance(from partyId: String, attempt: String) {
+        let current = generation
+        Task { [weak self] in
+            try? await Task.sleep(for: .seconds(12))
+            guard let self, self.generation == current, self.dinerAttempts[partyId] == attempt,
+                  self.phases[partyId] == .ranging, self.state != .tapped else { return }
+            self.record(self.rangingUpdates.contains(partyId)
+                ? "UWB distance unavailable for \(partyId.suffix(6)); retrying"
+                : "no UWB updates for \(partyId.suffix(6)); retrying")
+            self.announce(to: partyId)
+        }
     }
     private func rejectTable(_ partyId: String, reason: String) {
         guard phases[partyId] != nil else { return }
@@ -430,6 +446,8 @@ extension Proximity: MCNearbyServiceBrowserDelegate {
         DispatchQueue.main.async { [weak self] in
             guard let self, self.browser.map(ObjectIdentifier.init) == id else { return }
             self.record("discovery failed: \(error.localizedDescription)")
+            self.state = .rejected("Nearby discovery failed. Check Local Network access in Settings, then retry.")
+            self.onRejected?("Nearby discovery failed. Check Local Network access in Settings, then retry.")
         }
     }
     func browser(_ browser: MCNearbyServiceBrowser, foundPeer peerID: MCPeerID, withDiscoveryInfo info: [String: String]?) {
@@ -457,6 +475,10 @@ extension Proximity: NISessionDelegate {
         let distance = nearbyObjects.first?.distance
         DispatchQueue.main.async { [weak self] in
             guard let self, let key = self.niSessions.first(where: { ObjectIdentifier($0.value) == id })?.key else { return }
+            let firstUpdate = self.rangingUpdates.insert(key).inserted
+            if firstUpdate && distance == nil {
+                self.record("UWB update has no distance for \(key.suffix(6))")
+            }
             self.distanceUpdate(distance, for: key)
         }
     }
@@ -464,10 +486,17 @@ extension Proximity: NISessionDelegate {
         let id = ObjectIdentifier(session)
         DispatchQueue.main.async { [weak self] in
             guard let self, let key = self.niSessions.first(where: { ObjectIdentifier($0.value) == id })?.key else { return }
+            self.record("UWB peer removed for \(key.suffix(6)): \(reason)")
             self.distanceUpdate(nil, for: key)
         }
     }
-    func sessionWasSuspended(_ session: NISession) {}
+    func sessionWasSuspended(_ session: NISession) {
+        let id = ObjectIdentifier(session)
+        DispatchQueue.main.async { [weak self] in
+            guard let self, let key = self.niSessions.first(where: { ObjectIdentifier($0.value) == id })?.key else { return }
+            self.record("UWB session suspended for \(key.suffix(6))")
+        }
+    }
     func sessionSuspensionEnded(_ session: NISession) {
         if let config = session.configuration { session.run(config) }
     }
@@ -477,6 +506,15 @@ extension Proximity: NISessionDelegate {
             guard let self, let key = self.niSessions.first(where: { ObjectIdentifier($0.value) == id })?.key else { return }
             self.releaseSession(for: key)
             let nsError = error as NSError
+            if nsError.domain == NIErrorDomain && nsError.code == NIError.Code.userDidNotAllow.rawValue {
+                if self.isHost {
+                    self.record("Nearby Interaction access denied on restaurant phone")
+                    self.reject(userId: key, reason: "Restaurant phone needs Nearby Interaction access")
+                } else {
+                    self.rejectTable(key, reason: "Enable Nearby Interactions for TappyTabs in Settings")
+                }
+                return
+            }
             if nsError.domain == NIErrorDomain && nsError.code == NIError.Code.activeSessionsLimitExceeded.rawValue {
                 if self.isHost {
                     self.record("UWB capacity reached for diner \(key.suffix(6)); QR available")

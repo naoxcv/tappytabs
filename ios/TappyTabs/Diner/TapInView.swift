@@ -6,6 +6,7 @@ import SwiftUI
 
 struct TapInView: View {
     @Environment(AppModel.self) private var app
+    @Environment(\.scenePhase) private var scenePhase
     @Binding var pendingJoinCode: String?
     @State private var proximity = Proximity.shared
     @State private var showScanner = false
@@ -99,6 +100,9 @@ struct TapInView: View {
             if !Task.isCancelled && (proximity.state == .searching || proximity.state == .preparing) { promoteQR = true }
         }
         .onChange(of: pendingJoinCode) { _, code in if let code { Task { await joinByCode(code) } } }
+        .onChange(of: scenePhase) { _, phase in
+            if phase == .active && app.partyId == nil && !joiningByQR && !departing { start() }
+        }
         .onDisappear { proximity.stop(); watches = [:] }
     }
 
