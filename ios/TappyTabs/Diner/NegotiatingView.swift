@@ -14,7 +14,7 @@ struct NegotiatingView: View {
                 }
                 AvatarView(avatarId: store.me?.avatarId ?? "avatar_1", size: 120, highlighted: true, state: store.lastError == nil ? .thinking : .confused)
                 Text("Your agent is negotiating…").font(AppTypography.style(.title2, weight: .bold))
-                Text("Watch the restaurant screen!").foregroundStyle(.secondary)
+                Text("Watch the restaurant screen!").foregroundStyle(Theme.accent)
                 Spacer()
             }
             .padding()

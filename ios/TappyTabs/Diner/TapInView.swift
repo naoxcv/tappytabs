@@ -29,7 +29,7 @@ struct TapInView: View {
             Text(title).font(AppTypography.style(.title2, weight: .bold)).multilineTextAlignment(.center)
             if !proximity.nearbyTables.isEmpty {
                 Text("\(proximity.nearbyTables.count) nearby table\(proximity.nearbyTables.count == 1 ? "" : "s") found")
-                    .font(AppTypography.subheadline).foregroundStyle(.secondary)
+                    .font(AppTypography.subheadline).foregroundStyle(Theme.accent)
             }
             if proximity.hasCapacityOverflow {
                 Text("Too many tables to range at once. Choose the table shown on the restaurant phone.")
@@ -45,9 +45,9 @@ struct TapInView: View {
                     }
                 }
             }
-            if let message { Text(message).foregroundStyle(.red) }
+            if let message { Text(message).foregroundStyle(Theme.accent) }
             if joiningByQR { ProgressView("Joining table…") }
-            if !proximity.supportsTap { Text("This phone can't tap, use QR").foregroundStyle(.secondary) }
+            if !proximity.supportsTap { Text("This phone can't tap, use QR").foregroundStyle(Theme.accent) }
             if app.tapSearchPaused || promoteQR || proximity.state == .tapped {
                 Button(app.tapSearchPaused ? "Search for tables" : "Restart tap search") {
                     if app.tapSearchPaused { app.resumeTapSearch() }

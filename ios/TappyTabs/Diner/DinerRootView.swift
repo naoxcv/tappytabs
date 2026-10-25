@@ -22,7 +22,7 @@ struct DinerFlow: View {
                 } else if checkedUserId != app.userId {
                     VStack(spacing: 12) {
                         if let resumeError {
-                            Text(resumeError).foregroundStyle(.secondary)
+                            Text(resumeError).foregroundStyle(Theme.accent)
                             Button("Retry") { watchForExistingTable() }.buttonStyle(.bordered)
                         } else {
                             ProgressView("Checking your table…")
@@ -112,7 +112,7 @@ struct WaitingView: View {
         VStack(spacing: 20) {
             Spacer()
             Text(title).font(AppTypography.style(.largeTitle, weight: .bold))
-            Text(subtitle).foregroundStyle(.secondary)
+            Text(subtitle).foregroundStyle(Theme.accent)
             MemberTicks(members: store.party?.members ?? [], done: done)
             Spacer()
         }

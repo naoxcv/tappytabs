@@ -5,14 +5,13 @@ struct ModeSelectView: View {
     @Environment(AppModel.self) private var app
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     var isLaunching = false
-    var onLaunchComplete: (() -> Void)? = nil
 
     var body: some View {
         GeometryReader { geometry in
             let bottomPadding: CGFloat = max(geometry.safeAreaInsets.bottom == 0 ? 24 : 12, 12)
             VStack(spacing: 0) {
                 Spacer(minLength: 24)
-                LaunchBrandView(onLaunchComplete: onLaunchComplete)
+                LaunchBrandView()
                     .scaleEffect(reduceMotion || !isLaunching ? 1 : 0.9)
                     .offset(y: reduceMotion || !isLaunching ? 0 : (104 + bottomPadding) / 2)
                     .animation(reduceMotion ? nil : .smooth(duration: 0.6), value: isLaunching)
@@ -21,7 +20,7 @@ struct ModeSelectView: View {
                     Button { app.mode = .diner } label: {
                         Text("I am a diner")
                             .font(AppTypography.custom(22, weight: .regular))
-                            .foregroundStyle(.black)
+                            .foregroundStyle(Theme.accentForeground)
                             .frame(maxWidth: .infinity)
                             .frame(height: 56)
                             .background(Theme.accent, in: RoundedRectangle(cornerRadius: 15))
@@ -48,18 +47,15 @@ struct ModeSelectView: View {
                 .accessibilityHidden(isLaunching)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(Color.black.ignoresSafeArea())
+            .background(Theme.background.ignoresSafeArea())
         }
     }
 }
 
 struct LaunchBrandView: View {
-    var onLaunchComplete: (() -> Void)? = nil
-
     var body: some View {
         VStack(spacing: 0) {
-            AvatarView(avatarId: AvatarCatalog.restaurant, size: 200, state: .launching,
-                       onAnimationComplete: onLaunchComplete)
+            AvatarView(avatarId: AvatarCatalog.restaurant, size: 200, state: .launching)
                 .accessibilityHidden(true)
             Text("TappyTabs")
                 .font(AppTypography.custom(36, relativeTo: .largeTitle, weight: .black))

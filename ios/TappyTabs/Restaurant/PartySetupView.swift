@@ -37,13 +37,14 @@ struct PartySetupView: View {
                                         .frame(maxWidth: .infinity, minHeight: 64)
                                 }
                                 .buttonStyle(.borderedProminent)
+                                .foregroundStyle(Theme.accentForeground)
                                 .disabled(restaurant == nil || opening)
                             }
                         }
                     }
                     .frame(maxWidth: .infinity)
                 }
-                if let error { Text(error).foregroundStyle(.red) }
+                if let error { Text(error).foregroundStyle(Theme.accent) }
                 if opening { ProgressView("Opening table…") }
             }
             .padding()
@@ -55,7 +56,7 @@ struct PartySetupView: View {
         HStack {
             if let menu {
                 Text("Menu from \(menu.name) via \(menu.source == "apify" ? "Apify" : "seed snapshot") · \(Int(menu.itemCount)) items\(fetchedText(menu))")
-                    .font(AppTypography.footnote).foregroundStyle(.secondary)
+                    .font(AppTypography.footnote).foregroundStyle(Theme.accent)
             }
             Spacer()
             if fetching { ProgressView() } else {
@@ -65,7 +66,7 @@ struct PartySetupView: View {
             }
         }
         .overlay(alignment: .bottomLeading) {
-            if let note { Text(note).font(AppTypography.caption2).foregroundStyle(.secondary).offset(y: 16) }
+            if let note { Text(note).font(AppTypography.caption2).foregroundStyle(Theme.accent).offset(y: 16) }
         }
     }
 

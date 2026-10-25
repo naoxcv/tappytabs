@@ -15,14 +15,21 @@ struct OnboardingCard: Decodable, Identifiable, Equatable {
 final class OnboardingModel {
     enum Step: Int, CaseIterable { case basics, allergies, spice, swipe, followups, avatar, summary }
     var step: Step = .basics
+    var isMovingBackward = false
     var draft = DraftProfile()
     var questions: [FollowUpQuestion] = []
     var answers: [String: String] = [:]
     var summary: ProfileSummary?
     var error: String?
 
-    func next() { step = Step(rawValue: step.rawValue + 1) ?? .summary }
-    func back() { step = Step(rawValue: step.rawValue - 1) ?? .basics }
+    func next() {
+        isMovingBackward = false
+        step = Step(rawValue: step.rawValue + 1) ?? .summary
+    }
+    func back() {
+        isMovingBackward = true
+        step = Step(rawValue: step.rawValue - 1) ?? .basics
+    }
 
     func swipe(_ card: OnboardingCard, liked: Bool) {
         if liked {
@@ -45,6 +52,7 @@ final class OnboardingModel {
 
 struct OnboardingFlow: View {
     @Environment(AppModel.self) private var app
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var model = OnboardingModel()
     @State private var creatingTestProfile = false
     @State private var testProfileError: String?
@@ -53,23 +61,29 @@ struct OnboardingFlow: View {
         VStack(spacing: 0) {
             ProgressView(value: Double(model.step.rawValue + 1), total: Double(OnboardingModel.Step.allCases.count))
                 .padding(.horizontal)
-            Group {
-                switch model.step {
-                case .basics: BasicsStep(model: model)
-                case .allergies: AllergyDietStep(model: model)
-                case .spice: SpiceStep(model: model)
-                case .swipe: SwipeDeckStep(model: model)
-                case .followups: FollowUpStep(model: model)
-                case .avatar: AvatarPickerStep(model: model)
-                case .summary: ProfileSummaryStep(model: model)
+                .animation(reduceMotion ? nil : .easeInOut(duration: 0.35), value: model.step)
+            ZStack {
+                Group {
+                    switch model.step {
+                    case .basics: BasicsStep(model: model)
+                    case .allergies: AllergyDietStep(model: model)
+                    case .spice: SpiceStep(model: model)
+                    case .swipe: SwipeDeckStep(model: model)
+                    case .followups: FollowUpStep(model: model)
+                    case .avatar: AvatarPickerStep(model: model)
+                    case .summary: ProfileSummaryStep(model: model)
+                    }
                 }
+                .padding()
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .id(model.step)
+                .transition(pageTransition)
             }
-            .padding()
             .frame(maxHeight: .infinity)
-            .transition(.push(from: .trailing))
-            .animation(.easeInOut, value: model.step)
+            .clipped()
+            .animation(.easeInOut(duration: reduceMotion ? 0.15 : 0.35), value: model.step)
             if let testProfileError {
-                Text(testProfileError).font(AppTypography.footnote).foregroundStyle(.red).padding(.horizontal)
+                Text(testProfileError).font(AppTypography.footnote).foregroundStyle(Theme.accent).padding(.horizontal)
             }
             Button(creatingTestProfile ? "Creating test diner…" : "Skip onboarding for tap test") {
                 Task { await createTestProfile() }
@@ -78,6 +92,15 @@ struct OnboardingFlow: View {
             .disabled(creatingTestProfile)
             .padding(.bottom)
         }
+    }
+
+    private var pageTransition: AnyTransition {
+        guard !reduceMotion else { return .opacity }
+        let distance: CGFloat = model.isMovingBackward ? -24 : 24
+        return .asymmetric(
+            insertion: .offset(x: distance).combined(with: .opacity),
+            removal: .offset(x: -distance).combined(with: .opacity)
+        )
     }
 
     private func createTestProfile() async {
@@ -116,7 +139,7 @@ private struct StepScaffold<Content: View>: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             Text(title).font(AppTypography.style(.largeTitle, weight: .bold))
-            if let subtitle { Text(subtitle).foregroundStyle(.secondary) }
+            if let subtitle { Text(subtitle).foregroundStyle(Theme.accent) }
             content.frame(maxHeight: .infinity, alignment: .top)
             Button(nextTitle, action: onNext).buttonStyle(BigButtonStyle()).disabled(!canContinue)
         }
@@ -127,7 +150,8 @@ struct BasicsStep: View {
     @Bindable var model: OnboardingModel
     var body: some View {
         StepScaffold(title: "Hi! What's your name?", canContinue: !model.draft.name.trimmingCharacters(in: .whitespaces).isEmpty, onNext: model.next) {
-            TextField("First name", text: $model.draft.name).font(AppTypography.custom(22)).textFieldStyle(.roundedBorder).textContentType(.givenName)
+            TextField("First name", text: $model.draft.name, prompt: Text("First name").foregroundStyle(Theme.accent))
+                .font(AppTypography.custom(22)).textFieldStyle(.roundedBorder).textContentType(.givenName)
         }
     }
 }
@@ -159,7 +183,7 @@ struct FlowChips<T: Hashable & Identifiable>: View {
                 Button { if on { selected.remove(item) } else { selected.insert(item) } } label: {
                     Text(item[keyPath: label]).frame(maxWidth: .infinity).padding(.vertical, 10)
                         .background(on ? Theme.accent : Theme.card, in: Capsule())
-                        .foregroundStyle(on ? Theme.accentForeground : .primary)
+                        .foregroundStyle(on ? Theme.accentForeground : Theme.accent)
                 }.buttonStyle(.plain)
             }
         }
@@ -194,16 +218,16 @@ struct SwipeDeckStep: View {
                         Text(card.emoji).font(.system(size: 90))
                         Text(card.name).font(AppTypography.style(.title, weight: .bold))
                         if !card.tags.isEmpty {
-                            Text(card.tags.joined(separator: " · ")).foregroundStyle(.secondary)
+                            Text(card.tags.joined(separator: " · ")).foregroundStyle(Theme.accent)
                         }
                     }
                     .frame(maxWidth: .infinity, minHeight: 320)
                     .background(Theme.card, in: RoundedRectangle(cornerRadius: 24))
                     .overlay(alignment: .topLeading) {
-                        if top && offset.width > 40 { Text("YUM").font(AppTypography.style(.title, weight: .bold)).foregroundStyle(.green).padding() }
+                        if top && offset.width > 40 { Text("YUM").font(AppTypography.style(.title, weight: .bold)).foregroundStyle(Theme.accent).padding() }
                     }
                     .overlay(alignment: .topTrailing) {
-                        if top && offset.width < -40 { Text("NOPE").font(AppTypography.style(.title, weight: .bold)).foregroundStyle(.red).padding() }
+                        if top && offset.width < -40 { Text("NOPE").font(AppTypography.style(.title, weight: .bold)).foregroundStyle(Theme.accent).padding() }
                     }
                     .offset(top ? offset : .zero)
                     .rotationEffect(.degrees(top ? Double(offset.width / 20) : 0))
@@ -261,6 +285,7 @@ struct FollowUpStep: View {
                 group.cancelAll()
                 return first
             }
+            guard !Task.isCancelled, model.step == .followups else { return }
             loading = false
             if let result, !result.isEmpty { model.questions = result } else { model.next() }
         }
@@ -271,10 +296,32 @@ struct AvatarPickerStep: View {
     @Bindable var model: OnboardingModel
     var body: some View {
         StepScaffold(title: "Pick your agent", onNext: model.next) {
-            LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 4), spacing: 16) {
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: 96), spacing: 12)], spacing: 12) {
                 ForEach(AvatarCatalog.ids, id: \.self) { id in
-                    AvatarView(avatarId: id, size: 70, highlighted: model.draft.avatarId == id)
-                        .onTapGesture { model.draft.avatarId = id }
+                    let selected = AvatarCatalog.character(model.draft.avatarId) == AvatarCatalog.character(id)
+                    Button {
+                        model.draft.avatarId = id
+                    } label: {
+                        AvatarView(avatarId: id, size: 80, highlighted: selected)
+                            .allowsHitTesting(false)
+                            .frame(maxWidth: .infinity, minHeight: 100)
+                            .background(Theme.card, in: RoundedRectangle(cornerRadius: 16))
+                            .overlay {
+                                RoundedRectangle(cornerRadius: 16)
+                                    .strokeBorder(selected ? AvatarCatalog.color(id) : .clear, lineWidth: 2)
+                            }
+                            .overlay(alignment: .topTrailing) {
+                                if selected {
+                                    Image(systemName: "checkmark.circle.fill")
+                                        .foregroundStyle(AvatarCatalog.color(id))
+                                        .padding(6)
+                                }
+                            }
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityIdentifier("agent-picker-\(id)")
+                    .accessibilityAddTraits(selected ? .isSelected : [])
                 }
             }
         }
@@ -296,7 +343,7 @@ struct ProfileSummaryStep: View {
                     Text(s.personality.label).font(AppTypography.style(.caption, weight: .bold)).padding(6).background(Theme.accent.opacity(0.2), in: Capsule())
                     Text(s.profileSummary).multilineTextAlignment(.center)
                 }
-                if let e = model.error { Text(e).foregroundStyle(.red) }
+                if let e = model.error { Text(e).foregroundStyle(Theme.accent) }
             }
             .frame(maxWidth: .infinity)
         }

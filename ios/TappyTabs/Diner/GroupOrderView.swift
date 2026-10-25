@@ -14,7 +14,7 @@ struct GroupOrderView: View {
                 Countdown(deadlineMs: deadline, offsetMs: store.serverOffsetMs)
             }
             Section(header: Text("For the table").font(AppTypography.headline)) {
-                if store.sharedLines.isEmpty { Text("Nothing shared").foregroundStyle(.secondary) }
+                if store.sharedLines.isEmpty { Text("Nothing shared").foregroundStyle(Theme.accent) }
                 ForEach(store.sharedLines) { line in
                     LineRow(line: line, avatars: line.sharedBy.compactMap { store.avatar(of: $0) })
                         .swipeActions { if !confirmed { removeButton(line) } }
@@ -46,7 +46,7 @@ struct GroupOrderView: View {
                     Text("Table"); PriceText(cents: store.lines.totals.total)
                 }
                 if confirmed {
-                    Label("Confirmed, waiting for others", systemImage: "checkmark.seal.fill").foregroundStyle(.green)
+                    Label("Confirmed, waiting for others", systemImage: "checkmark.seal.fill").foregroundStyle(Theme.accent)
                 } else {
                     Button("Confirm my order") {
                         Task { await store.confirm(); UINotificationFeedbackGenerator().notificationOccurred(.success) }
@@ -55,14 +55,20 @@ struct GroupOrderView: View {
             }
             .padding().background(.bar)
         }
-        .sheet(item: $substitute) { sub in SubstituteSheet(sub: sub, store: store) }
-        .sheet(isPresented: $showAdd) { AddSheet(store: store) }
+        .sheet(item: $substitute) { sub in
+            SubstituteSheet(sub: sub, store: store)
+                .presentationBackground(Theme.background)
+        }
+        .sheet(isPresented: $showAdd) {
+            AddSheet(store: store)
+                .presentationBackground(Theme.background)
+        }
     }
 
     private func removeButton(_ line: Line) -> some View {
         Button(role: .destructive) {
             Task { if let s = await store.remove(line.lineId) { substitute = s } }
-        } label: { Label("Remove", systemImage: "minus.circle") }
+        } label: { Label("Remove", systemImage: "minus.circle").foregroundStyle(Theme.accent) }
     }
 }
 
@@ -73,7 +79,7 @@ struct LineRow: View {
     let avatars: [String]
     var body: some View {
         HStack {
-            Text("\(Int(line.qty))×").foregroundStyle(.secondary)
+            Text("\(Int(line.qty))×").foregroundStyle(Theme.accent)
             VStack(alignment: .leading) {
                 Text(line.name)
                 if line.askServer { AskServerBadge() }
@@ -92,7 +98,7 @@ struct SubstituteSheet: View {
     var body: some View {
         VStack(spacing: 16) {
             Text("Swap for \(sub.name)?").font(AppTypography.style(.title2, weight: .bold))
-            Text(sub.reason).foregroundStyle(.secondary)
+            Text(sub.reason).foregroundStyle(Theme.accent)
             PriceText(cents: sub.priceCents).font(AppTypography.custom(20))
             if sub.askServer { AskServerBadge() }
             Button("Swap") { Task { await store.add(sub.itemId, shared: false); dismiss() } }.buttonStyle(BigButtonStyle())
@@ -120,7 +126,7 @@ struct AddSheet: View {
                         HStack {
                             VStack(alignment: .leading) {
                                 Text(item.name)
-                                Text(item.category.capitalized).font(AppTypography.caption).foregroundStyle(.secondary)
+                                Text(item.category.capitalized).font(AppTypography.caption).foregroundStyle(Theme.accent)
                                 if item.askServer { AskServerBadge() }
                             }
                             Spacer()

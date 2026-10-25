@@ -12,7 +12,7 @@ struct ProximityDebugOverlay: View {
             ForEach(Array(proximity.debugHistory.enumerated()), id: \.offset) { entry in
                 Text(entry.element).font(AppTypography.caption2).fixedSize(horizontal: false, vertical: true)
             }
-            if !proximity.supportsTap { Text("No precise distance on this phone: QR only").font(AppTypography.caption2).foregroundStyle(.red) }
+            if !proximity.supportsTap { Text("No precise distance on this phone: QR only").font(AppTypography.caption2).foregroundStyle(Theme.accent) }
             ForEach(proximity.nearbyTables) { table in
                 Text("table \(table.partyId.suffix(6)): \(table.phase.rawValue)")
                     .font(AppTypography.caption2)
@@ -39,7 +39,7 @@ struct ProximityDebugOverlay: View {
         }
         .padding(10)
         .background(.black.opacity(0.75), in: RoundedRectangle(cornerRadius: 10))
-        .foregroundStyle(.white)
+        .foregroundStyle(Theme.accent)
         .padding()
     }
 

@@ -80,7 +80,7 @@ struct TableTalkView: View {
                         } ?? .restaurant
                         SpeechBubble(text: current.text, speaker: speaker).id(current.id)
                     } else {
-                        Text("Your agents are getting ready…").foregroundStyle(.secondary)
+                        Text("Your agents are getting ready…").foregroundStyle(Theme.accent)
                     }
                     HistoryStrip(bubbles: Array(visible.dropLast().suffix(3)), store: store)
                     if store.party?.status == .pick { PlanSummaryCard(store: store) }
@@ -114,7 +114,7 @@ struct HistoryStrip: View {
         VStack(alignment: .leading, spacing: 4) {
             ForEach(bubbles) { b in
                 Text("\(b.fromUserId.map { store.name(of: $0) } ?? "Host"): \(b.text)")
-                    .font(AppTypography.caption).lineLimit(1).foregroundStyle(.secondary)
+                    .font(AppTypography.caption).lineLimit(1).foregroundStyle(Theme.accent)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -136,7 +136,7 @@ struct PlanSummaryCard: View {
                 }
             }
             if let p = store.party {
-                Text("\(p.members.filter(\.picked).count) of \(p.members.count) picked their main").font(AppTypography.subheadline).foregroundStyle(.secondary)
+                Text("\(p.members.filter(\.picked).count) of \(p.members.count) picked their main").font(AppTypography.subheadline).foregroundStyle(Theme.accent)
             }
         }
         .padding()

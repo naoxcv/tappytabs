@@ -15,32 +15,52 @@ struct TappyTabsApp: App {
         guard let titleFont = UIFont(name: "RalewayRoman-Regular", size: 17),
               let largeTitleFont = UIFont(name: "RalewayRoman-Bold", size: 34) else { return }
         let appearance = UINavigationBarAppearance()
-        appearance.configureWithDefaultBackground()
+        appearance.configureWithOpaqueBackground()
+        appearance.backgroundColor = UIColor(Theme.background)
         appearance.titleTextAttributes[.font] = titleFont
         appearance.largeTitleTextAttributes[.font] = largeTitleFont
+        appearance.titleTextAttributes[.foregroundColor] = UIColor(Theme.accent)
+        appearance.largeTitleTextAttributes[.foregroundColor] = UIColor(Theme.accent)
         UINavigationBar.appearance().standardAppearance = appearance
         UINavigationBar.appearance().scrollEdgeAppearance = appearance
         UINavigationBar.appearance().compactAppearance = appearance
+        UISegmentedControl.appearance().selectedSegmentTintColor = UIColor(Theme.accent)
+        UISegmentedControl.appearance().setTitleTextAttributes([.foregroundColor: UIColor(Theme.accent)], for: .normal)
+        UISegmentedControl.appearance().setTitleTextAttributes([.foregroundColor: UIColor(Theme.accentForeground)], for: .selected)
     }
 
     var body: some Scene {
         WindowGroup {
             Group {
                 if app.mode == nil {
-                    ModeSelectView(isLaunching: showingLaunch, onLaunchComplete: finishLaunch)
+                    ModeSelectView(isLaunching: showingLaunch)
                 } else if showingLaunch {
-                    LaunchBrandView(onLaunchComplete: finishLaunch)
+                    LaunchBrandView()
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .background(Color.black.ignoresSafeArea())
+                    .background(Theme.background.ignoresSafeArea())
                     .transition(.opacity)
                 } else {
                     RootView(pendingJoinCode: $pendingJoinCode)
                         .transition(.opacity)
                 }
             }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .background(Theme.background.ignoresSafeArea())
+                .scrollContentBackground(.hidden)
+                .preferredColorScheme(.dark)
+                .foregroundStyle(Theme.accent, Theme.accent, Theme.accent)
                 .environment(app)
                 .onOpenURL { url in pendingJoinCode = JoinLink.joinCode(from: url) }
                 .tint(Theme.accent)
+                .task {
+                    guard showingLaunch else { return }
+                    do {
+                        try await Task.sleep(for: .seconds(1.2))
+                    } catch {
+                        return
+                    }
+                    finishLaunch()
+                }
                 .onChange(of: app.mode, initial: true) { _, mode in
                     OrientationDelegate.update(for: mode)
                 }
@@ -103,7 +123,7 @@ struct RootView: View {
     }
 }
 
-/// Logo used on every top-level screen. Long-press 2 s → mode select. Triple-tap → UWB debug overlay.
+/// Top-left shortcut area: long-press 2 s → mode select. Triple-tap → UWB debug overlay.
 struct LogoHeader: View {
     @Environment(AppModel.self) private var app
     @AppStorage("tt.debugOverlay") private var debugOverlay = false
@@ -111,7 +131,9 @@ struct LogoHeader: View {
 
     var body: some View {
         HStack {
-            Text("TappyTabs").font(AppTypography.style(.title3, weight: .black)).foregroundStyle(Theme.accent)
+            Color.clear
+                .frame(width: 120, height: 44)
+                .contentShape(Rectangle())
                 .onTapGesture(count: 3) { debugOverlay.toggle() }
                 .onLongPressGesture(minimumDuration: 2) { app.switchMode() }
             Spacer()
@@ -119,7 +141,10 @@ struct LogoHeader: View {
                 .accessibilityLabel("Debug menu")
         }
         .padding(.horizontal)
-        .sheet(isPresented: $showDebugMenu) { DebugMenu() }
+        .sheet(isPresented: $showDebugMenu) {
+            DebugMenu()
+                .presentationBackground(Theme.background)
+        }
     }
 }
 
@@ -149,7 +174,8 @@ struct DebugMenu: View {
                     Picker("Data", selection: $app.backendKind) {
                         ForEach(AppModel.BackendKind.allCases) { Text($0.rawValue.capitalized).tag($0) }
                     }.pickerStyle(.segmented)
-                    TextField("Convex URL", text: $app.convexURL).textInputAutocapitalization(.never).autocorrectionDisabled()
+                    TextField("Convex URL", text: $app.convexURL, prompt: Text("Convex URL").foregroundStyle(Theme.accent))
+                        .textInputAutocapitalization(.never).autocorrectionDisabled()
                     HStack {
                         Button("Dev") { app.convexURL = Env.devURL }
                         Spacer()
@@ -174,6 +200,7 @@ struct DebugMenu: View {
                         app.leaveTable()
                     }
                     Button("Sign out (re-run onboarding)", role: .destructive) { app.signOut() }
+                        .foregroundStyle(Theme.accent)
                 }
                 if let mock = app.mock {
                     Section(header: Text("Mock: jump to status").font(AppTypography.headline)) {
@@ -193,7 +220,7 @@ struct DebugMenu: View {
                         Task { await leaveJoinedTable() }
                     }.disabled(leavingTable)
                     if leavingTable { ProgressView("Leaving table…") }
-                    if let leaveError { Text(leaveError).foregroundStyle(.red).font(AppTypography.footnote) }
+                    if let leaveError { Text(leaveError).foregroundStyle(Theme.accent).font(AppTypography.footnote) }
                     Button("Switch mode") { app.switchMode(); dismiss() }
                 }
             }

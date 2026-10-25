@@ -2,8 +2,9 @@ import SwiftUI
 
 /// Presentation-only mapping. Keep stored avatar IDs compatible with the backend.
 enum AvatarCatalog {
-    static let characters = ["tomato", "mushroom", "bokchoy", "garlic", "cat"]
-    static let ids = (1...5).map { "avatar_\($0)" }
+    static let dinerCharacters = ["tomato", "mushroom", "bokchoy", "garlic"]
+    static let characters = dinerCharacters + ["cat"]
+    static let ids = (1...dinerCharacters.count).map { "avatar_\($0)" }
     static let restaurant = "restaurant"
     static let overrides = ["restaurant": "cat"]
 
@@ -11,11 +12,11 @@ enum AvatarCatalog {
         if let name = overrides[id] { return name }
         if characters.contains(id) { return id }
         if id.hasPrefix("avatar_"), let n = Int(id.dropFirst(7)), n > 0 {
-            return characters[(n - 1) % characters.count]
+            return dinerCharacters[(n - 1) % dinerCharacters.count]
         }
         // Stable across launches, unlike Swift's randomized hashValue.
         let hash = id.utf8.reduce(UInt64(5381)) { ($0 &* 33) &+ UInt64($1) }
-        return characters[Int(hash % UInt64(characters.count))]
+        return dinerCharacters[Int(hash % UInt64(dinerCharacters.count))]
     }
 
     static func color(_ id: String) -> Color {

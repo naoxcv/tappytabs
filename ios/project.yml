@@ -40,7 +40,8 @@ targets:
       path: TappyTabs/Resources/Info.plist
       properties:
         CFBundleDisplayName: TappyTabs
-        UILaunchScreen: {}
+        UILaunchScreen: {UIColorName: AppBackground}
+        UIUserInterfaceStyle: Dark
         UIAppFonts: [Raleway-Variable.ttf, OpenSans-Variable.ttf]
         UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait, UIInterfaceOrientationLandscapeLeft, UIInterfaceOrientationLandscapeRight]
         UIApplicationSupportsIndirectInputEvents: true

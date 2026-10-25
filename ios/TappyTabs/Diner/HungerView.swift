@@ -8,7 +8,7 @@ struct HungerView: View {
     var body: some View {
         VStack(spacing: 18) {
             Text("How hungry are you?").font(AppTypography.style(.largeTitle, weight: .bold)).padding(.top, 32)
-            Text("Your agent uses this to size the order.").foregroundStyle(.secondary)
+            Text("Your agent uses this to size the order.").foregroundStyle(Theme.accent)
             Spacer()
             ForEach(Hunger.allCases) { h in
                 Button {

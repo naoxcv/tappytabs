@@ -19,7 +19,7 @@ struct CheckInView: View {
                 VStack(spacing: 12) {
                     Text("\(members.count) of \(Int(store.party?.size ?? 0)) checked in")
                         .font(AppTypography.custom(32, relativeTo: .largeTitle, weight: .bold)).contentTransition(.numericText())
-                    Text("Hold your phone to this one").foregroundStyle(.secondary)
+                    Text("Hold your phone to this one").foregroundStyle(Theme.accent)
                     LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 3), spacing: 8) {
                         ForEach(members) { m in
                             VStack(spacing: 0) {
@@ -39,7 +39,7 @@ struct CheckInView: View {
                     }
                     if let mock = app.mock { Button("Simulate tap") { mock.simulateTap() }.font(AppTypography.footnote) }
                     Button("Start with fewer") { Task { await store.startWithFewer() } }
-                        .buttonStyle(.borderedProminent).disabled(members.count < 2)
+                        .buttonStyle(.borderedProminent).foregroundStyle(Theme.accentForeground).disabled(members.count < 2)
                 }
             }
             .padding()
@@ -67,7 +67,7 @@ struct HungerWaitView: View {
         VStack(spacing: 24) {
             Spacer()
             Text("Everyone's here!").font(AppTypography.style(.largeTitle, weight: .bold))
-            Text("Choosing hunger levels…").foregroundStyle(.secondary)
+            Text("Choosing hunger levels…").foregroundStyle(Theme.accent)
             MemberTicks(members: store.party?.members ?? []) { $0.hunger != nil }
             Spacer()
         }

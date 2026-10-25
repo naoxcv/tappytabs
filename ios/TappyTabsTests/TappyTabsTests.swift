@@ -116,7 +116,7 @@ final class AgentAvatarTests: XCTestCase {
     }
 
     func testLegacyIDsKeepTheirCharactersWhenReordered() {
-        let expected = ["tomato", "mushroom", "bokchoy", "garlic", "cat", "tomato", "mushroom", "bokchoy"]
+        let expected = ["tomato", "mushroom", "bokchoy", "garlic", "tomato", "mushroom", "bokchoy", "garlic"]
         for n in (1...8).reversed() {
             XCTAssertEqual(AvatarCatalog.character("avatar_\(n)"), expected[n - 1])
         }

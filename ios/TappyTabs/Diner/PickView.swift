@@ -11,7 +11,7 @@ struct PickView: View {
             VStack(alignment: .leading, spacing: 14) {
                 Text("Your agent's picks").font(AppTypography.style(.largeTitle, weight: .bold))
                 if let deadline = store.party?.pickDeadline { Countdown(deadlineMs: deadline, offsetMs: store.serverOffsetMs) }
-                if store.mains.isEmpty { Text("Your agent couldn't find a safe main. Ask your server.").foregroundStyle(.secondary) }
+                if store.mains.isEmpty { Text("Your agent couldn't find a safe main. Ask your server.").foregroundStyle(Theme.accent) }
                 ForEach(store.mains) { c in
                     CandidateCard(candidate: c, big: c.rank == 1, selected: (selected ?? store.mains.first?.itemId) == c.itemId)
                         .onTapGesture { selected = c.itemId }
@@ -24,7 +24,7 @@ struct PickView: View {
                         PriceText(cents: drink.priceCents).font(AppTypography.subheadline)
                     }
                     .padding().background(Theme.card, in: RoundedRectangle(cornerRadius: 14))
-                    Text("You can remove it in the next step.").font(AppTypography.caption).foregroundStyle(.secondary)
+                    Text("You can remove it in the next step.").font(AppTypography.caption).foregroundStyle(Theme.accent)
                 }
             }
             .padding()
@@ -63,8 +63,8 @@ struct CandidateCard: View {
                 PriceText(cents: candidate.priceCents).font(AppTypography.custom(big ? 20 : 17, weight: .bold))
             }
             Text(candidate.name).font(big ? AppTypography.style(.title, weight: .bold) : AppTypography.style(.title3, weight: .bold))
-            Text(candidate.reason).font(AppTypography.subheadline).foregroundStyle(.secondary)
-            if big { Text(candidate.description).font(AppTypography.footnote).foregroundStyle(.secondary) }
+            Text(candidate.reason).font(AppTypography.subheadline).foregroundStyle(Theme.accent)
+            if big { Text(candidate.description).font(AppTypography.footnote).foregroundStyle(Theme.accent) }
             if candidate.askServer { AskServerBadge() }
         }
         .padding(big ? 20 : 14)
@@ -82,7 +82,7 @@ struct Countdown: View {
         TimelineView(.periodic(from: .now, by: 1)) { ctx in
             let left = max(0, Int((deadlineMs - (ctx.date.ms + offsetMs)) / 1000))
             Label("\(left)s left: then your agent decides", systemImage: "timer")
-                .font(AppTypography.footnote).foregroundStyle(left < 10 ? .red : .secondary)
+                .font(AppTypography.footnote).foregroundStyle(Theme.accent)
         }
     }
 }

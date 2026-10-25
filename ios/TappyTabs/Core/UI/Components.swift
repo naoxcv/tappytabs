@@ -3,8 +3,9 @@ import SwiftUI
 import UIKit
 
 enum Theme {
+    static let background = Color("AppBackground")
     static let accent = Color(red: 1, green: 0.96, blue: 0.86)
-    static let accentForeground = Color.black
+    static let accentForeground = background
     static let card = Color(.secondarySystemBackground)
     static let restaurantBubble = Color(.tertiarySystemFill)
 }
@@ -86,7 +87,7 @@ struct SpeechBubble: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             if case .diner(_, let name) = speaker {
-                Text(name).font(AppTypography.style(.caption, weight: .bold)).foregroundStyle(.secondary)
+                Text(name).font(AppTypography.style(.caption, weight: .bold)).foregroundStyle(Theme.accent)
             }
             if revealed {
                 Text(text).font(AppTypography.custom(15)).transition(.scale(scale: 0.8).combined(with: .opacity))
@@ -119,7 +120,7 @@ struct TypingDots: View {
                 Circle().frame(width: 6, height: 6).opacity(0.3 + 0.7 * abs(sin(phase + Double(i) * 0.6)))
             }
         }
-        .foregroundStyle(.secondary)
+        .foregroundStyle(Theme.accent)
         .frame(height: 18)
         .onAppear { withAnimation(.linear(duration: 0.9).repeatForever(autoreverses: false)) { phase = .pi } }
     }
@@ -167,7 +168,8 @@ struct StoreFeedback: ViewModifier {
         content
             .overlay(alignment: .top) {
                 if store.reconnecting {
-                    Text("Reconnecting…").font(AppTypography.style(.caption, weight: .bold)).padding(6).frame(maxWidth: .infinity).background(.yellow.opacity(0.85))
+                    Text("Reconnecting…").font(AppTypography.style(.caption, weight: .bold)).padding(6).frame(maxWidth: .infinity)
+                        .foregroundStyle(Theme.accentForeground).background(Theme.accent)
                 }
             }
             .overlay(alignment: .bottom) {
