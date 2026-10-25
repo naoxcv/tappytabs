@@ -291,10 +291,17 @@ struct DraftProfile: Equatable {
     var spice: Double = 2
     var likes: [String] = []
     var dislikes: [String] = []
+    var ingredientLikes: [String] = []
+    var ingredientAvoids: [String] = []
     var cuisines: [String] = []
     var dislikedCuisines: [String] = []
     var likedCategories: [String] = []
     var avatarId = "avatar_1"
+    var pairAnswers: [String: String] = [:]
+    var tasteCorrections: [String: Double] = [:]
+    var removedContrasts: Set<String> = []
+    var priceSensitivity = "somewhat"
+    var familiarity = "familiar"
 }
 
 enum JoinVia: String { case uwb, qr, sim }

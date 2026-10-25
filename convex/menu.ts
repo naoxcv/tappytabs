@@ -38,6 +38,9 @@ export const normalizedItem = z.object({
   tags: z.array(z.string()),
   description: z.string(),
   priceCents: z.number().int().nonnegative(),
+  currency: z.string().optional(),
+  priceVerified: z.boolean().optional(),
+  taste: z.array(z.object({ contrast: z.string(), value: z.number(), evidence: z.enum(["stated", "inferred"]), detail: z.string() })).optional(),
   allergens: z.array(z.object({ allergen: z.enum(ALLERGENS), level: z.enum(ALLERGEN_LEVELS) })),
   diet: z.array(z.enum(DIETS)),
   spice: z.number().min(0).max(4),
@@ -213,4 +216,3 @@ export const upsertItems = internalMutation({
     return items.length;
   },
 });
-

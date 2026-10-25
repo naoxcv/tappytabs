@@ -12,7 +12,7 @@ export type NormalizedItem = {
   cuisine?: string;
   tags: string[];
   description: string;
-  priceCents: number;
+  priceCents: number | null;
   allergens: { allergen: Allergen; level: Level }[];
   diet: Diet[];
   spice: number;
@@ -20,6 +20,9 @@ export type NormalizedItem = {
   shareable: boolean;
   menuOrder: number;
   tagStatus: "tagged" | "untagged";
+  taste: { contrast: string; value: number; evidence: "stated" | "inferred"; detail: string }[];
+  priceVerified: boolean;
+  currency?: string;
 };
 
 /** LLM tag output per item (validated in main.ts). May only add or raise. */
@@ -31,15 +34,47 @@ export type LlmTags = {
   spice?: number;
   isDrink?: boolean;
   shareable?: boolean;
+  taste?: { contrast: string; value: number; detail: string }[];
 };
 
 const RANK: Record<Level, number> = { not_detected: 0, may_contain: 1, contains: 2 };
 const raise = (a: Level, b: Level): Level => (RANK[b] > RANK[a] ? b : a);
 
-export function parsePriceCents(price: RawItem["price"]): number {
-  if (typeof price === "number") return price > 200 ? Math.round(price) : Math.round(price * 100);
-  const m = String(price ?? "").replace(",", ".").match(/(\d+(?:\.\d{1,2})?)/);
-  return m ? Math.round(parseFloat(m[1]) * 100) : 0;
+export function parsePrice(price: RawItem["price"]): { cents: number | null; currency?: string } {
+  if (typeof price === "number") return Number.isFinite(price) && price >= 0 && price <= 200 ? { cents: Math.round(price * 100) } : { cents: null };
+  const source = String(price ?? "").trim();
+  if (!source || /\b(from|starting|market|varies|ask)\b|[-–]\s*[$€£]?\d/i.test(source)) return { cents: null };
+  const symbols = [...source.matchAll(/[$€£]/g)].map((m) => m[0]);
+  const codes = [...source.matchAll(/\b(?:USD|EUR|GBP|CAD|AUD)\b/gi)].map((m) => m[0].toUpperCase());
+  const currencies = [...new Set([...symbols.map((s) => ({ "$": "USD", "€": "EUR", "£": "GBP" })[s]), ...codes])];
+  if (currencies.length > 1) return { cents: null };
+  const cleaned = source.replace(/[$€£]|\b(?:USD|EUR|GBP|CAD|AUD)\b/gi, "").trim();
+  if (!/^\d+(?:[.,]\d{1,2})?$/.test(cleaned)) return { cents: null };
+  return { cents: Math.round(Number(cleaned.replace(",", ".")) * 100), currency: currencies[0] };
+}
+
+export const parsePriceCents = (price: RawItem["price"]): number | null => parsePrice(price).cents;
+
+/** Only annotate traits directly supported by menu wording. Missing traits stay unknown. */
+export function inferTaste(text: string): NormalizedItem["taste"] {
+  const rules: [string, number, "stated" | "inferred", RegExp][] = [
+    ["texture", -1, "stated", /\b(crisp|crispy|crunchy)\b/i], ["texture", 1, "stated", /\b(tender|soft)\b/i],
+    ["texture", 1, "inferred", /\bbraised\b/i],
+    ["richness", -1, "stated", /\b(light|lean)\b/i], ["richness", 1, "stated", /\b(creamy|rich)\b/i],
+    ["richness", 1, "inferred", /\b(butter|cheesy)\b/i],
+    ["brightness", 1, "stated", /\b(tangy|bright)\b/i], ["brightness", 1, "inferred", /\b(lemon|lime|citrus|vinegar)\b/i],
+    ["brothiness", 1, "stated", /\b(broth|soup)\b/i], ["brothiness", -1, "stated", /\b(dry.fried)\b/i],
+    ["boldness", 1, "stated", /\b(bold|boldly seasoned)\b/i], ["boldness", -1, "stated", /\b(simply seasoned)\b/i],
+    ["boldness", 1, "inferred", /\b(spiced|garlic|gochujang)\b/i],
+    ["char", -1, "stated", /\b(fresh herb|basil|cilantro|parsley)\b/i], ["char", 1, "stated", /\b(smoky|smoked|charred)\b/i],
+    ["char", 1, "inferred", /\bgrilled\b/i],
+  ];
+  return rules.flatMap(([contrast, value, evidence, pattern]) => {
+    const match = text.match(pattern);
+    return match ? [{ contrast, value, evidence, detail: match[0] }] : [];
+  }).filter((trait, index, all) =>
+    !all.some((other) => other.contrast === trait.contrast && other.value !== trait.value) &&
+    !all.slice(0, index).some((other) => other.contrast === trait.contrast));
 }
 
 /** Deterministic first pass. Without an LLM result, the item stays usable but conservative. */
@@ -62,6 +97,9 @@ export function keywordPass(raw: RawItem, index: number): NormalizedItem {
     tags: [],
     description: (raw.description ?? "").trim(),
     priceCents: parsePriceCents(raw.price),
+    currency: parsePrice(raw.price).currency,
+    priceVerified: false,
+    taste: inferTaste(text),
     allergens: ALLERGENS.map((allergen) => ({ allergen, level: hits.has(allergen) ? "contains" : "not_detected" })),
     diet,
     spice: /(spicy|chili|chilli|gochujang|sriracha|jalape|hot )/.test(lower) ? 2 : 0,
@@ -83,6 +121,14 @@ export function mergeLlm(base: NormalizedItem, llm: LlmTags | null): NormalizedI
   ) : base.diet;
   return {
     ...base,
+    taste: [
+      ...base.taste,
+      ...(Array.isArray(llm.taste) ? llm.taste : []).filter((t) =>
+        ["texture", "richness", "brightness", "brothiness", "boldness", "char"].includes(t.contrast) &&
+        Number.isFinite(t.value) && Math.abs(t.value) <= 1 && !!t.detail?.trim() &&
+        !base.taste.some((existing) => existing.contrast === t.contrast),
+      ).map((t) => ({ ...t, evidence: "inferred" as const })),
+    ],
     allergens,
     diet: [...new Set(diet)],
     tags: (llm.tags ?? []).map((t) => t.toLowerCase()).slice(0, 6),
