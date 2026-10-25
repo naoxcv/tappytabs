@@ -1,0 +1,765 @@
+[
+  {
+    "name": "A1. Imperial Crab Rolls 2pcs",
+    "price": "$9.60",
+    "description": "",
+    "category": "APPETIZERS",
+    "sourceUrl": "https://order.toasttab.com/online/pho-ha-noi-san-jose-969-story-road-6048"
+  },
+  {
+    "name": "A2. Pork Egg Rolls 3pcs",
+    "price": "$8.85",
+    "description": "",
+    "category": "APPETIZERS",
+    "sourceUrl": "https://order.toasttab.com/online/pho-ha-noi-san-jose-969-story-road-6048"
+  },
+  {
+    "name": "A3. Garlic and Fish Sauce Chicken Wings",
+    "price": "$12.35",
+    "description": "",
+    "category": "APPETIZERS",
+    "sourceUrl": "https://order.toasttab.com/online/pho-ha-noi-san-jose-969-story-road-6048"
+  },
+  {
+    "name": "A4. Grilled Pork Sausage Roll",
+    "price": "$8.85",
+    "description": "",
+    "category": "APPETIZERS",
+    "sourceUrl": "https://order.toasttab.com/online/pho-ha-noi-san-jose-969-story-road-6048"
+  },
+  {
+    "name": "A5. Chargrilled Pork Roll",
+    "price": "$8.85",
+    "description": "",
+    "category": "APPETIZERS",
+    "sourceUrl": "https://order.toasttab.com/online/pho-ha-noi-san-jose-969-story-road-6048"
+  },
+  {
+    "name": "A6. Spring Roll",
+    "price": "$8.85",
+    "description": "",
+    "category": "APPETIZERS",
+    "sourceUrl": "https://order.toasttab.com/online/pho-ha-noi-san-jose-969-story-road-6048"
+  },
+  {
+    "name": "A7. Ha Noi Special Rolls",
+    "price": "$14.35",
+    "description": "",
+    "category": "APPETIZERS",
+    "sourceUrl": "https://order.toasttab.com/online/pho-ha-noi-san-jose-969-story-road-6048"
+  },
+  {
+    "name": "Custom Pho",
+    "price": "$19.25",
+    "description": "",
+    "category": "BEEF PHO",
+    "sourceUrl": "https://order.toasttab.com/online/pho-ha-noi-san-jose-969-story-road-6048"
+  },
+  {
+    "name": "P1. Combination Beef Pho",
+    "price": "$19.85",
+    "description": "",
+    "category": "BEEF PHO",
+    "sourceUrl": "https://order.toasttab.com/online/pho-ha-noi-san-jose-969-story-road-6048"
+  },
+  {
+    "name": "P10. Oxtail Pho",
+    "price": "$20.45",
+    "description": "",
+    "category": "BEEF PHO",
+    "sourceUrl": "https://order.toasttab.com/online/pho-ha-noi-san-jose-969-story-road-6048"
+  },
+  {
+    "name": "P11. Rare Steak and Oxtail Pho",
+    "price": "$19.85",
+    "description": "",
+    "category": "BEEF PHO",
+    "sourceUrl": "https://order.toasttab.com/online/pho-ha-noi-san-jose-969-story-road-6048"
+  },
+  {
+    "name": "P13. Vegetable Beef Broth Pho",
+    "price": "$19.25",
+    "description": "",
+    "category": "BEEF PHO",
+    "sourceUrl": "https://order.toasttab.com/online/pho-ha-noi-san-jose-969-story-road-6048"
+  },
+  {
+    "name": "P2. Rare Steak Pho",
+    "price": "$19.25",
+    "description": "",
+    "category": "BEEF PHO",
+    "sourceUrl": "https://order.toasttab.com/online/pho-ha-noi-san-jose-969-story-road-6048"
+  },
+  {
+    "name": "P3. Rare Steak and Welldone Pho",
+    "price": "$19.25",
+    "description": "",
+    "category": "BEEF PHO",
+    "sourceUrl": "https://order.toasttab.com/online/pho-ha-noi-san-jose-969-story-road-6048"
+  },
+  {
+    "name": "P4. Rare Steak, Brisket and Shank Pho",
+    "price": "$19.25",
+    "description": "",
+    "category": "BEEF PHO",
+    "sourceUrl": "https://order.toasttab.com/online/pho-ha-noi-san-jose-969-story-road-6048"
+  },
+  {
+    "name": "P5. Rare Steak & Meatball Pho",
+    "price": "$19.25",
+    "description": "",
+    "category": "BEEF PHO",
+    "sourceUrl": "https://order.toasttab.com/online/pho-ha-noi-san-jose-969-story-road-6048"
+  },
+  {
+    "name": "P6. Sauteed Flank Steak Pho",
+    "price": "$19.85",
+    "description": "",
+    "category": "BEEF PHO",
+    "sourceUrl": "https://order.toasttab.com/online/pho-ha-noi-san-jose-969-story-road-6048"
+  },
+  {
+    "name": "P7. 1lb Short Rib Pho",
+    "price": "$19.35",
+    "description": "",
+    "category": "BEEF PHO",
+    "sourceUrl": "https://order.toasttab.com/online/pho-ha-noi-san-jose-969-story-road-6048"
+  },
+  {
+    "name": "P8. Rare Steak & Boneless Short Rib Pho",
+    "price": "$19.35",
+    "description": "",
+    "category": "BEEF PHO",
+    "sourceUrl": "https://order.toasttab.com/online/pho-ha-noi-san-jose-969-story-road-6048"
+  },
+  {
+    "name": "P9. No Meat Beef Broth Pho",
+    "price": "$12.00",
+    "description": "",
+    "category": "BEEF PHO",
+    "sourceUrl": "https://order.toasttab.com/online/pho-ha-noi-san-jose-969-story-road-6048"
+  },
+  {
+    "name": "C1. Chicken Thigh Pho",
+    "price": "$19.10",
+    "description": "",
+    "category": "CHICKEN PHO",
+    "sourceUrl": "https://order.toasttab.com/online/pho-ha-noi-san-jose-969-story-road-6048"
+  },
+  {
+    "name": "C2. Chicken Breast Pho",
+    "price": "$18.10",
+    "description": "",
+    "category": "CHICKEN PHO",
+    "sourceUrl": "https://order.toasttab.com/online/pho-ha-noi-san-jose-969-story-road-6048"
+  },
+  {
+    "name": "C3. No Meat Chicken Broth Pho",
+    "price": "$11.00",
+    "description": "",
+    "category": "CHICKEN PHO",
+    "sourceUrl": "https://order.toasttab.com/online/pho-ha-noi-san-jose-969-story-road-6048"
+  },
+  {
+    "name": "C4. Vegetable Chicken Broth Pho",
+    "price": "$18.10",
+    "description": "",
+    "category": "CHICKEN PHO",
+    "sourceUrl": "https://order.toasttab.com/online/pho-ha-noi-san-jose-969-story-road-6048"
+  },
+  {
+    "name": "C5. Combination Chicken Pho",
+    "price": "$19.10",
+    "description": "",
+    "category": "CHICKEN PHO",
+    "sourceUrl": "https://order.toasttab.com/online/pho-ha-noi-san-jose-969-story-road-6048"
+  },
+  {
+    "name": "Arnold Palmer",
+    "price": "$6.00",
+    "description": "",
+    "category": "DRINKS",
+    "sourceUrl": "https://order.toasttab.com/online/pho-ha-noi-san-jose-969-story-road-6048"
+  },
+  {
+    "name": "Black Coffee",
+    "price": "$5.00",
+    "description": "",
+    "category": "DRINKS",
+    "sourceUrl": "https://order.toasttab.com/online/pho-ha-noi-san-jose-969-story-road-6048"
+  },
+  {
+    "name": "Coconut Juice",
+    "price": "$6.50",
+    "description": "",
+    "category": "DRINKS",
+    "sourceUrl": "https://order.toasttab.com/online/pho-ha-noi-san-jose-969-story-road-6048"
+  },
+  {
+    "name": "Coconut Juice with Kumquat",
+    "price": "$7.00",
+    "description": "",
+    "category": "DRINKS",
+    "sourceUrl": "https://order.toasttab.com/online/pho-ha-noi-san-jose-969-story-road-6048"
+  },
+  {
+    "name": "Coconut Smoothie",
+    "price": "$7.50",
+    "description": "",
+    "category": "DRINKS",
+    "sourceUrl": "https://order.toasttab.com/online/pho-ha-noi-san-jose-969-story-road-6048"
+  },
+  {
+    "name": "Coffee Condensed Milk",
+    "price": "$6.00",
+    "description": "",
+    "category": "DRINKS",
+    "sourceUrl": "https://order.toasttab.com/online/pho-ha-noi-san-jose-969-story-road-6048"
+  },
+  {
+    "name": "Coke",
+    "price": "$2.50",
+    "description": "",
+    "category": "DRINKS",
+    "sourceUrl": "https://order.toasttab.com/online/pho-ha-noi-san-jose-969-story-road-6048"
+  },
+  {
+    "name": "Diet Coke",
+    "price": "$2.50",
+    "description": "",
+    "category": "DRINKS",
+    "sourceUrl": "https://order.toasttab.com/online/pho-ha-noi-san-jose-969-story-road-6048"
+  },
+  {
+    "name": "Egg Coffee",
+    "price": "$6.50",
+    "description": "",
+    "category": "DRINKS",
+    "sourceUrl": "https://order.toasttab.com/online/pho-ha-noi-san-jose-969-story-road-6048"
+  },
+  {
+    "name": "Fanta",
+    "price": "$2.50",
+    "description": "",
+    "category": "DRINKS",
+    "sourceUrl": "https://order.toasttab.com/online/pho-ha-noi-san-jose-969-story-road-6048"
+  },
+  {
+    "name": "Fresh Lemon Soda",
+    "price": "$6.00",
+    "description": "",
+    "category": "DRINKS",
+    "sourceUrl": "https://order.toasttab.com/online/pho-ha-noi-san-jose-969-story-road-6048"
+  },
+  {
+    "name": "Fresh Orange Juice",
+    "price": "$6.50",
+    "description": "",
+    "category": "DRINKS",
+    "sourceUrl": "https://order.toasttab.com/online/pho-ha-noi-san-jose-969-story-road-6048"
+  },
+  {
+    "name": "Fresh Orange Juice No Ice",
+    "price": "$8.00",
+    "description": "",
+    "category": "DRINKS",
+    "sourceUrl": "https://order.toasttab.com/online/pho-ha-noi-san-jose-969-story-road-6048"
+  },
+  {
+    "name": "Hot Lemonade Ginger and Honey",
+    "price": "$6.00",
+    "description": "",
+    "category": "DRINKS",
+    "sourceUrl": "https://order.toasttab.com/online/pho-ha-noi-san-jose-969-story-road-6048"
+  },
+  {
+    "name": "Hot Tea",
+    "price": "$1.50",
+    "description": "",
+    "category": "DRINKS",
+    "sourceUrl": "https://order.toasttab.com/online/pho-ha-noi-san-jose-969-story-road-6048"
+  },
+  {
+    "name": "Iced Tea",
+    "price": "$1.50",
+    "description": "",
+    "category": "DRINKS",
+    "sourceUrl": "https://order.toasttab.com/online/pho-ha-noi-san-jose-969-story-road-6048"
+  },
+  {
+    "name": "Lemonade",
+    "price": "$5.00",
+    "description": "",
+    "category": "DRINKS",
+    "sourceUrl": "https://order.toasttab.com/online/pho-ha-noi-san-jose-969-story-road-6048"
+  },
+  {
+    "name": "Mango Smoothie",
+    "price": "$7.50",
+    "description": "",
+    "category": "DRINKS",
+    "sourceUrl": "https://order.toasttab.com/online/pho-ha-noi-san-jose-969-story-road-6048"
+  },
+  {
+    "name": "Passionfruit Drink",
+    "price": "$6.00",
+    "description": "",
+    "category": "DRINKS",
+    "sourceUrl": "https://order.toasttab.com/online/pho-ha-noi-san-jose-969-story-road-6048"
+  },
+  {
+    "name": "Salted Cream Coffee",
+    "price": "$6.50",
+    "description": "",
+    "category": "DRINKS",
+    "sourceUrl": "https://order.toasttab.com/online/pho-ha-noi-san-jose-969-story-road-6048"
+  },
+  {
+    "name": "Salted Lemon Soda",
+    "price": "$6.00",
+    "description": "",
+    "category": "DRINKS",
+    "sourceUrl": "https://order.toasttab.com/online/pho-ha-noi-san-jose-969-story-road-6048"
+  },
+  {
+    "name": "Salted Plum Soda",
+    "price": "$6.00",
+    "description": "",
+    "category": "DRINKS",
+    "sourceUrl": "https://order.toasttab.com/online/pho-ha-noi-san-jose-969-story-road-6048"
+  },
+  {
+    "name": "Soursop Smoothie",
+    "price": "$7.50",
+    "description": "",
+    "category": "DRINKS",
+    "sourceUrl": "https://order.toasttab.com/online/pho-ha-noi-san-jose-969-story-road-6048"
+  },
+  {
+    "name": "Soy Milk",
+    "price": "$5.00",
+    "description": "",
+    "category": "DRINKS",
+    "sourceUrl": "https://order.toasttab.com/online/pho-ha-noi-san-jose-969-story-road-6048"
+  },
+  {
+    "name": "Special Healthy Drink",
+    "price": "$7.00",
+    "description": "",
+    "category": "DRINKS",
+    "sourceUrl": "https://order.toasttab.com/online/pho-ha-noi-san-jose-969-story-road-6048"
+  },
+  {
+    "name": "Sprite",
+    "price": "$2.50",
+    "description": "",
+    "category": "DRINKS",
+    "sourceUrl": "https://order.toasttab.com/online/pho-ha-noi-san-jose-969-story-road-6048"
+  },
+  {
+    "name": "Strawberry Lemonade",
+    "price": "$6.00",
+    "description": "",
+    "category": "DRINKS",
+    "sourceUrl": "https://order.toasttab.com/online/pho-ha-noi-san-jose-969-story-road-6048"
+  },
+  {
+    "name": "Strawberry Smoothie",
+    "price": "$7.50",
+    "description": "",
+    "category": "DRINKS",
+    "sourceUrl": "https://order.toasttab.com/online/pho-ha-noi-san-jose-969-story-road-6048"
+  },
+  {
+    "name": "Sugar Cane Juice",
+    "price": "$7.00",
+    "description": "",
+    "category": "DRINKS",
+    "sourceUrl": "https://order.toasttab.com/online/pho-ha-noi-san-jose-969-story-road-6048"
+  },
+  {
+    "name": "Thai Tea",
+    "price": "$6.50",
+    "description": "",
+    "category": "DRINKS",
+    "sourceUrl": "https://order.toasttab.com/online/pho-ha-noi-san-jose-969-story-road-6048"
+  },
+  {
+    "name": "Three Color Dessert",
+    "price": "$7.00",
+    "description": "",
+    "category": "DRINKS",
+    "sourceUrl": "https://order.toasttab.com/online/pho-ha-noi-san-jose-969-story-road-6048"
+  },
+  {
+    "name": "Ube Coffee",
+    "price": "$6.50",
+    "description": "",
+    "category": "DRINKS",
+    "sourceUrl": "https://order.toasttab.com/online/pho-ha-noi-san-jose-969-story-road-6048"
+  },
+  {
+    "name": "Ube Smoothie",
+    "price": "$7.50",
+    "description": "",
+    "category": "DRINKS",
+    "sourceUrl": "https://order.toasttab.com/online/pho-ha-noi-san-jose-969-story-road-6048"
+  },
+  {
+    "name": "$6.5 Veggies(Rau Cu)",
+    "price": "$6.50",
+    "description": "",
+    "category": "SIDE ORDER",
+    "sourceUrl": "https://order.toasttab.com/online/pho-ha-noi-san-jose-969-story-road-6048"
+  },
+  {
+    "name": "Chinese Breadsticks",
+    "price": "$2.50",
+    "description": "",
+    "category": "SIDE ORDER",
+    "sourceUrl": "https://order.toasttab.com/online/pho-ha-noi-san-jose-969-story-road-6048"
+  },
+  {
+    "name": "Extra Soup for TOGO",
+    "price": "$6.50",
+    "description": "",
+    "category": "SIDE ORDER",
+    "sourceUrl": "https://order.toasttab.com/online/pho-ha-noi-san-jose-969-story-road-6048"
+  },
+  {
+    "name": "French Fries",
+    "price": "$6.00",
+    "description": "",
+    "category": "SIDE ORDER",
+    "sourceUrl": "https://order.toasttab.com/online/pho-ha-noi-san-jose-969-story-road-6048"
+  },
+  {
+    "name": "Half Roti Chicken",
+    "price": "$15.00",
+    "description": "",
+    "category": "SIDE ORDER",
+    "sourceUrl": "https://order.toasttab.com/online/pho-ha-noi-san-jose-969-story-road-6048"
+  },
+  {
+    "name": "Half Steamed Chicken",
+    "price": "$14.00",
+    "description": "",
+    "category": "SIDE ORDER",
+    "sourceUrl": "https://order.toasttab.com/online/pho-ha-noi-san-jose-969-story-road-6048"
+  },
+  {
+    "name": "Side of Beef Shank",
+    "price": "$7.50",
+    "description": "",
+    "category": "SIDE ORDER",
+    "sourceUrl": "https://order.toasttab.com/online/pho-ha-noi-san-jose-969-story-road-6048"
+  },
+  {
+    "name": "Side of Beef Short Rib",
+    "price": "$12.00",
+    "description": "",
+    "category": "SIDE ORDER",
+    "sourceUrl": "https://order.toasttab.com/online/pho-ha-noi-san-jose-969-story-road-6048"
+  },
+  {
+    "name": "Side of Brisket",
+    "price": "$7.50",
+    "description": "",
+    "category": "SIDE ORDER",
+    "sourceUrl": "https://order.toasttab.com/online/pho-ha-noi-san-jose-969-story-road-6048"
+  },
+  {
+    "name": "Side of Chicken Breast",
+    "price": "$8.00",
+    "description": "",
+    "category": "SIDE ORDER",
+    "sourceUrl": "https://order.toasttab.com/online/pho-ha-noi-san-jose-969-story-road-6048"
+  },
+  {
+    "name": "Side of Chicken Rice",
+    "price": "$3.00",
+    "description": "",
+    "category": "SIDE ORDER",
+    "sourceUrl": "https://order.toasttab.com/online/pho-ha-noi-san-jose-969-story-road-6048"
+  },
+  {
+    "name": "Side of Chicken Thigh",
+    "price": "$8.00",
+    "description": "",
+    "category": "SIDE ORDER",
+    "sourceUrl": "https://order.toasttab.com/online/pho-ha-noi-san-jose-969-story-road-6048"
+  },
+  {
+    "name": "Side of Crispy Sticky Rice",
+    "price": "$8.00",
+    "description": "",
+    "category": "SIDE ORDER",
+    "sourceUrl": "https://order.toasttab.com/online/pho-ha-noi-san-jose-969-story-road-6048"
+  },
+  {
+    "name": "Side of Egg Noodle",
+    "price": "$3.00",
+    "description": "",
+    "category": "SIDE ORDER",
+    "sourceUrl": "https://order.toasttab.com/online/pho-ha-noi-san-jose-969-story-road-6048"
+  },
+  {
+    "name": "Side of Fresh Noodle",
+    "price": "$3.00",
+    "description": "",
+    "category": "SIDE ORDER",
+    "sourceUrl": "https://order.toasttab.com/online/pho-ha-noi-san-jose-969-story-road-6048"
+  },
+  {
+    "name": "Side of Meatball",
+    "price": "$7.50",
+    "description": "",
+    "category": "SIDE ORDER",
+    "sourceUrl": "https://order.toasttab.com/online/pho-ha-noi-san-jose-969-story-road-6048"
+  },
+  {
+    "name": "Side of Rare Steak",
+    "price": "$8.00",
+    "description": "",
+    "category": "SIDE ORDER",
+    "sourceUrl": "https://order.toasttab.com/online/pho-ha-noi-san-jose-969-story-road-6048"
+  },
+  {
+    "name": "Side of Regular Noodle",
+    "price": "$3.00",
+    "description": "",
+    "category": "SIDE ORDER",
+    "sourceUrl": "https://order.toasttab.com/online/pho-ha-noi-san-jose-969-story-road-6048"
+  },
+  {
+    "name": "Side of Sticky Rice",
+    "price": "$4.00",
+    "description": "",
+    "category": "SIDE ORDER",
+    "sourceUrl": "https://order.toasttab.com/online/pho-ha-noi-san-jose-969-story-road-6048"
+  },
+  {
+    "name": "Side of Tendon",
+    "price": "$7.50",
+    "description": "",
+    "category": "SIDE ORDER",
+    "sourceUrl": "https://order.toasttab.com/online/pho-ha-noi-san-jose-969-story-road-6048"
+  },
+  {
+    "name": "Side of Tomato Rice",
+    "price": "$3.00",
+    "description": "",
+    "category": "SIDE ORDER",
+    "sourceUrl": "https://order.toasttab.com/online/pho-ha-noi-san-jose-969-story-road-6048"
+  },
+  {
+    "name": "Side of Vermicelli",
+    "price": "$3.00",
+    "description": "",
+    "category": "SIDE ORDER",
+    "sourceUrl": "https://order.toasttab.com/online/pho-ha-noi-san-jose-969-story-road-6048"
+  },
+  {
+    "name": "Side of Welldone Meat",
+    "price": "$7.50",
+    "description": "",
+    "category": "SIDE ORDER",
+    "sourceUrl": "https://order.toasttab.com/online/pho-ha-noi-san-jose-969-story-road-6048"
+  },
+  {
+    "name": "Side of White Rice",
+    "price": "$2.00",
+    "description": "",
+    "category": "SIDE ORDER",
+    "sourceUrl": "https://order.toasttab.com/online/pho-ha-noi-san-jose-969-story-road-6048"
+  },
+  {
+    "name": "Vietnamese Baguette",
+    "price": "$2.00",
+    "description": "",
+    "category": "SIDE ORDER",
+    "sourceUrl": "https://order.toasttab.com/online/pho-ha-noi-san-jose-969-story-road-6048"
+  },
+  {
+    "name": "15 oz Short Rib Pho",
+    "price": "$13.45",
+    "description": "",
+    "category": "SPECIAL SALE",
+    "sourceUrl": "https://order.toasttab.com/online/pho-ha-noi-san-jose-969-story-road-6048"
+  },
+  {
+    "name": "Beef Stew",
+    "price": "$13.45",
+    "description": "",
+    "category": "SPECIAL SALE",
+    "sourceUrl": "https://order.toasttab.com/online/pho-ha-noi-san-jose-969-story-road-6048"
+  },
+  {
+    "name": "Rare Steak and 8oz Short Rib Pho",
+    "price": "$13.45",
+    "description": "",
+    "category": "SPECIAL SALE",
+    "sourceUrl": "https://order.toasttab.com/online/pho-ha-noi-san-jose-969-story-road-6048"
+  },
+  {
+    "name": "Shrimp & Pork Rib Noodle Soup",
+    "price": "$13.45",
+    "description": "",
+    "category": "SPECIAL SALE",
+    "sourceUrl": "https://order.toasttab.com/online/pho-ha-noi-san-jose-969-story-road-6048"
+  },
+  {
+    "name": "S1. Roasted Kui Fei Chicken with Egg Noodle",
+    "price": "$18.40",
+    "description": "",
+    "category": "SPECIALTIES",
+    "sourceUrl": "https://order.toasttab.com/online/pho-ha-noi-san-jose-969-story-road-6048"
+  },
+  {
+    "name": "S11. Ha Noi Grilled Pork Vermicelli",
+    "price": "$17.50",
+    "description": "",
+    "category": "SPECIALTIES",
+    "sourceUrl": "https://order.toasttab.com/online/pho-ha-noi-san-jose-969-story-road-6048"
+  },
+  {
+    "name": "S12. Spicy Hue Noodle Soup",
+    "price": "$18.50",
+    "description": "",
+    "category": "SPECIALTIES",
+    "sourceUrl": "https://order.toasttab.com/online/pho-ha-noi-san-jose-969-story-road-6048"
+  },
+  {
+    "name": "S13. Spicy Hue Noodle with 1lb Short Rib",
+    "price": "$20.00",
+    "description": "",
+    "category": "SPECIALTIES",
+    "sourceUrl": "https://order.toasttab.com/online/pho-ha-noi-san-jose-969-story-road-6048"
+  },
+  {
+    "name": "S15. Grilled Pork Chop Jasmine Rice",
+    "price": "$16.00",
+    "description": "",
+    "category": "SPECIALTIES",
+    "sourceUrl": "https://order.toasttab.com/online/pho-ha-noi-san-jose-969-story-road-6048"
+  },
+  {
+    "name": "S16. Imperial Crab Roll Vermicelli",
+    "price": "$19.25",
+    "description": "",
+    "category": "SPECIALTIES",
+    "sourceUrl": "https://order.toasttab.com/online/pho-ha-noi-san-jose-969-story-road-6048"
+  },
+  {
+    "name": "S17. Grilled Pork Vermicelli",
+    "price": "$16.00",
+    "description": "",
+    "category": "SPECIALTIES",
+    "sourceUrl": "https://order.toasttab.com/online/pho-ha-noi-san-jose-969-story-road-6048"
+  },
+  {
+    "name": "S18. Grilled Pork and Pork Egg Roll Vermicelli",
+    "price": "$16.00",
+    "description": "",
+    "category": "SPECIALTIES",
+    "sourceUrl": "https://order.toasttab.com/online/pho-ha-noi-san-jose-969-story-road-6048"
+  },
+  {
+    "name": "S19. Grilled Pork and Crab Roll Vermicelli",
+    "price": "$17.50",
+    "description": "",
+    "category": "SPECIALTIES",
+    "sourceUrl": "https://order.toasttab.com/online/pho-ha-noi-san-jose-969-story-road-6048"
+  },
+  {
+    "name": "S2. Roasted Kui Fei Chicken with Tomato Rice",
+    "price": "$18.40",
+    "description": "",
+    "category": "SPECIALTIES",
+    "sourceUrl": "https://order.toasttab.com/online/pho-ha-noi-san-jose-969-story-road-6048"
+  },
+  {
+    "name": "S20. Tamarind Prawns",
+    "price": "$21.50",
+    "description": "",
+    "category": "SPECIALTIES",
+    "sourceUrl": "https://order.toasttab.com/online/pho-ha-noi-san-jose-969-story-road-6048"
+  },
+  {
+    "name": "S21. Hainanese Chicken with Rice",
+    "price": "$17.90",
+    "description": "",
+    "category": "SPECIALTIES",
+    "sourceUrl": "https://order.toasttab.com/online/pho-ha-noi-san-jose-969-story-road-6048"
+  },
+  {
+    "name": "S22. Hainanese Chicken with Sticky Rice",
+    "price": "$17.90",
+    "description": "",
+    "category": "SPECIALTIES",
+    "sourceUrl": "https://order.toasttab.com/online/pho-ha-noi-san-jose-969-story-road-6048"
+  },
+  {
+    "name": "S23. Savory Sticky Rice",
+    "price": "$14.50",
+    "description": "",
+    "category": "SPECIALTIES",
+    "sourceUrl": "https://order.toasttab.com/online/pho-ha-noi-san-jose-969-story-road-6048"
+  },
+  {
+    "name": "S24. Egg Roll Vermicelli",
+    "price": "$16.00",
+    "description": "",
+    "category": "SPECIALTIES",
+    "sourceUrl": "https://order.toasttab.com/online/pho-ha-noi-san-jose-969-story-road-6048"
+  },
+  {
+    "name": "S25. Shrimp & Pork Rib Noodle",
+    "price": "$16.50",
+    "description": "",
+    "category": "SPECIALTIES",
+    "sourceUrl": "https://order.toasttab.com/online/pho-ha-noi-san-jose-969-story-road-6048"
+  },
+  {
+    "name": "S3. Roasted Kui Fei Chicken with Sticky Rice",
+    "price": "$18.40",
+    "description": "",
+    "category": "SPECIALTIES",
+    "sourceUrl": "https://order.toasttab.com/online/pho-ha-noi-san-jose-969-story-road-6048"
+  },
+  {
+    "name": "S4. Roasted Kui Fei Chicken with Crispy Sticky Rice",
+    "price": "$19.90",
+    "description": "",
+    "category": "SPECIALTIES",
+    "sourceUrl": "https://order.toasttab.com/online/pho-ha-noi-san-jose-969-story-road-6048"
+  },
+  {
+    "name": "S5. Shaking Beef with Tomato Rice",
+    "price": "$20.00",
+    "description": "",
+    "category": "SPECIALTIES",
+    "sourceUrl": "https://order.toasttab.com/online/pho-ha-noi-san-jose-969-story-road-6048"
+  },
+  {
+    "name": "S6. Korean Short Rib with Jasmine Rice",
+    "price": "$19.50",
+    "description": "",
+    "category": "SPECIALTIES",
+    "sourceUrl": "https://order.toasttab.com/online/pho-ha-noi-san-jose-969-story-road-6048"
+  },
+  {
+    "name": "S7. Vietnamese Sizzling Steak",
+    "price": "$21.50",
+    "description": "",
+    "category": "SPECIALTIES",
+    "sourceUrl": "https://order.toasttab.com/online/pho-ha-noi-san-jose-969-story-road-6048"
+  },
+  {
+    "name": "S8. Beef Stew",
+    "price": "$16.50",
+    "description": "",
+    "category": "SPECIALTIES",
+    "sourceUrl": "https://order.toasttab.com/online/pho-ha-noi-san-jose-969-story-road-6048"
+  }
+]
